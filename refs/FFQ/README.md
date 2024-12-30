@@ -161,7 +161,7 @@ Remark: We have to resort to platform-specific & compiler extensions. Can we rel
 
 ### Methodology
 
-- The benchmark:
+- The micro-benchmark:
   - Spawns a number of producer threads and consumer threads.
   - Each producer thread corresponds to a number of consumer of threads (>= 0).
   - The producer has an SPMC queue for sending requests and an SPSC response queue for each consumer.
@@ -171,3 +171,7 @@ Remark: We have to resort to platform-specific & compiler extensions. Can we rel
   -> Simple benchmark.
 
 - Benchmarks are written in C and compiled using **gcc** with optimization `-O3`.
+
+- The comparative test:
+  - Use the benchmark framework in another [paper](https://dl.acm.org/doi/10.1145/2851141.2851168).
+  - A number of threads repeatedly execute pairs of `enqueue` and `dequeue` operations on a MPMC single queue. Between two operations, an arbitrary delay is added to avoid a cache line being held by one thread for a long time.
