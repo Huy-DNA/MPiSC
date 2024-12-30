@@ -52,26 +52,26 @@ The minimum queue's requirements are:
   - Enqueue: Try the following until success:
     1. Grab the `cell` at `tail`.
     2. If the `cell`'s rank is not a sentinel, that means the `cell` is already occupied:
-      1. Set the `cell`'s gap to `tail`, which is the current rank.
-      2. Increase `tail` by 1, essentially skipping the current rank.
-      3. Retry.
+       1. Set the `cell`'s gap to `tail`, which is the current rank.
+       2. Increase `tail` by 1, essentially skipping the current rank.
+       3. Retry.
     3. Otherwise, the `cell` is not occupied i.e its rank is a sentinel:
-      1. Set the `cell`'s data.
-      2. Set the `cell`'s rank to `tail`, which is the current rank.
-      3. Increase `tail` by 1.
-      4. Signal success.
+       1. Set the `cell`'s data.
+       2. Set the `cell`'s rank to `tail`, which is the current rank.
+       3. Increase `tail` by 1.
+       4. Signal success.
   - Dequeue:
     1. **Atomically** perform fetch-and-add `head` to get the `rank` of the next item.
     2. Get the `cell` corresponding to `rank`.
     3. Try the following until success:
-      1. If the `cell`'s rank equals `rank`, that means the cell indeed stores the item with rank `head`:
-        1. Extract its data.
-        2. Reset its rank to the sentinel.
-        3. Signal success.
-      2. Otherwise, if the `cell`'s gap >= `rank` and the `cell`'s rank != `rank`, that means this cell was skipped:
-        1. **Atomically** perform fetch-and-add `head` and update `rank` to the next rank.
-        2. Update `cell` to the next cell.
-      3. Otherwise, the consumer waits for the producer to enqueue the value to the current cell.
+       1. If the `cell`'s rank equals `rank`, that means the cell indeed stores the item with rank `head`:
+          1. Extract its data.
+          2. Reset its rank to the sentinel.
+          3. Signal success.
+       2. Otherwise, if the `cell`'s gap >= `rank` and the `cell`'s rank != `rank`, that means this cell was skipped:
+          1. **Atomically** perform fetch-and-add `head` and update `rank` to the next rank.
+          2. Update `cell` to the next cell.
+       3. Otherwise, the consumer waits for the producer to enqueue the value to the current cell.
     4. Return the extracted data.
 - Remarks:
   - Possible UB without a proper implementation:
@@ -90,27 +90,27 @@ The minimum queue's requirements are:
     1. **Atomically** fetch-and-add `tail` to obtain the current `rank`.
     2. Get the `cell` corresponding to the current `rank`.
     3. Loop:
-      1. Store the `cell`'s gap into `g`.
-      2. If `g >= rank` then this cell's has been taken, break out of the loop.
-      3. Store the `cell`'s rank into `r`.
-      4. If `r >= 0` then this cell has been used, skip it by performing an **atomic** double-compare-and-swap to:
-         - Set the `cell`'s gap to `rank`.
-         - Set the `cell`'s rank to `r`.
-         If both:
-         - `cell`'s gap == `g`.
-         - `cell`'s rank == `r`.
-         Reloop.
-      5. Otherwise, this cell may not have been used, try to reserve it by performin an **atomic** double-compare-and-swap to:
-         - Set the `cell`'s gap to `g`.
-         - Set the `cell`'s rank to another sentinel with reserve semantic.
-         If both:
-         - `cell`'s gap == `g`.
-         - `cell`'s rank == sentinel.
-         If this operation fails, reloop.
-         Otherwise:
-         1. Set `cell`'s data.
-         2. Set `cell`'s rank to `rank`.
-         3. Signal success.
+       1. Store the `cell`'s gap into `g`.
+       2. If `g >= rank` then this cell's has been taken, break out of the loop.
+       3. Store the `cell`'s rank into `r`.
+       4. If `r >= 0` then this cell has been used, skip it by performing an **atomic** double-compare-and-swap to:
+          - Set the `cell`'s gap to `rank`.
+          - Set the `cell`'s rank to `r`.
+          If both:
+          - `cell`'s gap == `g`.
+          - `cell`'s rank == `r`.
+          Reloop.
+       5. Otherwise, this cell may not have been used, try to reserve it by performin an **atomic** double-compare-and-swap to:
+          - Set the `cell`'s gap to `g`.
+          - Set the `cell`'s rank to another sentinel with reserve semantic.
+          If both:
+          - `cell`'s gap == `g`.
+          - `cell`'s rank == sentinel.
+          If this operation fails, reloop.
+          Otherwise:
+          1. Set `cell`'s data.
+          2. Set `cell`'s rank to `rank`.
+          3. Signal success.
 
 ## Implementation considerations
 
