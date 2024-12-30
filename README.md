@@ -47,3 +47,7 @@ We need to evaluate at least 3 levels:
 ## Caution
 
 - A lock-free algorithm often *assumes* that some synchronization primitive is lock-free. This depends on the target platform and during implementation, the library used. Care must be taken to avoid accidental non-lock-free operation usage.
+
+## Links
+
+- [References](/refs/README.md): Notes for various related papers.
