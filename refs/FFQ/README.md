@@ -78,7 +78,7 @@ The minimum queue's requirements are:
     - There is no synchronization between a producer and a consumer but they read and write non-atomic shared variables, i.e in cases where they are accessing the same cell.
     - Multiple consumers may still try to access the same cell but their intended accessed ranks are different, for example, consumer 1 tries to access cell of rank `C1` while consumer 2 tries to access cell of rank `C1 + N` which maps to the same cell. At most one consumer may modify the cell at a time.
 
-    -> Without memory fences, this algorithm would cause undefined behavior with C++ memory model.
+    -> Without memory fences, this algorithm would cause undefined behavior with the C++ memory model. The implementation uses various compiler extensions anyways to this argument doesn't hold.
   - The wait-free of `enqueue` is achieved by allowing the producer to skip a cell under the assumption that eventually the producer would find an emtpy cell. If this assumption is violated, the producer would spin for a long time and `enqueue` is no longer wait-free.
   - `dequeue` is not wait-free as if the producer suspends, all the consumers must wait and make no progress, however, consumers do not block each other.
   - The recheck for `cell`'s rank != `rank` in step 3.2 in `dequeue` is to avoid a slow consumer being idle during the time gap between step 3.1 and 3.2 and a producer in the mean time has enqueued an item ranked `rank`, did a full circle, skipped some cells and ended up updating the current `cell`'s gap >= `rank`.
