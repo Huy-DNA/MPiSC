@@ -96,17 +96,23 @@ The minimum queue's requirements are:
        4. If `r >= 0` then this cell has been used, skip it by performing an **atomic** double-compare-and-swap to:
           - Set the `cell`'s gap to `rank`.
           - Set the `cell`'s rank to `r`.
+          
           If both:
+
           - `cell`'s gap == `g`.
           - `cell`'s rank == `r`.
+          
           Reloop.
-       5. Otherwise, this cell may not have been used, try to reserve it by performin an **atomic** double-compare-and-swap to:
+       6. Otherwise, this cell may not have been used, try to reserve it by performin an **atomic** double-compare-and-swap to:
           - Set the `cell`'s gap to `g`.
           - Set the `cell`'s rank to another sentinel with reserve semantic.
+          
           If both:
           - `cell`'s gap == `g`.
           - `cell`'s rank == sentinel.
+          
           If this operation fails, reloop.
+
           Otherwise:
           1. Set `cell`'s data.
           2. Set `cell`'s rank to `rank`.
