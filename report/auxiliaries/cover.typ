@@ -3,8 +3,8 @@
 #let bordered-page(body) = {
   box(width: 100%, height: 100%, stroke: 2pt + black, inset: 1em, body)
 }
-
 #show: bordered-page
+
 #set align(center)
 
 #[
@@ -20,8 +20,6 @@
 
 #align(center, image("/static/logo.png", height: 5cm))
 
-#v(1fr)
-
 #[
   #set text(size: 15pt)
   #set align(center)
@@ -31,13 +29,11 @@
 
 #v(.5fr)
 
-#block(width: 100%, inset: (y: 2em), stroke: (y: 1pt))[
-  #set text(weight: "bold", size: 16pt)
-  #upper(t.at("title"))
+#set text(weight: "bold", size: 16pt)
+#upper(t.at("title"))
 
-  #set text(weight: "regular", size: 15pt)
-  Major: Computer Science
-]
+#set text(weight: "regular", size: 15pt)
+Major: Computer Science
 
 #v(1fr)
 
@@ -47,37 +43,27 @@
   columns: (1fr, 1fr),
   rows: (2em, auto),
   column-gutter: .2cm,
-  align(right, [thesis committee:\ member secretary:]),
+  align(right, [*thesis committee*:\ *member secretary*:\ *supervisors*:]),
   align(
     left,
     [
-      #v(1em, weak: true)
       #t.committee.id\
-      #t.committee.secretary
-  ]
-  ),
-)
-#grid(
-  columns: (1fr, 1fr),
-  rows: (2em, auto),
-  column-gutter: .2cm,
-  align(right, [supervisors:]),
-  align(
-    left,
-    for s in t.at("teachers") [
-      #v(0.5em, weak: true)
-      #s.at("name")
-
+      #t.committee.secretary\
+      #for s in t.at("teachers") [
+        #s.at("name")
+      ]
     ],
   ),
 )
 
-#lower[---o0o---]
+#v(1fr)
+#lower[---oOo---]
+
 #grid(
   columns: (1fr, 1fr),
   rows: (2em, auto),
   column-gutter: .2cm,
-  align(right, [Students:]),
+  align(right, [*students*:]),
   align(
     left,
     for s in t.at("students") [

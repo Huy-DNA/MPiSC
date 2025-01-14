@@ -1,7 +1,6 @@
 #set text(size: 15pt)
 *Supervisor's Signature*
 
-#lorem(30)
 #set text(size: 13pt)
 #align(center)[
   #grid(
