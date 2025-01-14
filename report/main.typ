@@ -1,29 +1,10 @@
 #let t = toml("/templates.toml")
 #let fonts = t.at("fonts")
-#show heading: it => {
-  it
-  v(.5em)
-}
-#set list(indent: 10pt)
-
-#set par(justify: true)
 
 #set document(
   title: t.title,
   author: t.students.map(s => s.at("name")),
 )
-#set text(font: fonts.at("serif"), lang: "en", size: 13pt)
-#show raw: set text(font: fonts.at("monospace"))
-#show raw.where(block: true): set block(
-  fill: gray.lighten(90%),
-  width: 100%,
-  inset: (x: 1em, y: 1em),
-)
-#show link: it => {
-  set text(fill: blue)
-  underline(it)
-}
-
 #set page(
   paper: "a4",
   header: { include "/auxiliaries/header.typ" },
@@ -39,6 +20,23 @@
     "{1}.{2}.{3}.{4}",
   ),
 )
+#show heading: it => {
+  it
+  v(.5em)
+}
+#set text(font: fonts.at("serif"), lang: "en", size: 13pt)
+#show raw: set text(font: fonts.at("monospace"))
+#show raw.where(block: true): set block(
+  fill: gray.lighten(90%),
+  width: 100%,
+  inset: (x: 1em, y: 1em),
+)
+#set list(indent: 10pt)
+#set par(justify: true)
+#show link: it => {
+  set text(fill: blue)
+  underline(it)
+}
 
 #include "/auxiliaries/cover.typ"
 #pagebreak()
