@@ -1,5 +1,7 @@
 # A novel MPI+MPI hybrid approach combining MPI-3 shared memory windows and C11/C++11 memory model
 
+Link: https://www.sciencedirect.com/science/article/abs/pii/S074373152100143X
+
 ## Context
 
 - MPI is widely used for *internode operations*.
