@@ -4,10 +4,16 @@
 #{ include "./background/index.typ" }
 #pagebreak()
 
-#{ include "./related/index.typ" }
+#{ include "./literature-review/index.typ" }
 #pagebreak()
 
-#{ include "./results/index.typ" }
+#{ include "./approach/index.typ" }
+#pagebreak()
+
+#{ include "./evaluation/index.typ" }
+#pagebreak()
+
+#{ include "./conclusion/index.typ" }
 #pagebreak()
 
 #{ include "./future/index.typ" }
