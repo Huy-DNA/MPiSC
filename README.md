@@ -23,6 +23,22 @@ A specialized queue with these (minimum) characteristics:
 | Operations          | `queue`, `enqueue`      |
 | Concurrency         | Concurrent & Lock-free  |
 
+## Porting approach
+
+<details>
+  <summary>Hybrid MPI+MPI approach?</summary>
+  TBU
+</details>
+
+<details>
+  <summary>How to perform an MPI port in a lock-free manner?</summary>
+  TBU
+</details>
+
+<details>
+  <summary>General porting approach?</summary>
+</details>
+
 ## Evaluation criteria
 
 - Correctness: Correct `queue`/`enqueue` semantics, memory-safe, no undefined-behavior.
