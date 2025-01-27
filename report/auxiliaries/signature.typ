@@ -12,6 +12,13 @@
 
       #v(40pt)
 
+      Assoc. Prof. Thoai Nam
+    ],
+    [
+      Ho Chi Minh City, #datetime.today().display("[day]/[month]/[year]")
+
+      #v(40pt)
+
       MS. Diep Thanh Dang
     ],
   )

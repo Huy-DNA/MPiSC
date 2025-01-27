@@ -50,7 +50,7 @@ Major: Computer Science
       #t.committee.id\
       #t.committee.secretary\
       #for s in t.at("teachers") [
-        #s.at("name")
+        #s.at("name")\
       ]
     ],
   ),

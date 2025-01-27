@@ -3,7 +3,7 @@
 
 #set text(size: 13pt)
 
-I want to extend my gratitude towards my supervisor, Mr. Diệp Thanh Đăng, who has acted as a constant counselor and advisor from the project's inception throughout. He has led the direction and laid the academic basis for this project, upon which my work is essentially built upon. Without him, this project wouldn't have reached this point of creation.
+I want to extend my gratitude towards my supervisors, Mr.Thoại Nam and Mr. Diệp Thanh Đăng, who have acted as constant counselors and advisors from the project's inception throughout. They have led the direction and laid the academic basis for this project, upon which my work is essentially built upon. Without them, this project wouldn't have reached this point of creation.
 
 I also want to give my family the sincerest thanks for their emotional and financial support, without which I couldn't have whole-heartedly followed my research till the end.
 
