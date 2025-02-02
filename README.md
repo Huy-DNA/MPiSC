@@ -71,7 +71,7 @@
 
 - Patching up the queue?
 
-  Possible solutions: Take a snapshot of current state of the queue, complete the operation of any stalled process that may be blocking it [[implementing-lock-free-queues]] or a dead process leaving the queue broken.
+  Possible solutions: Take a snapshot of current state of the queue, complete the operation of any stalled process that may be blocking it ([ImpLFQ pp.2-3](/refs/Implement-lock-free-queues/README.md)) or a dead process leaving the queue broken.
 
 ## Evaluation strategy
 
