@@ -24,7 +24,12 @@
 ## Approach
 
 <details>
-  <summary>Hybrid MPI+MPI approach?</summary>
+  <summary>Hybrid MPI+MPI approach with C++11 memory model?</summary>
+  TBU
+</details>
+
+<details>
+  <summary>C++11 memory model</summary>
   TBU
 </details>
 
@@ -35,6 +40,7 @@
 
 <details>
   <summary>General porting approach?</summary>
+  TBU
 </details>
 
 ## Literature review
