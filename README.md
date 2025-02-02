@@ -42,6 +42,23 @@
 ### Links
 - [References](/refs/README.md): Notes for various related papers.
 
+### Known problems
+- ABA problem.
+
+  Possible solutions: Monotonic counter, hazard pointer.
+
+- Safe memory reclamation problem.
+
+  Possible solutions: Hazard pointer.
+
+- Special case: empty queue - Concurrent `enqueue` and `dequeue` can conflict with each other.
+
+  Possible solutions: Dummy node to decouple head and tail.
+
+- A dead process performing `enqueue` and `dequeue` could leave the queue broken.
+  
+  Possible solutions: The other processes can help out patching up the queue.
+
 ## Evaluation criteria
 
 - Correctness: Correct `queue`/`enqueue` semantics, memory-safe, no undefined-behavior.
