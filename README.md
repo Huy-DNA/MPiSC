@@ -55,6 +55,10 @@
 
   Possible solutions: Dummy node to decouple head and tail.
 
+- A slow process performing `enqueue` and `dequeue` could leave the queue in an intermediate state.
+
+  Possible solutions: To be lockfree, the other processes can help out patching up the queue (don't wait).
+
 - A dead process performing `enqueue` and `dequeue` could leave the queue broken.
   
   Possible solutions: The other processes can help out patching up the queue.
