@@ -63,30 +63,30 @@
   
   Possible solutions: The other processes can help out patching up the queue.
 
-## Evaluation criteria
+- Patching up the queue?
 
-- Correctness: Correct `queue`/`enqueue` semantics, memory-safe, no undefined-behavior.
-- Performance: The less time it takes to serve common workloads on the target platform the better.
-- Scalability: The performance gain for `queue` and `enqueue` should scale with the number of threads on the target platform.
-- Lock-free-ness: A thread suspended while using the queue should not prevent other threads from making progress using the queue.
+  Possible solutions: Take a snapshot of current state of the queue, complete the operation of any stalled process that may be blocking it [[implementing-lock-free-queues]] or a dead process leaving the queue broken.
 
 ## Evaluation strategy
 
 We need to evaluate at least 3 levels:
-- Theory verification: Prove that the algorithm possess the desired properties.
-- Implementation verifcation: Even though theory is correct, implementation details nuances can affect the desired properties.
-  - Static verification: Verify the source code + its dependencies.
-  - Dynamic verification: Verify its behavior at runtime.
+- Theory verification: Prove that the algorithm possesses the desired properties.
+- Implementation verification: Even though theory is correct, implementation details nuances can affect the desired properties.
+  - Static verification: *Verify* the source code + its dependencies.
+  - Dynamic verification: *Verify* its behavior at runtime & *Benchmark*.
 
+### Correctness
+- Correctness: Correct `queue`/`enqueue` semantics, memory-safe, no undefined-behavior.
 <details>
   <summary>Caution - Lockfree-ness of dependencies</summary>
   A lock-free algorithm often *assumes* that some synchronization primitive is lock-free. This depends on the target platform and during implementation, the library used. Care must be taken to avoid accidental non-lock-free operation usage.
 </details>
 
-### Correctness
-
 ### Performance
+- Performance: The less time it takes to serve common workloads on the target platform the better.
 
 ### Lockfree-ness
+- Scalability: The performance gain for `queue` and `enqueue` should scale with the number of threads on the target platform.
 
 ### Scalability
+- Lock-free-ness: A thread suspended while using the queue should not prevent other threads from making progress using the queue.
