@@ -59,7 +59,7 @@
 
 - Special case: empty queue - Concurrent `enqueue` and `dequeue` can conflict with each other.
 
-  Possible solutions: Dummy node to decouple head and tail ([JPQ](/refs/JPQ/README.md) and [ImpLFQ](/refs/Implement-lock-free-queues/README.md)).
+  Possible solutions: Dummy node to decouple head and tail ([JP-Queue](/refs/JP-Queue/README.md) and [Imp-Lfq](/refs/Imp-Lfq/README.md)).
 
 - A slow process performing `enqueue` and `dequeue` could leave the queue in an intermediate state.
 
@@ -74,7 +74,7 @@
   Why: If `enqueue` or `dequeue` needs to perform some updates on the queue to move it to a consistent state, then a suspended process may leave the queue in an intermediate state. The `enqueue` and `dequeue` should not wait until it sees a consistent state or else the algorithm is blocking. Rather, they should help the suspended process complete the operation.
 
   Possible solutions: (1) detect intermediate state. (2) (try) patch.
-  1. Typically, updates are performed using CAS. If CAS fails, some state changes have occurred, we can detect if this is intermediary & try to perform another CAS to patch up the queue. Note that the patching CAS may fail in case the queue is just patched up, so looping until a successful CAS may not be necessary. A good example can be found in [`enqueue` operation in ImpLFQ pp.3](/refs/Implement-lock-free-queues/README.md)
+  1. Typically, updates are performed using CAS. If CAS fails, some state changes have occurred, we can detect if this is intermediary & try to perform another CAS to patch up the queue. Note that the patching CAS may fail in case the queue is just patched up, so looping until a successful CAS may not be necessary. A good example can be found in [`enqueue` operation in Imp-Lfq pp.3](/refs/Imp-Lfq/README.md)
 
 ## Evaluation strategy
 
