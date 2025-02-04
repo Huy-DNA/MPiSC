@@ -59,7 +59,7 @@
 
 - Special case: empty queue - Concurrent `enqueue` and `dequeue` can conflict with each other.
 
-  Possible solutions: Dummy node to decouple head and tail.
+  Possible solutions: Dummy node to decouple head and tail ([JPQ](/refs/JPQ/README.md) and [ImpLFQ](/refs/Implement-lock-free-queues/README.md)).
 
 - A slow process performing `enqueue` and `dequeue` could leave the queue in an intermediate state.
 
