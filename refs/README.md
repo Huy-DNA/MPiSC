@@ -12,7 +12,7 @@ In chronological order,
 
   Cite: Maged M. Michael and Michael L. Scott. 1996. Simple, fast, and practical non-blocking and blocking concurrent queue algorithms. In Proceedings of the fifteenth annual ACM symposium on Principles of distributed computing (PODC '96). Association for Computing Machinery, New York, NY, USA, 267–275. https://doi.org/10.1145/248052.248106
 
-- [JP-Queue](/refs/JP-Queue/README.md): Logarithmic-Time Single Deleter, Multiple Inserter Wait-Free Queues and Stacks.
+- [LT-Queue](/refs/LT-Queue/README.md): Logarithmic-Time Single Deleter, Multiple Inserter Wait-Free Queues and Stacks.
 
   Cite: Jayanti, P., Petrovic, S. (2005). Logarithmic-Time Single Deleter, Multiple Inserter Wait-Free Queues and Stacks. In: Sarukkai, S., Sen, S. (eds) FSTTCS 2005: Foundations of Software Technology and Theoretical Computer Science. FSTTCS 2005. Lecture Notes in Computer Science, vol 3821. Springer, Berlin, Heidelberg. https://doi.org/10.1007/11590156_33.
 
