@@ -78,7 +78,7 @@
   Solutions often involve (1) detect intermediate state. (2) (try) patch.
 
   Possible solutions:
-  - Typically, updates are performed using CAS. If CAS fails, some state changes have occurred, we can detect if this is intermediary & try to perform another CAS to patch up the queue. Note that the patching CAS may fail in case the queue is just patched up, so looping until a successful CAS may not be necessary. A good example can be found in [`enqueue` operation in Imp-Lfq pp.3](/refs/Imp-Lfq/README.md)
+  - Typically, updates are performed using CAS. If CAS fails, some state changes have occurred, we can detect if this is intermediary & try to perform another CAS to patch up the queue. Note that the patching CAS may fail in case the queue is just patched up, so looping until a successful CAS may not be necessary. A good example can be found in [the `enqueue` operation in Imp-Lfq pp.3](/refs/Imp-Lfq/README.md)
 
 ### Trends
 
