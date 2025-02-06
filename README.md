@@ -85,7 +85,7 @@
 ### Trends
 
 - Speed up happy paths.
-  - WFQueue: The happy path uses lock-free algorithm and falls back to the wait-free algorithm. As lock-free algorithms are typically more efficient, this can lead to speedups.
+  - [WFQueue](/refs/WFQueue/README.md): The happy path uses lock-free algorithm and falls back to the wait-free algorithm. As lock-free algorithms are typically more efficient, this can lead to speedups.
   - Replacing CAS with simpler operations like FAA, load/store in the fast path.
 - Avoid contention: Enqueuers or dequeuers performing on a shared data structures can harm each other's progress.
   - Local buffers can be used at the enqueuers' side in MPSC so that enqueuers do not contend with each other.
