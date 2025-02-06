@@ -4,7 +4,7 @@
 
 In chronological order,
 
-- [Imp-Lfq](/refs/ImpLfq/README.md): Implementing lock-free queues
+- [Imp-Lfq](/refs/Imp-Lfq/README.md): Implementing lock-free queues
 
   Cite: Valois, J. D. (1994, October). Implementing lock-free queues. In Proceedings of the seventh international conference on Parallel and Distributed Computing Systems (pp. 64-69).
 
