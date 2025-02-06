@@ -63,18 +63,22 @@
 
 - A slow process performing `enqueue` and `dequeue` could leave the queue in an intermediate state.
 
-  Possible solutions: To be lockfree, the other processes can help out patching up the queue (don't wait).
+  Possible solutions:
+  - Help mechanism: To be lockfree, the other processes can help out patching up the queue (don't wait).
 
 - A dead process performing `enqueue` and `dequeue` could leave the queue broken.
   
-  Possible solutions: The other processes can help out patching up the queue (help mechanism).
+  Possible solutions:
+  - Help mechanism: The other processes can help out patching up the queue.
 
-- Patching up the queue (help mechanism)?
+- Motivation for the help mechanism?
 
   Why: If `enqueue` or `dequeue` needs to perform some updates on the queue to move it to a consistent state, then a suspended process may leave the queue in an intermediate state. The `enqueue` and `dequeue` should not wait until it sees a consistent state or else the algorithm is blocking. Rather, they should help the suspended process complete the operation.
 
-  Possible solutions: (1) detect intermediate state. (2) (try) patch.
-  1. Typically, updates are performed using CAS. If CAS fails, some state changes have occurred, we can detect if this is intermediary & try to perform another CAS to patch up the queue. Note that the patching CAS may fail in case the queue is just patched up, so looping until a successful CAS may not be necessary. A good example can be found in [`enqueue` operation in Imp-Lfq pp.3](/refs/Imp-Lfq/README.md)
+  Solutions often involve (1) detect intermediate state. (2) (try) patch.
+
+  Possible solutions:
+  - Typically, updates are performed using CAS. If CAS fails, some state changes have occurred, we can detect if this is intermediary & try to perform another CAS to patch up the queue. Note that the patching CAS may fail in case the queue is just patched up, so looping until a successful CAS may not be necessary. A good example can be found in [`enqueue` operation in Imp-Lfq pp.3](/refs/Imp-Lfq/README.md)
 
 ### Trends
 
