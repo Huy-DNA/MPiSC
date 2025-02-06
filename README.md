@@ -67,14 +67,24 @@
 
 - A dead process performing `enqueue` and `dequeue` could leave the queue broken.
   
-  Possible solutions: The other processes can help out patching up the queue.
+  Possible solutions: The other processes can help out patching up the queue (help mechanism).
 
-- Patching up the queue?
+- Patching up the queue (help mechanism)?
 
   Why: If `enqueue` or `dequeue` needs to perform some updates on the queue to move it to a consistent state, then a suspended process may leave the queue in an intermediate state. The `enqueue` and `dequeue` should not wait until it sees a consistent state or else the algorithm is blocking. Rather, they should help the suspended process complete the operation.
 
   Possible solutions: (1) detect intermediate state. (2) (try) patch.
   1. Typically, updates are performed using CAS. If CAS fails, some state changes have occurred, we can detect if this is intermediary & try to perform another CAS to patch up the queue. Note that the patching CAS may fail in case the queue is just patched up, so looping until a successful CAS may not be necessary. A good example can be found in [`enqueue` operation in Imp-Lfq pp.3](/refs/Imp-Lfq/README.md)
+
+### Trends
+
+- Speed up happy paths.
+  - WFQueue: The happy path uses lock-free algorithm and falls back to the wait-free algorithm. As lock-free algorithms are typically more efficient, this can lead to speedups.
+  - Replacing CAS with simpler operations like FAA, load/store in the fast path.
+- Avoid contention: Enqueuers or dequeuers performing on a shared data structures can harm each other's progress.
+  - Local buffers can be used at the enqueuers' side in MPSC so that enqueuers do not contend with each other.
+  - Elimination + Backing off techniques in MPMC.
+- Cache-aware solutions.
 
 ## Evaluation strategy
 
