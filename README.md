@@ -59,7 +59,7 @@
 
 - Special case: empty queue - Concurrent `enqueue` and `dequeue` can conflict with each other.
 
-  Possible solutions: Dummy node to decouple head and tail ([LT-Queue](/refs/LT-Queue/README.md) and [Imp-Lfq](/refs/Imp-Lfq/README.md)).
+  Possible solutions: Dummy node to decouple head and tail ([LTQueue](/refs/LT-Queue/README.md) and [Imp-Lfq](/refs/Imp-Lfq/README.md)).
 
 - A slow process performing `enqueue` and `dequeue` could leave the queue in an intermediate state.
 
