@@ -34,6 +34,14 @@ In chronological order,
 
 ## Programming models
 
+- [MPI3-RMA](/refs/MPI3-RMA/README.md): An implementation and evaluation of the MPI 3.0 one-sided communication interface
+
+  Cite: James Dinan, Pavan Balaji, Darius Buntinas, David Goodell, William Gropp, and Rajeev Thakur. 2016. An implementation and evaluation of the MPI 3.0 one-sided communication interface. Concurr. Comput. : Pract. Exper. 28, 17 (December 2016), 4385–4404. https://doi.org/10.1002/cpe.3758
+
+- [MPI+MPI](/refs/MPI%2BMPI/README.md): MPI + MPI: a new hybrid approach to parallel programming with MPI plus shared memory
+
+  Cite: Hoefler, T., Dinan, J., Buntinas, D. et al. MPI + MPI: a new hybrid approach to parallel programming with MPI plus shared memory. Computing 95, 1121–1136 (2013). https://doi.org/10.1007/s00607-013-0324-2
+
 - [MPI+MPI+Cpp11](/refs/MPI+MPI+Cpp11/README.md): A novel MPI+MPI hybrid approach combining MPI-3 shared memory windows and C11/C++11 memory model.
 
   Cite: Lionel Quaranta, Lalith Maddegedara, A novel MPI+MPI hybrid approach combining MPI-3 shared memory windows and C11/C++11 memory model, Journal of Parallel and Distributed Computing, Volume 157, 2021, Pages 125-144, ISSN 0743-7315, https://doi.org/10.1016/j.jpdc.2021.06.008.
