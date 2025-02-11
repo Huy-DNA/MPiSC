@@ -40,13 +40,13 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
 </details>
 
 <details>
-  <summary>Why MPI-3 RMA?</summary>
+  <summary>Why MPI-3 RMA? ([paper](/refs/MPI3-RMA/README.md))</summary>
 
   MPI-3 improves the RMA API, providing the non-collective `MPI_Win_lock_all` for a process to open an access epoch on a group of processes. This allows for lock-free synchronization.
 </details>
 
 <details>
-  <summary>Hybrid MPI+MPI</summary>
+  <summary>Hybrid MPI+MPI ([paper](/refs/MPI%2BMPI/README.md))</summary>
   The Pure MPI approach is oblivious to the fact that some MPI processes are on the same node, which causes some unnecessary overhead. MPI-3 introduces the MPI SHM API, allowing us to obtain a communicator containing processes on a single node. From this communicator, we can allocate a shared memory window using `MPI_Win_allocate_shared`. Hybrid MPI+MPI means that MPI is used for both intra-node and inter-node communication. This shared memory window follows the *unified memory model* and can be synchronized both using MPI facilities or any other alternatives. Hybrid MPI+MPI can take advantage of the many cores of current computer processors.
 </details>
 
