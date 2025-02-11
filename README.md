@@ -47,12 +47,12 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
 
 <details>
   <summary>Hybrid MPI+MPI</summary>
-  Hybrid MPI+MPI means that MPI is used for both intra-node and inter-node communication. MPI-3 introduces the MPI SHM API, allowing us to obtain a communicator containing processes on a single node. From this communicator, we can allocate a shared memory window using `MPI_Win_allocate_shared`. This shared memory window follows the *unified memory model* and can be synchronized both using MPI facilities or others. Hybrid MPI+MPI can take advantage of the many cores of current computer processors and relieve the network interface.
+  The Pure MPI approach is oblivious to the fact that some MPI processes are on the same node, which causes some unnecessary overhead. MPI-3 introduces the MPI SHM API, allowing us to obtain a communicator containing processes on a single node. From this communicator, we can allocate a shared memory window using `MPI_Win_allocate_shared`. Hybrid MPI+MPI means that MPI is used for both intra-node and inter-node communication. This shared memory window follows the *unified memory model* and can be synchronized both using MPI facilities or any other alternatives. Hybrid MPI+MPI can take advantage of the many cores of current computer processors.
 </details>
 
 <details>
   <summary>Hybrid MPI+MPI+C++11 ([paper](/refs/MPI%2BMPI%2BCpp11/README.md))</summary>
-  Within the shared memory window, C++11 synchronization facilities can be used and prove to be much more efficient than MPI. So incorporating C++11 can be thought of as an optimization step.
+  Within the shared memory window, C++11 synchronization facilities can be used and prove to be much more efficient than MPI. So incorporating C++11 can be thought of as an optimization step for intra-node communication.
 </details>
 
 <details>
