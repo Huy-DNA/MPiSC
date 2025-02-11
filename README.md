@@ -1,10 +1,10 @@
-# Nonblocking distributed MPSC queues using the hybrid programing model combining MPI-3 and C++11
+# Porting shared memory MPSCs to distributed computing using MPI-3 RMA
 
 ## Objective
 
 - Examination of the *shared-memory* literature to find potential *lock-free*, *concurrent*, *multiple-producer single-consumer* queue algorithms.
 - Use the an MPI-3 new RMA capabilities to port potential lock-free *shared-memory* queue algorithms to distributed context.
-- Optimize MPI ports using MPI-3 SHM + C++11 memory model. 
+- Potentially optimize MPI RMA ports using MPI-3 SHM + C++11 memory model. 
 
 - Minimum characteristics:
 
