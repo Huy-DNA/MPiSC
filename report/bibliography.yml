@@ -1,3 +1,65 @@
 # Hayagriva format bibliography file
 # Read this https://github.com/typst/hayagriva/blob/main/docs/file-format.md
 
+michael-scott:
+  type: article
+  title: "Simple, fast, and practical non-blocking and blocking concurrent queue algorithms"
+  author: ["Mage M.Michael", "Michael L.Scott"]
+  date: 1996
+  serial-number:
+    doi: "10.1145/248052.248106"
+    isbn: 0897918002
+  publisher: Association for Computing Machinery
+  page-range: 267-275
+  page-total: 9
+  location: Philadelphia, Pennsylvania, USA
+
+valois:
+  type: article
+  title: "Implementing Lock-Free Queues"
+  author: John D. Valois
+  date: 1994
+
+lamport-leslie:
+  type: article
+  author: "Lamport, Leslie"
+  title: "Specifying Concurrent Program Modules"
+  date: 1983
+  publisher: "Association for Computing Machinery"
+  address: New York, NY, USA
+  volume: 5
+  serial-number:
+    issn: 0164-0925
+    doi: 10.1145/69624.357207
+  journal:
+    value: ACM Trans. Program. Lang. Syst.
+  page-range: 190–222
+  page-total: 33
+
+jiffy:
+  type: article
+  author: ["Adas, Dolev", "Friedman, Roy"]
+  title: "A Fast Wait-Free Multi-Producers Single-Consumer Queue"
+  date: 2022
+  serial-number:
+    isbn: 9781450395601
+    doi: 10.1145/3491003.3491004
+  publisher: "Association for Computing Machinery"
+  address: New York, NY, USA
+  page-range: 77–86
+  page-total: 10
+  location: "Delhi, AA, India"
+
+ltqueue:
+  type: article
+  author: ["Jayanti, Prasad", "Petrovic, Srdjan"]
+  title: "Logarithmic-time single deleter, multiple inserter wait-free queues and stacks"
+  date: 2005
+  serial-number:
+    isbn: 3540304959
+    doi: 10.1007/11590156_33
+  publisher: Springer-Verlag
+  address: "Berlin, Heidelberg"
+  page-range: 408–419
+  page-total: 12
+  location: "Hyderabad, India"
