@@ -3,7 +3,8 @@
 ## Objective
 
 - Examination of the *shared-memory* literature to find potential *lock-free*, *concurrent*, *multiple-producer single-consumer* queue algorithms.
-- Use the hybrid programming model MPI+MPI with C++11 for shared-memory synchronization to port the potential *shared-memory* queue algorithm to distributed context.
+- Use the an MPI-3 new RMA capabilities to port potential lock-free *shared-memory* queue algorithms to distributed context.
+- Optimize MPI ports using MPI-3 SHM + C++11 memory model. 
 
 - Minimum characteristics:
 
@@ -23,14 +24,35 @@
 
 ## Approach
 
+The porting approach we choose is to use MPI-3 RMA to port lock-free queue algorithms. We further optimize these ports using MPI SHM (or the so called MPI+MPI hybrid approach) and C++11 for shared memory synchronization.
+
 <details>
-  <summary>Hybrid MPI+MPI approach with C++11 memory model?</summary>
-  TBU
+  <summary>Why MPI RMA?</summary>
+  
+  MPSC belongs to the class of *irregular* applications, this means that:
+    - Memory access pattern is not known.
+    - Data locations cannot be known in advance, it can change during execution.
+  
+  In other words, we cannot statically analyze where the data may be stored - data can be stored anywhere and we can only determine its location at runtime. This means the tradition message passing interface using `MPI_Send` and `MPI_Recv` is insufficient: Suppose at runtime, process A wants and knows to access a piece of data at `B`, then `A` must issue `MPI_Recv(B)`, but this requires `B` to anticipate that it should issue `MPI_Send(A, data)` and know that which data `A` actually wants. The latter issue can be worked around by having `A` issue `MPI_Send(B, data_descripto)` first. Then, `B` must have waited for `MPI_Recv(A)`. However, because the memory access pattern is not known, `B` must anticipate that any other processes may want to access its data. It's possible but cumbersome.
+   
+   MPI RMA is specifically designed to conveniently express irregular applications by having one side specify all it wants.
+
 </details>
 
 <details>
-  <summary>C++11 memory model</summary>
-  TBU
+  <summary>Why MPI-3 RMA?</summary>
+
+  MPI-3 improves the RMA API, providing the non-collective `MPI_Win_lock_all` for a process to open an access epoch on a group of processes. This allows for lock-free synchronization.
+</details>
+
+<details>
+  <summary>Hybrid MPI+MPI</summary>
+  Hybrid MPI+MPI means that MPI is used for both intra-node and inter-node communication. MPI-3 introduces the MPI SHM API, allowing us to obtain a communicator containing processes on a single node. From this communicator, we can allocate a shared memory window using `MPI_Win_allocate_shared`. This shared memory window follows the *unified memory model* and can be synchronized both using MPI facilities or others. Hybrid MPI+MPI can take advantage of the many cores of current computer processors and relieve the network interface.
+</details>
+
+<details>
+  <summary>Hybrid MPI+MPI+C++11 ([paper](/refs/MPI%2BMPI%2BCpp11/README.md))</summary>
+  Within the shared memory window, C++11 synchronization facilities can be used and prove to be much more efficient than MPI. So incorporating C++11 can be thought of as an optimization step.
 </details>
 
 <details>
