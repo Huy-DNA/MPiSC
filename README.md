@@ -57,12 +57,12 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
 
 <details>
   <summary>How to perform an MPI port in a lock-free manner?</summary>
-  TBU
-</details>
-
-<details>
-  <summary>General porting approach?</summary>
-  TBU
+  
+  With MPI-3 RMA capabilities:
+    - Use `MPI_Win_lock_all` and `MPI_Win_unlock_all` to open and end access epochs.
+    - Within an access epoch, MPI atomics are used.
+  
+  This is made clear in [MPI3-RMA](/refs/MPI3-RMA/README.md).
 </details>
 
 ## Literature review
