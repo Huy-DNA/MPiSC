@@ -133,7 +133,7 @@ We need to evaluate at least 3 levels:
 - Performance: The less time it takes to serve common workloads on the target platform the better.
 
 ### Lockfree-ness
-- Scalability: The performance gain for `queue` and `enqueue` should scale with the number of threads on the target platform.
+- Lock-free-ness: A process suspended while using the queue should not prevent other processes from making progress using the queue.
 
 ### Scalability
-- Lock-free-ness: A thread suspended while using the queue should not prevent other threads from making progress using the queue.
+- Scalability: The performance gain for `queue` and `enqueue` should scale with the number of threads on the target platform.
