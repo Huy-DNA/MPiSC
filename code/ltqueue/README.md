@@ -47,7 +47,22 @@ As LL/SC is not supported by MPI, we'll have to replace them using some other su
         minT = min([child.timestamp for child in children(currentNode)])
         return SC(currentNodeTimeStamp, minT)
     ```
-    `timestamp` is of format `[counter, rank]` packed into 64 bits, `rank` is the rank of the MPI enqueuer that obtain the specific value of `counter`.
-    
+    `timestamp` is of format `[counter, rank]` packed into 64 bits, `rank` is the rank of the MPI enqueuer that obtains the specific value of `counter`. This is likely to be replaced using CAS.
+
+- Possible replacement schemes:
+  1. Replace this LL/SC sequence:
+     ```python
+     old_val = ll(svar)
+     new_val = f(old_val) # new-value-computation time-frame
+     sc(location)
+     ```
+     with this CAS sequence:
+     ```python
+     old_val = location
+     new_val = f(old_val) # new-value-computation timeframe
+     CAS(location, old_val, new_val)
+     ```
+     while ensuring that ABA problem does not occur within a reasonably large timeframe. Some ABA solutions are given in [this paper](/refs/ABA/README.md).
+  2. There are some papers that propose more advanced methods to replace LL/SC using CAS. The drawback is that these also assume shared memory context, which means this requires another port.
 
 ### Pseudo code after removing LL/SC

@@ -45,3 +45,9 @@ In chronological order,
 - [MPI+MPI+Cpp11](/refs/MPI+MPI+Cpp11/README.md): A novel MPI+MPI hybrid approach combining MPI-3 shared memory windows and C11/C++11 memory model.
 
   Cite: Lionel Quaranta, Lalith Maddegedara, A novel MPI+MPI hybrid approach combining MPI-3 shared memory windows and C11/C++11 memory model, Journal of Parallel and Distributed Computing, Volume 157, 2021, Pages 125-144, ISSN 0743-7315, https://doi.org/10.1016/j.jpdc.2021.06.008.
+
+## Auxiliaries
+
+- [ABA](/refs/ABA/README.md): Understanding and Effectively Preventing the ABA Problem in Descriptor-based Lock-free Designs
+
+  Cite: Damian Dechev, Peter Pirkelbauer, and Bjarne Stroustrup. 2010. Understanding and Effectively Preventing the ABA Problem in Descriptor-Based Lock-Free Designs. In Proceedings of the 2010 13th IEEE International Symposium on Object/Component/Service-Oriented Real-Time Distributed Computing (ISORC '10). IEEE Computer Society, USA, 185–192. https://doi.org/10.1109/ISORC.2010.10
