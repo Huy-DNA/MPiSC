@@ -9,8 +9,8 @@ Lock-free MPSC and other FIFO variants, such as multi-producer multi-consumer (M
 == Objective <objective>
 
 This thesis aims to:
-- Investigate state-of-the-art shared-memory MPSC.
-- Select potential algorithms to be ported.
+- Investigate state-of-the-art shared-memory MPSCs.
+- Select potential MPSC algorithms to be ported to distributed MPSC algorithms using MPI-3 RMA.
 - Adapt/Optimize the ported algorithms to fit the constraints of distributed computing.
 - Benchmark the ported algorithms.
 
