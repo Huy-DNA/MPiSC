@@ -20,7 +20,7 @@
 
 - Queue is the backbone data structures in many applications: scheduling, event handling, message bufferring. In these applications, the queue may be highly contended, for example, in event handling, there can be multiple sources of events & many consumers of events at the same time. If the queue has not been designed properly, it can become a bottleneck in a highly concurrent environment, adversely affecting the application's scalability. This sentiment also applies to queues in distributed contexts.
 - Within the context of shared-memory, there have been plenty of research and testing going into efficient, scalable & lock-free queue algorithms. This presents an opportunity to port these high-quality algorithms to the distributed context, albeit some inherent differences that need to be taken into consideration between the two contexts.
-- In the distributed literature, most of the proposed algorithms completely disregard the existing shared-memory algorithms. This is why we investigate the porting approach & compare them with existing distributed queue algorithms.
+- In the distributed literature, most of the proposed algorithms completely disregard the existing shared-memory algorithms, mostly due to the discrepancy between the programming model of shared memory and that of distributed computing. However, with MPI-3 RMA, the gap is bridged, and we can straightforwardly model shared memory application using MPI. This is why we investigate the porting approach & compare them with existing distributed queue algorithms.
 
 ## Approach
 
