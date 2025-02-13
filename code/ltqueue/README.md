@@ -1,5 +1,7 @@
 # LTQueue - MPI port
 
+Link: [paper](/refs/LTQueue/README.md)
+
 ## Naive port 
 
 ### Replacing LL/SC
