@@ -88,6 +88,10 @@ new_pointer = malloc(size)
 *new_pointer = f(old_val)
 CAS(svar, old_pointer, new_pointer)
 ```
-If we never free the pointers, ABA never occurs. However, this is apparently unacceptable, we have to free the pointers at some point. This risks introducing the ABA problem & unsafe memory usage: The *safe memory reclamation problem*. This problem can be solved using *harzard pointer*.
+If we never free the pointers, ABA never occurs. However, this is apparently unacceptable, we have to free the pointers at some point. This risks introducing the ABA problem & unsafe memory usage: The *safe memory reclamation problem*. This problem can be solved using *harzard pointer*. However, pointers are hard to deal with in distributed computing & hazard pointer is pretty heavyweight.
+
+Therefore, I now come back to the very nature of [LTQueue](/refs/LTQueue/README.md) and propose a specialized solution inspired by both the version tag and the idea of introducing a level of introduction.
+
+![image](https://github.com/user-attachments/assets/2e25d85e-cb6a-4155-8a42-7792e0d78805)
 
 ### Pseudo code after removing LL/SC
