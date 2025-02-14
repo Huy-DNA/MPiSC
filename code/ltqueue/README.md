@@ -68,6 +68,7 @@ As LL/SC is not supported by MPI, we'll have to replace them using some other su
   We'll investigate first scheme for the time being, which means find a way to avoid ABA problem.
   
 #### Avoiding ABA problem
+
 The simplest approach is to use a monotonic version tag: Reserve some bits in the shared variable to use as a monotonic counter, so the shared variable now consists of two parts:
 * Control bits: The bits that comprise the meaningful value of the shared variable.
 * Counter bits: Represent a monotonic counter.
@@ -79,7 +80,7 @@ Can we use version tag for `timestamp`? We know that timestamp is already split 
 - `rank` needs to be large enough to represent any cluster.
 - `version tag` needs to be large enough to make the chance of ABA very small.
 
-So attaching a version tag to `timestamp` is not feasible. We need to modify this somehow. Another popular approach has to do with pointers: Notice that if we `malloc` a pointer `p`, as long as we do not free `p`, subsequent `malloc` would never produce a value equals to `p`. The idea is to introduce a level of indirection, instead of shared variable = [timestamp | rank], the shared variable is a pointer to [timestamp | rank] and we CAS the pointers instead:
+So attaching a version tag to `timestamp` is not feasible. We need to modify this somehow. Another popular approach has to do with pointers: Notice that if we `malloc` a pointer `p`, as long as we do not free `p`, subsequent `malloc` would never produce a value equals to `p`. The idea is to introduce a level of indirection, instead of `svar = [timestamp | rank]`, the `svar` is a pointer to `[timestamp | rank]` and we CAS the pointers instead:
 ```
 old_pointer = svar
 old_val = *old_pointer
