@@ -72,7 +72,7 @@ The simplest approach is to use a monotonic version tag: Reserve some bits in th
 * Control bits: The bits that comprise the meaningful value of the shared variable.
 * Counter bits: Represent a monotonic counter.
 
-So, shared variable = [Control bits | Counter bits]. Additionally, `CAS(shared variable, old value, new value)` becomes `CAS(shared variable, [old control bits, counter bits], [new control bits, counter bits + 1])`. If overflow of the counter bits does not occur, ABA problem would not occur because the value of the shared variable as a whole is always unique. If overflow does occur, there's a chance that ABA problem occurs, therefore, the larger the counter bits, the less chance the ABA problem occurs. The drawback is that this limits the range of meaningful values for the shared variable.
+So, `svar = [Control bits | Counter bits]`. Additionally, `CAS(svar, old value, new value)` becomes `CAS(svar, [old control bits, counter bits], [new control bits, counter bits + 1])`. If overflow of the counter bits does not occur, ABA problem would not occur because the value of the shared variable as a whole is always unique. If overflow does occur, there's a chance that ABA problem occurs, therefore, the larger the counter bits, the less chance the ABA problem occurs. The drawback is that this limits the range of meaningful values for the shared variable.
 
 Can we use version tag for `timestamp`? We know that timestamp is already split into `[counter, rank]`. Using a version tag means that we have to further split the 64 bits:
 - `counter` needs to be very large that overflow practically cannot occur.
@@ -81,7 +81,7 @@ Can we use version tag for `timestamp`? We know that timestamp is already split 
 
 So attaching version tag to `timestamp` is not feasible.
 
-We need to modify this somehow. Another popular approach has to do with pointers: Notice that if we `malloc` a pointer `p`, as long as we do not free `p`, subsequent `malloc` would never produce a value equal `p`. The idea is to introduce a level of indirection, instead of shared variable = [timestamp | rank], the shared variable is a pointer to [timestamp | rank] and we CAS the pointers instead:
+We need to modify this somehow. Another popular approach has to do with pointers: Notice that if we `malloc` a pointer `p`, as long as we do not free `p`, subsequent `malloc` would never produce a value equals to `p`. The idea is to introduce a level of indirection, instead of shared variable = [timestamp | rank], the shared variable is a pointer to [timestamp | rank] and we CAS the pointers instead:
 ```
 old_pointer = svar
 old_val = *old_pointer
