@@ -79,9 +79,7 @@ Can we use version tag for `timestamp`? We know that timestamp is already split 
 - `rank` needs to be large enough to represent any cluster.
 - `version tag` needs to be large enough to make the chance of ABA very small.
 
-So attaching version tag to `timestamp` is not feasible.
-
-We need to modify this somehow. Another popular approach has to do with pointers: Notice that if we `malloc` a pointer `p`, as long as we do not free `p`, subsequent `malloc` would never produce a value equals to `p`. The idea is to introduce a level of indirection, instead of shared variable = [timestamp | rank], the shared variable is a pointer to [timestamp | rank] and we CAS the pointers instead:
+So attaching a version tag to `timestamp` is not feasible. We need to modify this somehow. Another popular approach has to do with pointers: Notice that if we `malloc` a pointer `p`, as long as we do not free `p`, subsequent `malloc` would never produce a value equals to `p`. The idea is to introduce a level of indirection, instead of shared variable = [timestamp | rank], the shared variable is a pointer to [timestamp | rank] and we CAS the pointers instead:
 ```
 old_pointer = svar
 old_val = *old_pointer
