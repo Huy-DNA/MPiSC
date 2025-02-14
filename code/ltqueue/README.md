@@ -98,9 +98,9 @@ Notice that, except right in the middle of a dequeue, for a specific `rank`, the
 
 ![image](https://github.com/user-attachments/assets/5abcca30-738d-4adb-9fb4-3fbb746b1575)
 
-`rank` in this case acts like a pointer - it points to specific min-timestamp - with one extra benefit: we don't need `malloc` or `free`, so no need for safe memory reclamation.
+`rank` in this case acts like a pointer - it points to specific min-timestamp in a node with that rank - with one extra benefit: we don't need `malloc` or `free`, so no need for safe memory reclamation.
 
-The ABA problem still remains. However, because `rank` is now a full-flex 64-bit number, we can just split `rank` into `rank` and `version tag`.
+The ABA problem still remains. However, because `rank` is now a full-flexed 64-bit number, we can just split `rank` into `rank` and `version tag`.
 
 ![image](https://github.com/user-attachments/assets/d6d715f7-6bdd-4972-8a80-cf73d71b21ee)
 
