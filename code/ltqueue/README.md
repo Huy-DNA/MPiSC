@@ -94,4 +94,14 @@ Therefore, I now come back to the very nature of [LTQueue](/refs/LTQueue/README.
 
 ![image](https://github.com/user-attachments/assets/2e25d85e-cb6a-4155-8a42-7792e0d78805)
 
+Notice that, except right in the middle of a dequeue, for a specific `rank`, there's only one corresponding `min-timestamp` in the interal node. How about restructuring the tree like this:
+
+![image](https://github.com/user-attachments/assets/5abcca30-738d-4adb-9fb4-3fbb746b1575)
+
+`rank` in this case acts like a pointer - it points to specific min-timestamp - with one extra benefit: we don't need `malloc` or `free`, so no need for safe memory reclamation.
+
+The ABA problem still remains. However, because `rank` is now a full-flex 64-bit number, we can just split `rank` into `rank` and `version tag`.
+
+![image](https://github.com/user-attachments/assets/a30dfb99-fe88-40a5-bdd1-5b8b0245c6d0)
+
 ### Pseudo code after removing LL/SC
