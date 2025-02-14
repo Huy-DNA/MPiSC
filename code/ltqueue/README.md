@@ -1,4 +1,4 @@
-9# LTQueue - MPI port
+# LTQueue - MPI port
 
 Link: [paper](/refs/LTQueue/README.md)
 
