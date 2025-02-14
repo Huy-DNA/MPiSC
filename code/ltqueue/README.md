@@ -1,4 +1,4 @@
-# LTQueue - MPI port
+9# LTQueue - MPI port
 
 Link: [paper](/refs/LTQueue/README.md)
 
@@ -103,6 +103,8 @@ Notice that, except right in the middle of a dequeue, for a specific `rank`, the
 The ABA problem still remains. However, because `rank` is now a full-flexed 64-bit number, we can just split `rank` into `rank` and `version tag`.
 
 ![image](https://github.com/user-attachments/assets/d6d715f7-6bdd-4972-8a80-cf73d71b21ee)
+
+There's a nuance though. In the original version, the `timestamp` at each internal node is guaranteed to be minimum among the timestamps in the subtree rooted at the internal node. However, with our version, suppose in the above visualization, we dequeue so that the min-timestamp of rank 1 changes and becomes bigger than min-timestamp of rank 2, still, right at that moment, some internal nodes still point to rank 1, implicitly imply that the new min-timestamp of rank 1 is the min-timestamp of the whole subtree, which is incorrect. We need to introduce some adaptation.
 
 Adaptation and proof of correctness will be provided in the next two sections.
 
