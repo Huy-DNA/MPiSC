@@ -63,6 +63,32 @@ As LL/SC is not supported by MPI, we'll have to replace them using some other su
      CAS(location, old_val, new_val)
      ```
      while ensuring that ABA problem does not occur within a reasonably large timeframe. Some ABA solutions are given in [this paper](/refs/ABA/README.md).
-  2. There are some papers that propose more advanced methods to replace LL/SC using CAS. The drawback is that these also assume shared memory context, which means this requires another port.
+  2. There are some papers that propose more advanced methods to replace LL/SC using CAS. The drawbacks are (1) these also assume shared memory context, which means these require another port (2) potentially too heavyweight.
+
+  We'll investigate first scheme for the time being, which means find a way to avoid ABA problem.
+  
+#### Avoiding ABA problem
+The simplest approach is to use a monotonic version tag: Reserve some bits in the shared variable to use as a monotonic counter, so the shared variable now consists of two parts:
+* Control bits: The bits that comprise the meaningful value of the shared variable.
+* Counter bits: Represent a monotonic counter.
+
+So, shared variable = [Control bits | Counter bits]. Additionally, `CAS(shared variable, old value, new value)` becomes `CAS(shared variable, [old control bits, counter bits], [new control bits, counter bits + 1])`. If overflow of the counter bits does not occur, ABA problem would not occur because the value of the shared variable as a whole is always unique. If overflow does occur, there's a chance that ABA problem occurs, therefore, the larger the counter bits, the less chance the ABA problem occurs. The drawback is that this limits the range of meaningful values for the shared variable.
+
+Can we use version tag for `timestamp`? We know that timestamp is already split into `[counter, rank]`. Using a version tag means that we have to further split the 64 bits:
+- `counter` needs to be very large that overflow practically cannot occur.
+- `rank` needs to be large enough to represent any cluster.
+- `version tag` needs to be large enough to make the chance of ABA very small.
+
+So attaching version tag to `timestamp` is not feasible.
+
+We need to modify this somehow. Another popular approach has to do with pointers: Notice that if we `malloc` a pointer `p`, as long as we do not free `p`, subsequent `malloc` would never produce a value equal `p`. The idea is to introduce a level of indirection, instead of shared variable = [timestamp | rank], the shared variable is a pointer to [timestamp | rank] and we CAS the pointers instead:
+```
+old_pointer = svar
+old_val = *old_pointer
+new_pointer = malloc(size)
+*new_pointer = f(old_val)
+CAS(svar, old_pointer, new_pointer)
+```
+If we never free the pointers, ABA never occurs. However, this is apparently unacceptable, we have to free the pointers at some point. This risks introducing the ABA problem & unsafe memory usage: The *safe memory reclamation problem*. This problem can be solved using *harzard pointer*.
 
 ### Pseudo code after removing LL/SC
