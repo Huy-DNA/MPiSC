@@ -109,3 +109,21 @@ There's a nuance though. In the original version, the `timestamp` at each intern
 Adaptation and proof of correctness will be provided in the next two sections.
 
 ### Pseudo code after removing LL/SC
+
+```
+struct node_t
+  value_t data
+
+struct spsc_t
+  int first
+  int last
+  int announce
+  int free_later
+  node_t nodes[MAX_SIZE]
+
+function enqueue_spsc(spsc_t* q, value_t value)
+  ...
+
+function dequeue_spsc(spsc_t* q)
+  ...
+```
