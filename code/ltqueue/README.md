@@ -102,6 +102,8 @@ Notice that, except right in the middle of a dequeue, for a specific `rank`, the
 
 The ABA problem still remains. However, because `rank` is now a full-flex 64-bit number, we can just split `rank` into `rank` and `version tag`.
 
-![image](https://github.com/user-attachments/assets/a30dfb99-fe88-40a5-bdd1-5b8b0245c6d0)
+![image](https://github.com/user-attachments/assets/d6d715f7-6bdd-4972-8a80-cf73d71b21ee)
+
+Adaptation and proof of correctness will be provided in the next two sections.
 
 ### Pseudo code after removing LL/SC
