@@ -172,25 +172,54 @@ function spsc_dequeuer_read_front(spsc_t* q)
 Modified MPSC after replacing all LL/SC:
 
 ```
-struct internal_node_t
-  int rank
-  internal_node_t* parent
+struct tree_node_t
+  rank_t min_timestamp_rank
+  ...
 
 struct enqueuer_t
   spsc_t queue
-  internal_node_t* internal_node
+  tree_node_t* tree_node
   int min_timestamp
 
 struct mpsc_t
   enqueuer_t queues[ENQUEUERS]
+  tree_node_t* root
   int counter
 
 function create_mpsc
-  // logic to build a tree of internal node
+  // logic to build the tree
 
-function mpsc_enqueue(mpsc_t* q, value_t value)
-  ...
+function mpsc_enqueue(mpsc_t* q, int rank, value_t value)
+  timestamp = FAA(q->counter)
+  spsc_enqueue(&q->queues[rank].queue, (value, timestamp))
+  q->queues[rank].min_timestamp = spsc_enqueuer_read_front(&q->queues[rank].queue).timestamp
+  propagate(q->queues[rank].tree_node)
 
 function mpsc_dequeue(mpsc_t* q)
-  ...
+  rank = q->root->rank.value
+  if (rank == NONE) return NULL
+  ret = spsc_dequeue(&q->queues[rank].queue)
+  q->queues[rank].min_timestamp = spsc_dequeuer_read_front(&q->queues[rank].queue).timestamp
+  propagate(q, q->queues[rank].tree_node)
+  return ret.val
+
+function propagate(mpsc_t* q, tree_node_t* node)
+  current_node = node
+  repeat
+    current_node = parent(current_node)
+    if (!refresh(q, current_node))
+      refresh(q, current_node)
+  until (current_node == q->root)
+
+function refresh(mpsc_t* q, tree_node_t* node)
+  current_rank = current_node->rank
+  min_timestamp = MAX_INT
+  min_timestamp_rank = NONE
+  for child_node in children(node)
+    cur_rank = child_node->rank.value
+    cur_timestamp = q->queues[rank].min_timestamp
+    if (cur_timestamp < min_timestamp)
+       min_timestamp = cur_timestamp
+       min_timestamp_rank = cur_rank
+  return CAS(&current_node->rank, current_rank, (min_timestamp_rank, current_rank.version + 1))
 ```
