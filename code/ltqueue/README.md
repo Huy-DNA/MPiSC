@@ -112,7 +112,7 @@ Adaptation and proof of correctness will be provided in the next two sections.
 
 SPSC is kept intact, and due to Prasad Jayanti and Srdjan Petrovic:
 
-```
+```C
 struct node_t
   value_t data
   node_t* next
@@ -171,7 +171,7 @@ function spsc_dequeuer_read_front(spsc_t* q)
 
 Modified MPSC after replacing all LL/SC:
 
-```
+```C
 struct tree_node_t
   rank_t min_timestamp_rank
   ...
@@ -186,7 +186,7 @@ struct mpsc_t
   tree_node_t* root
   int counter
 
-function create_mpsc
+function create_mpsc()
   // logic to build the tree
 
 function mpsc_enqueue(mpsc_t* q, int rank, value_t value)
