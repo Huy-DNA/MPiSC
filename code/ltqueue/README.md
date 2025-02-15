@@ -223,6 +223,7 @@ function refresh(mpsc_t* q, tree_node_t* node)
   min_timestamp_rank = NONE
   for child_node in children(node)
     cur_rank = child_node->rank.value
+    if (cur_rank == NONE) continue
     cur_timestamp = q->queues[rank].min_timestamp
     if (cur_timestamp < min_timestamp)
        min_timestamp = cur_timestamp
