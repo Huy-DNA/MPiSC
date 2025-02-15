@@ -123,17 +123,21 @@ We need to evaluate at least 3 levels:
   - Dynamic verification: *Verify* its behavior at runtime & *Benchmark*.
 
 ### Correctness
-- Correctness: Correct `queue`/`enqueue` semantics, memory-safe, no undefined-behavior.
-<details>
-  <summary>Caution - Lockfree-ness of dependencies</summary>
-  A lock-free algorithm often *assumes* that some synchronization primitive is lock-free. This depends on the target platform and during implementation, the library used. Care must be taken to avoid accidental non-lock-free operation usage.
-</details>
+- Correctness:
+  - Linearizability
+  - No ABA problem
+  - Safe memory reclamation
 
 ### Performance
 - Performance: The less time it takes to serve common workloads on the target platform the better.
 
 ### Lockfree-ness
-- Lock-free-ness: A process suspended while using the queue should not prevent other processes from making progress using the queue.
+- Lockfree-ness: A process suspended while using the queue should not prevent other processes from making progress using the queue.
+
+<details>
+  <summary>Caution - Lockfree-ness of dependencies</summary>
+  A lock-free algorithm often *assumes* that some synchronization primitive is lock-free. This depends on the target platform and during implementation, the library used. Care must be taken to avoid accidental non-lock-free operation usage.
+</details>
 
 ### Scalability
 - Scalability: The performance gain for `queue` and `enqueue` should scale with the number of threads on the target platform.
