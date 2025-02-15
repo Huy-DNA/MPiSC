@@ -1,4 +1,4 @@
-# LTQueue - MPI port
+# LTQueue (Prasad Jayanti, Srdjan Petrovic, 2005) - MPI port
 
 Link: [paper](/refs/LTQueue/README.md)
 
@@ -110,6 +110,8 @@ Adaptation and proof of correctness will be provided in the next two sections.
 
 ### Pseudo code after removing LL/SC
 
+SPSC is kept intact, and due to Prasad Jayanti and Srdjan Petrovic:
+
 ```
 struct node_t
   value_t data
@@ -165,4 +167,30 @@ function spsc_dequeuer_read_front(spsc_t* q)
   tmp = q->first
   if (tmp == q->last) return NULL
   return tmp->val
+```
+
+Modified MPSC after replacing all LL/SC:
+
+```
+struct internal_node_t
+  int rank
+  internal_node_t* parent
+
+struct enqueuer_t
+  spsc_t queue
+  internal_node_t* internal_node
+  int min_timestamp
+
+struct mpsc_t
+  enqueuer_t queues[ENQUEUERS]
+  int counter
+
+function create_mpsc
+  // logic to build a tree of internal node
+
+function mpsc_enqueue(mpsc_t* q, value_t value)
+  ...
+
+function mpsc_dequeue(mpsc_t* q)
+  ...
 ```
