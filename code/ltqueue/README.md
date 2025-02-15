@@ -240,3 +240,9 @@ function refresh(mpsc_t* q, tree_node_t* node)
 #### Safe memory reclamation
 
 #### Lockfree-ness
+
+### Porting
+
+See [source code](./ltqueue.cpp).
+
+For the time being, SPSC is implemented using a circular array instead of a linked list due to the complexity of managing dynamic memory in the shared memory window with MPI.
