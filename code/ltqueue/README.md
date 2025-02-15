@@ -219,7 +219,7 @@ function propagate(mpsc_t* q, tree_node_t* node)
 
 function refresh(mpsc_t* q, tree_node_t* node)
   current_rank = current_node->rank
-  min_timestamp = MAX_INT
+  min_timestamp = MAX_TIMESTAMP
   min_timestamp_rank = NONE
   for child_node in children(node)
     cur_rank = child_node->rank.value
