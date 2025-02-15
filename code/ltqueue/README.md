@@ -195,7 +195,8 @@ function mpsc_enqueue(mpsc_t* q, int rank, value_t value)
   front = spsc_dequeuer_read_front(&q->queues[rank].queue)
   if (front == NULL)
     q->queues[rank].min_timestamp = MAX_TIMESTAMP
-  else q->queues[rank].min_timestamp = front.timestamp
+  else
+    q->queues[rank].min_timestamp = front.timestamp
   propagate(q->queues[rank].tree_node)
 
 function mpsc_dequeue(mpsc_t* q)
@@ -205,7 +206,8 @@ function mpsc_dequeue(mpsc_t* q)
   front = spsc_dequeuer_read_front(&q->queues[rank].queue)
   if (front == NULL)
     q->queues[rank].min_timestamp = MAX_TIMESTAMP
-  else q->queues[rank].min_timestamp = front.timestamp
+  else
+    q->queues[rank].min_timestamp = front.timestamp
   propagate(q, q->queues[rank].tree_node)
   return ret.val
 
