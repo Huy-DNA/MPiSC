@@ -113,17 +113,56 @@ Adaptation and proof of correctness will be provided in the next two sections.
 ```
 struct node_t
   value_t data
+  node_t* next
 
 struct spsc_t
-  int first
-  int last
-  int announce
-  int free_later
-  node_t nodes[MAX_SIZE]
+  node_t* first
+  node_t* last
+  node_t* announce
+  node_t* free_later
+  value_t help 
 
-function enqueue_spsc(spsc_t* q, value_t value)
-  ...
+function create_spsc()
+  q = spsc_t()
+  dummy_node = new node_t()
+  dummy_node->next = NULL
+  q.first = dummy_node
+  q.last = dummy_node
+  q.announce = NULL
+  q.free_later = NULL
+  return q
 
-function dequeue_spsc(spsc_t* q)
-  ...
+function spsc_enqueue(spsc_t* q, value_t value)
+  new_node = new node_t()
+  tmp = q->last
+  tmp->data = value
+  tmp->next = new_node
+  last = new_node
+
+function spsc_dequeue(spsc_t* q)
+  tmp = q->first
+  if (tmp == q->last) return NULL
+  retval = tmp->data
+  q->help = retval
+  q->first = tmp->next
+  if (tmp == q->announce)
+    tmp' = q->free_later
+    q->free_later = q->announce
+    free(tmp')
+  else free(tmp)
+  return retval
+
+function spsc_enqueuer_read_front(spsc_t* q)
+  tmp = q->first
+  if (tmp == q->last) return NULL
+  q->announce = tmp
+  if (q->announce != q->first)
+    retval = q->help
+  else retval = tmp
+  return retval
+
+function spsc_dequeuer_read_front(spsc_t* q)
+  tmp = q->first
+  if (tmp == q->last) return NULL
+  return tmp->val
 ```
