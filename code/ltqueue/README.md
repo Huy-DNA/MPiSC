@@ -229,3 +229,11 @@ function refresh(mpsc_t* q, tree_node_t* node)
        min_timestamp_rank = cur_rank
   return CAS(&current_node->rank, current_rank, (min_timestamp_rank, current_rank.version + 1))
 ```
+
+#### Linearizability
+
+#### ABA problem
+
+#### Safe memory reclamation
+
+#### Lockfree-ness
