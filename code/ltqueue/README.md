@@ -160,7 +160,7 @@ function spsc_enqueuer_read_front(spsc_t* q)
   q->announce = tmp
   if (q->announce != q->first)
     retval = q->help
-  else retval = tmp
+  else retval = tmp->data
   return retval
 
 function spsc_dequeuer_read_front(spsc_t* q)
