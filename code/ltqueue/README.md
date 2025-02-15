@@ -192,7 +192,7 @@ function create_mpsc()
 function mpsc_enqueue(mpsc_t* q, int rank, value_t value)
   timestamp = FAA(q->counter)
   spsc_enqueue(&q->queues[rank].queue, (value, timestamp))
-  front = spsc_dequeuer_read_front(&q->queues[rank].queue)
+  front = spsc_enqueuer_read_front(&q->queues[rank].queue)
   if (front == NULL)
     q->queues[rank].min_timestamp = MAX_TIMESTAMP
   else
