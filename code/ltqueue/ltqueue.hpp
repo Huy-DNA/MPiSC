@@ -35,15 +35,6 @@ private:
     MPI_Win _last_win;
     MPI_Aint *_last_ptr;
 
-    MPI_Win _announce_win;
-    MPI_Aint *_announce_ptr;
-
-    MPI_Win _free_later_win;
-    MPI_Aint *_free_later_ptr;
-
-    MPI_Win _help_win;
-    data_t *_help_ptr;
-
   public:
     Spsc(MPI_Comm comm, MPI_Datatype original_type, MPI_Aint size,
          MPI_Aint self_rank, MPI_Aint dequeuer_rank)
@@ -66,25 +57,13 @@ private:
                        &this->_first_ptr, &this->_first_win);
       MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
                        &this->_last_ptr, &this->_last_win);
-      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
-                       &this->_announce_ptr, &this->_announce_win);
-      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
-                       &this->_free_later_ptr, &this->_free_later_win);
-      MPI_Win_allocate(sizeof(data_t), sizeof(data_t), info, comm,
-                       &this->_help_ptr, &this->_help_win);
 
       MPI_Win_lock_all(0, this->_first_win);
       MPI_Win_lock_all(0, this->_last_win);
-      MPI_Win_lock_all(0, this->_announce_win);
-      MPI_Win_lock_all(0, this->_free_later_win);
       *this->_first_ptr = 0;
       *this->_last_ptr = 0;
-      *this->_announce_ptr = NULL_INDEX;
-      *this->_free_later_ptr = NULL_INDEX;
       MPI_Win_unlock_all(this->_first_win);
       MPI_Win_unlock_all(this->_last_win);
-      MPI_Win_unlock_all(this->_announce_win);
-      MPI_Win_unlock_all(this->_free_later_win);
       MPI_Barrier(comm);
     }
     ~Spsc() {
@@ -92,45 +71,28 @@ private:
       MPI_Win_free(&this->_data_win);
       MPI_Win_free(&this->_first_win);
       MPI_Win_free(&this->_last_win);
-      MPI_Win_free(&this->_announce_win);
-      MPI_Win_free(&this->_free_later_win);
-      MPI_Win_free(&this->_help_win);
     }
 
     bool enqueue(const data_t &data) {
       MPI_Win_lock_all(0, this->_first_win);
       MPI_Win_lock_all(0, this->_last_win);
-      MPI_Win_lock_all(0, this->_announce_win);
-      MPI_Win_lock_all(0, this->_free_later_win);
       MPI_Win_lock_all(0, this->_data_win);
 
       MPI_Aint first;
       MPI_Aint last;
-      MPI_Aint announce;
-      MPI_Aint free_later;
       MPI_Get_accumulate(NULL, 0, MPI_AINT, &first, 1, MPI_AINT,
                          this->_self_rank, 0, 1, MPI_AINT, MPI_NO_OP,
                          this->_first_win);
       MPI_Get_accumulate(NULL, 0, MPI_AINT, &last, 1, MPI_AINT,
                          this->_self_rank, 0, 1, MPI_AINT, MPI_NO_OP,
                          this->_last_win);
-      MPI_Get_accumulate(NULL, 0, MPI_AINT, &announce, 1, MPI_AINT,
-                         this->_self_rank, 0, 1, MPI_AINT, MPI_NO_OP,
-                         this->_announce_win);
-      MPI_Get_accumulate(NULL, 0, MPI_AINT, &free_later, 1, MPI_AINT,
-                         this->_self_rank, 0, 1, MPI_AINT, MPI_NO_OP,
-                         this->_free_later_win);
       MPI_Win_flush(this->_self_rank, this->_first_win);
       MPI_Win_flush(this->_self_rank, this->_last_win);
-      MPI_Win_flush(this->_self_rank, this->_announce_win);
-      MPI_Win_flush(this->_self_rank, this->_free_later_win);
 
       MPI_Aint new_last = (last + 1) % this->_size;
-      if (new_last == first || last == announce || last == free_later) {
+      if (new_last == first) {
         MPI_Win_unlock_all(this->_first_win);
         MPI_Win_unlock_all(this->_last_win);
-        MPI_Win_unlock_all(this->_announce_win);
-        MPI_Win_unlock_all(this->_free_later_win);
         MPI_Win_unlock_all(this->_data_win);
         return false;
       }
@@ -142,8 +104,6 @@ private:
 
       MPI_Win_unlock_all(this->_first_win);
       MPI_Win_unlock_all(this->_last_win);
-      MPI_Win_unlock_all(this->_announce_win);
-      MPI_Win_unlock_all(this->_free_later_win);
       MPI_Win_unlock_all(this->_data_win);
 
       return true;
@@ -200,15 +160,6 @@ private:
     MPI_Win _last_win;
     MPI_Aint *_last_ptr;
 
-    MPI_Win _announce_win;
-    MPI_Aint *_announce_ptr;
-
-    MPI_Win _free_later_win;
-    MPI_Aint *_free_later_ptr;
-
-    MPI_Win _help_win;
-    data_t *_help_ptr;
-
   public:
     Spsc(MPI_Comm comm, MPI_Datatype original_type, MPI_Aint size,
          MPI_Aint self_rank)
@@ -231,12 +182,6 @@ private:
                        &this->_first_win);
       MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_last_ptr,
                        &this->_last_win);
-      MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_announce_ptr,
-                       &this->_announce_win);
-      MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_free_later_ptr,
-                       &this->_free_later_win);
-      MPI_Win_allocate(0, sizeof(data_t), info, comm, &this->_help_ptr,
-                       &this->_help_win);
       MPI_Barrier(comm);
     }
 
@@ -245,22 +190,15 @@ private:
       MPI_Win_free(&this->_data_win);
       MPI_Win_free(&this->_first_win);
       MPI_Win_free(&this->_last_win);
-      MPI_Win_free(&this->_announce_win);
-      MPI_Win_free(&this->_free_later_win);
-      MPI_Win_free(&this->_help_win);
     }
 
     void dequeue(data_t *&output, MPI_Aint enqueuer_rank) {
       MPI_Win_lock_all(0, this->_first_win);
       MPI_Win_lock_all(0, this->_last_win);
-      MPI_Win_lock_all(0, this->_announce_win);
-      MPI_Win_lock_all(0, this->_free_later_win);
       MPI_Win_lock_all(0, this->_data_win);
 
       MPI_Aint first;
       MPI_Aint last;
-      MPI_Aint announce;
-      MPI_Aint free_later;
       MPI_Get_accumulate(NULL, 0, MPI_AINT, &first, 1, MPI_AINT, enqueuer_rank,
                          0, 1, MPI_AINT, MPI_NO_OP, this->_first_win);
       MPI_Get_accumulate(NULL, 0, MPI_AINT, &last, 1, MPI_AINT, enqueuer_rank,
@@ -271,8 +209,6 @@ private:
         output = NULL;
         MPI_Win_unlock_all(this->_first_win);
         MPI_Win_unlock_all(this->_last_win);
-        MPI_Win_unlock_all(this->_announce_win);
-        MPI_Win_unlock_all(this->_free_later_win);
         MPI_Win_unlock_all(this->_data_win);
         return;
       }
@@ -280,25 +216,13 @@ private:
       MPI_Get(output, 1, this->_mpi_type, enqueuer_rank, first, 1,
               this->_mpi_type, this->_data_win);
       MPI_Win_flush(enqueuer_rank, this->_data_win);
-      MPI_Accumulate(output, 1, this->_mpi_type, enqueuer_rank, 0, 1,
-                     this->_mpi_type, MPI_REPLACE, this->_help_win);
 
       MPI_Aint new_first = (first + 1) % this->_size;
       MPI_Accumulate(&new_first, 1, MPI_AINT, enqueuer_rank, 0, 1, MPI_AINT,
                      MPI_REPLACE, this->_first_win);
 
-      MPI_Get_accumulate(NULL, 0, MPI_AINT, &announce, 1, MPI_AINT,
-                         enqueuer_rank, 0, 1, MPI_AINT, MPI_NO_OP,
-                         this->_announce_win);
-      MPI_Win_flush(enqueuer_rank, this->_announce_win);
-      if (first == announce) {
-        MPI_Accumulate(&announce, 1, MPI_AINT, enqueuer_rank, 0, 1, MPI_AINT,
-                       MPI_REPLACE, this->_free_later_win);
-      }
       MPI_Win_unlock_all(this->_first_win);
       MPI_Win_unlock_all(this->_last_win);
-      MPI_Win_unlock_all(this->_announce_win);
-      MPI_Win_unlock_all(this->_free_later_win);
       MPI_Win_unlock_all(this->_data_win);
     }
   } _spsc;
