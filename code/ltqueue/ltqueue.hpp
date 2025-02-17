@@ -126,7 +126,7 @@ private:
       MPI_Win_flush(this->_self_rank, this->_free_later_win);
 
       MPI_Aint new_last = (last + 1) % this->_size;
-      if (new_last == first || new_last == announce || new_last == free_later) {
+      if (new_last == first || last == announce || last == free_later) {
         MPI_Win_unlock_all(this->_first_win);
         MPI_Win_unlock_all(this->_last_win);
         MPI_Win_unlock_all(this->_announce_win);
