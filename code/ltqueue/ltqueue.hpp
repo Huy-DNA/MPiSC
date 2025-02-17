@@ -134,7 +134,6 @@ private:
         MPI_Win_unlock_all(this->_data_win);
         return false;
       }
-      printf("%d\n", (int)last);
       MPI_Put(&data, 1, this->_mpi_type, this->_self_rank, last, 1,
               this->_mpi_type, this->_data_win);
       MPI_Win_flush(this->_self_rank, this->_data_win);
