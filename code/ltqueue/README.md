@@ -192,24 +192,25 @@ function create_mpsc()
 function mpsc_enqueue(mpsc_t* q, int rank, value_t value)
   timestamp = FAA(q->counter)
   spsc_enqueue(&q->queues[rank].queue, (value, timestamp))
-  front = spsc_enqueuer_read_front(&q->queues[rank].queue)
-  if (front == NULL)
-    q->queues[rank].min_timestamp = MAX_TIMESTAMP
-  else
-    q->queues[rank].min_timestamp = front.timestamp
+  if (!refresh_timestamp(q, rank))
+    refresh_timestamp(q, rank)
   propagate(q->queues[rank].tree_node)
 
 function mpsc_dequeue(mpsc_t* q)
   rank = q->root->rank.value
   if (rank == NONE) return NULL
   ret = spsc_dequeue(&q->queues[rank].queue)
+  if (!refresh_timestamp(q, rank))
+    refresh_timestamp(q, rank)
+  propagate(q, q->queues[rank].tree_node)
+  return ret.val
+
+function refresh_timestamp(mpsc_t* q, int rank)
   front = spsc_dequeuer_read_front(&q->queues[rank].queue)
   if (front == NULL)
     q->queues[rank].min_timestamp = MAX_TIMESTAMP
   else
     q->queues[rank].min_timestamp = front.timestamp
-  propagate(q, q->queues[rank].tree_node)
-  return ret.val
 
 function propagate(mpsc_t* q, tree_node_t* node)
   current_node = node
