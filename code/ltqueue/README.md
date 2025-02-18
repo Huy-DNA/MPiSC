@@ -90,7 +90,9 @@ CAS(svar, old_pointer, new_pointer)
 ```
 If we never free the pointers, ABA never occurs. However, this is apparently unacceptable, we have to free the pointers at some point. This risks introducing the ABA problem & unsafe memory usage: The *safe memory reclamation problem*. This problem can be solved using *harzard pointer*. However, pointers are hard to deal with in distributed computing & hazard pointer is pretty heavyweight.
 
-Therefore, I now come back to the very nature of [LTQueue](/refs/LTQueue/README.md) and propose a specialized solution inspired by both the version tag and the idea of introducing a level of introduction.
+##### Scheme 1: Ranks as implicit pointers
+
+Coming back to the very nature of [LTQueue](/refs/LTQueue/README.md), we can propose a specialized solution inspired by both the version tag and the idea of introducing a level of indirection.
 
 ![image](https://github.com/user-attachments/assets/2e25d85e-cb6a-4155-8a42-7792e0d78805)
 
@@ -104,9 +106,7 @@ The ABA problem still remains. However, because `rank` is now a full-flexed 64-b
 
 ![image](https://github.com/user-attachments/assets/d6d715f7-6bdd-4972-8a80-cf73d71b21ee)
 
-There's a nuance though. In the original version, the `timestamp` at each internal node is guaranteed to be minimum among the timestamps in the subtree rooted at the internal node. However, with our version, suppose in the above visualization, we dequeue so that the min-timestamp of rank 1 changes and becomes bigger than min-timestamp of rank 2, still, right at that moment, some internal nodes still point to rank 1, implicitly implies that the new min-timestamp of rank 1 is the min-timestamp of the whole subtree, which is incorrect. We need to introduce some adaptation.
-
-Adaptation and proof of correctness will be provided in the next two sections.
+There's a nuance though. In the original version, the `timestamp` at each internal node is guaranteed to be minimum among the timestamps in the subtree rooted at the internal node. However, with our version, suppose in the above visualization, we dequeue so that the min-timestamp of rank 1 changes and becomes bigger than min-timestamp of rank 2, still, right at that moment, some internal nodes still point to rank 1, implicitly implies that the new min-timestamp of rank 1 is the min-timestamp of the whole subtree, which is incorrect.
 
 ### Pseudo code after removing LL/SC
 
