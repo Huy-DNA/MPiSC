@@ -202,9 +202,7 @@ private:
     return number_processes - 1;
   }
 
-  int _get_tree_size() const {
-    return 2 * this->_get_number_of_enqueuers();
-  }
+  int _get_tree_size() const { return 2 * this->_get_number_of_enqueuers(); }
 
   int _get_parent_index(int index) const {
     if (index == 0) {
@@ -611,9 +609,7 @@ private:
     return number_processes - 1;
   }
 
-  int _get_tree_size() const {
-    return 2 * this->_get_number_of_enqueuers();
-  }
+  int _get_tree_size() const { return 2 * this->_get_number_of_enqueuers(); }
 
   int _get_parent_index(int index) const {
     if (index == 0) {
@@ -693,6 +689,7 @@ private:
     MPI_Win_unlock_all(this->_min_timestamp_win);
 
     MPI_Win_lock_all(0, this->_tree_win);
+
     MPI_Get_accumulate(NULL, 0, MPI_INT, &self_node, 1, this->_tree_node_type,
                        this->_self_rank, self_index, 1, this->_tree_node_type,
                        MPI_NO_OP, this->_tree_win);
@@ -764,7 +761,7 @@ private:
     if (!this->_refresh_self_node(enqueuer_rank)) {
       this->_refresh_self_node(enqueuer_rank);
     }
-    int current_index = enqueuer_rank;
+    int current_index = this->_get_enqueuer_index(enqueuer_rank);
     do {
       current_index = this->_get_parent_index(current_index);
       if (!this->_refresh(current_index)) {
