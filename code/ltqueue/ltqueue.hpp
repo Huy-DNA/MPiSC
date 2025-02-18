@@ -825,12 +825,14 @@ public:
       return;
     }
     data_t spsc_output;
-    data_t *spsc_ouput_ptr;
-    this->_spsc.dequeue(spsc_ouput_ptr, root.rank);
+    data_t *spsc_output_ptr = &spsc_output;
+    this->_spsc.dequeue(spsc_output_ptr, root.rank);
     if (!this->_refresh_timestamp(root.rank)) {
       this->_refresh_timestamp(root.rank);
     }
     this->_propagate(root.rank);
-    *output = spsc_output.data;
+    if (spsc_output_ptr) {
+      *output = spsc_output.data;
+    }
   }
 };
