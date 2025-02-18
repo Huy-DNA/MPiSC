@@ -259,13 +259,14 @@ private:
     MPI_Get_accumulate(NULL, 0, MPI_INT, &self_node, 1, this->_tree_node_type,
                        this->_dequeuer_rank, self_index, 1,
                        this->_tree_node_type, MPI_NO_OP, this->_tree_win);
-    MPI_Win_flush(this->_self_rank, this->_tree_win);
+    MPI_Win_flush_all(this->_tree_win);
     if (min_timestamp.timestamp == MAX_TIMESTAMP) {
       const tree_node_t new_node = {DUMMY_RANK, self_node.tag + 1};
       tree_node_t result_node;
       MPI_Compare_and_swap(&new_node, &self_node, &result_node,
                            this->_tree_node_type, this->_dequeuer_rank,
                            self_index, this->_tree_win);
+      MPI_Win_flush_all(this->_tree_win);
       res = result_node.rank == self_node.rank &&
             result_node.tag == self_node.tag;
     } else {
@@ -274,6 +275,7 @@ private:
       MPI_Compare_and_swap(&new_node, &self_node, &result_node,
                            this->_tree_node_type, this->_dequeuer_rank,
                            self_index, this->_tree_win);
+      MPI_Win_flush_all(this->_tree_win);
       res = result_node.rank == self_node.rank &&
             result_node.tag == self_node.tag;
     }
@@ -302,6 +304,7 @@ private:
       MPI_Compare_and_swap(&new_timestamp, &current_timestamp,
                            &result_timestamp, this->_timestamp_type,
                            this->_self_rank, 0, this->_min_timestamp_win);
+      MPI_Win_flush_all(this->_tree_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
     } else {
@@ -312,6 +315,7 @@ private:
       MPI_Compare_and_swap(&new_timestamp, &current_timestamp,
                            &result_timestamp, this->_timestamp_type,
                            this->_self_rank, 0, this->_min_timestamp_win);
+      MPI_Win_flush_all(this->_tree_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
     }
@@ -659,6 +663,7 @@ private:
       MPI_Compare_and_swap(&new_timestamp, &current_timestamp,
                            &result_timestamp, this->_timestamp_type,
                            enqueuer_rank, 0, this->_min_timestamp_win);
+      MPI_Win_flush_all(this->_tree_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
     } else {
@@ -669,6 +674,7 @@ private:
       MPI_Compare_and_swap(&new_timestamp, &current_timestamp,
                            &result_timestamp, this->_timestamp_type,
                            enqueuer_rank, 0, this->_min_timestamp_win);
+      MPI_Win_flush_all(this->_tree_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             current_timestamp.timestamp == result_timestamp.timestamp;
     }
@@ -700,6 +706,7 @@ private:
       MPI_Compare_and_swap(&new_node, &self_node, &result_node,
                            this->_tree_node_type, this->_self_rank, self_index,
                            this->_tree_win);
+      MPI_Win_flush_all(this->_tree_win);
       res = result_node.tag == self_node.tag &&
             result_node.rank == self_node.rank;
     } else {
@@ -708,6 +715,7 @@ private:
       MPI_Compare_and_swap(&new_node, &self_node, &result_node,
                            this->_tree_node_type, this->_self_rank, self_index,
                            this->_tree_win);
+      MPI_Win_flush_all(this->_tree_win);
       res = result_node.tag == self_node.tag &&
             result_node.rank == self_node.rank;
     }
