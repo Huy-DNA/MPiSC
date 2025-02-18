@@ -194,7 +194,7 @@ function mpsc_enqueue(mpsc_t* q, int rank, value_t value)
   spsc_enqueue(&q->queues[rank].queue, (value, timestamp))
   if (!enqueuer_refresh_timestamp(q, rank))
     enqueuer_refresh_timestamp(q, rank)
-  propagate(q->queues[rank].tree_node)
+  propagate(q, rank)
 
 function mpsc_dequeue(mpsc_t* q)
   rank = q->root->rank.value
@@ -202,33 +202,43 @@ function mpsc_dequeue(mpsc_t* q)
   ret = spsc_dequeue(&q->queues[rank].queue)
   if (!dequeuer_refresh_timestamp(q, rank))
     dequeuer_refresh_timestamp(q, rank)
-  propagate(q, q->queues[rank].tree_node)
+  propagate(q, rank)
   return ret.val
 
 function dequeuer_refresh_timestamp(mpsc_t* q, int rank)
 
 function enqueuer_refresh_timestamp(mpsc_t* q, int rank)
 
-function propagate(mpsc_t* q, tree_node_t* node)
-  current_node = node
+function propagate(mpsc_t* q, int rank)
+  if (!refresh_self_node(q, rank))
+    refresh_self_node(q, rank)
+  current_node = q->queues[rank].tree_node
   repeat
     current_node = parent(current_node)
     if (!refresh(q, current_node))
       refresh(q, current_node)
   until (current_node == q->root)
 
+function refresh_self_node(mpsc_t* q, int rank)
+  node = q->queues[rank].tree_node
+  current_rank = node->min_timestamp_rank
+  if (q->queues[rank].min_timestamp == MAX_TIMESTAMP)
+    return CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
+  else
+    return CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
+
 function refresh(mpsc_t* q, tree_node_t* node)
-  current_rank = current_node->rank
+  current_rank = current_node->min_timestamp_rank
   min_timestamp = MAX_TIMESTAMP
   min_timestamp_rank = NONE
   for child_node in children(node)
-    cur_rank = child_node->rank.value
+    cur_rank = child_node->min_timestamp_rank.value
     if (cur_rank == NONE) continue
-    cur_timestamp = q->queues[rank].min_timestamp
+    cur_timestamp = q->queues[cur_rank].min_timestamp
     if (cur_timestamp < min_timestamp)
        min_timestamp = cur_timestamp
        min_timestamp_rank = cur_rank
-  return CAS(&current_node->rank, current_rank, (min_timestamp_rank, current_rank.version + 1))
+  return CAS(&current_node->min_timestamp_rank, current_rank, (min_timestamp_rank, current_rank.version + 1))
 ```
 
 #### Linearizability
