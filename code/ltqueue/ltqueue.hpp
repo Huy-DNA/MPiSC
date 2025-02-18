@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -204,14 +203,14 @@ private:
   }
 
   int _get_tree_size() const {
-    return (2 * this->_get_number_of_enqueuers()) + 1;
+    return 2 * this->_get_number_of_enqueuers();
   }
 
-  int _parent_index(int index) const {
+  int _get_parent_index(int index) const {
     if (index == 0) {
       return -1;
     }
-    return index / 2;
+    return (index - 1) / 2;
   }
 
   int _get_self_index() const {
@@ -219,8 +218,8 @@ private:
   }
 
   std::vector<int> _get_children_indexes(int index) const {
-    int left_child = index * 2;
-    int right_child = index * 2 + 1;
+    int left_child = index * 2 + 1;
+    int right_child = index * 2 + 2;
     std::vector<int> res;
     if (left_child >= this->_get_tree_size()) {
       return res;
@@ -239,7 +238,7 @@ private:
     }
     int current_index = this->_get_self_index();
     do {
-      current_index = this->_parent_index(current_index);
+      current_index = this->_get_parent_index(current_index);
       if (!this->_refresh(current_index)) {
         this->_refresh(current_index);
       }
@@ -613,14 +612,14 @@ private:
   }
 
   int _get_tree_size() const {
-    return (2 * this->_get_number_of_enqueuers()) + 1;
+    return 2 * this->_get_number_of_enqueuers();
   }
 
-  int _parent_index(int index) const {
+  int _get_parent_index(int index) const {
     if (index == 0) {
       return -1;
     }
-    return index / 2;
+    return (index - 1) / 2;
   }
 
   int _get_enqueuer_index(int rank) const {
@@ -629,8 +628,8 @@ private:
   }
 
   std::vector<int> _get_children_indexes(int index) const {
-    int left_child = index * 2;
-    int right_child = index * 2 + 1;
+    int left_child = index * 2 + 1;
+    int right_child = index * 2 + 2;
     std::vector<int> res;
     if (left_child >= this->_get_tree_size()) {
       return res;
@@ -767,7 +766,7 @@ private:
     }
     int current_index = enqueuer_rank;
     do {
-      current_index = this->_parent_index(current_index);
+      current_index = this->_get_parent_index(current_index);
       if (!this->_refresh(current_index)) {
         this->_refresh(current_index);
       }
