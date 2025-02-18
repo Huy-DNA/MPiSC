@@ -709,7 +709,7 @@ private:
       res = result_node.tag == self_node.tag &&
             result_node.rank == self_node.rank;
     } else {
-      const tree_node_t new_node = {this->_self_rank, self_node.tag + 1};
+      const tree_node_t new_node = {enqueuer_rank, self_node.tag + 1};
       tree_node_t result_node;
       MPI_Compare_and_swap(&new_node, &self_node, &result_node,
                            this->_tree_node_type, this->_self_rank, self_index,
