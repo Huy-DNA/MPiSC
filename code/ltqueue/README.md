@@ -211,8 +211,8 @@ function mpsc_dequeue(mpsc_t* q)
 // - There's one enqueue that changes `min_timestamp` from `old_timestamp` to some different timestamp.
 // - There's another enqueue that changes back the `min_timestamp` to `old_timestamp`.
 function dequeuer_refresh_timestamp(mpsc_t* q, int rank)
-  old_timestamp = q->queues[rank].min_timestamp
   front = spsc_dequeuer_read_front(&q->queues[rank].queue)
+  old_timestamp = q->queues[rank].min_timestamp
   if (front == NULL)
     return CAS(&q->queues[rank].min_timestamp, old_timestamp, MAX_TIMESTAMP)
   else
@@ -224,8 +224,8 @@ function dequeuer_refresh_timestamp(mpsc_t* q, int rank)
 // - There's one dequeue that changes `min_timestamp` from `old_timestamp` to some different timestamp.
 // - There's another dequeue that changes back the `min_timestamp` to `old_timestamp`.
 function enqueuer_refresh_timestamp(mpsc_t* q, int rank)
-  old_timestamp = q->queues[rank].min_timestamp
   front = spsc_enqueuer_read_front(&q->queues[rank].queue)
+  old_timestamp = q->queues[rank].min_timestamp
   if (front == NULL)
     return CAS(&q->queues[rank].min_timestamp, old_timestamp, MAX_TIMESTAMP)
   else
