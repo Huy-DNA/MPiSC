@@ -205,19 +205,31 @@ function mpsc_dequeue(mpsc_t* q)
   propagate(q, q->queues[rank].tree_node)
   return ret.val
 
+// ABA never occurs
+// Each rank's local queue has only one enqueuer at one time and one dequeuer at one time
+// If the dequeuer encounters ABA it means that:
+// - There's one enqueue that changes `min_timestamp` from `old_timestamp` to some different timestamp.
+// - There's another enqueue that changes back the `min_timestamp` to `old_timestamp`.
 function dequeuer_refresh_timestamp(mpsc_t* q, int rank)
+  old_timestamp = q->queues[rank].min_timestamp
   front = spsc_dequeuer_read_front(&q->queues[rank].queue)
   if (front == NULL)
-    q->queues[rank].min_timestamp = MAX_TIMESTAMP
+    return CAS(&q->queues[rank].min_timestamp, old_timestamp, MAX_TIMESTAMP)
   else
-    q->queues[rank].min_timestamp = front.timestamp
+    return CAS(&q->queues[rank].min_timestamp, old_timestamp, front.timestamp)
 
+// ABA never occurs
+// Each rank's local queue has only one enqueuer at one time and one dequeuer at one time
+// If the dequeuer encounters ABA it means that:
+// - There's one dequeue that changes `min_timestamp` from `old_timestamp` to some different timestamp.
+// - There's another dequeue that changes back the `min_timestamp` to `old_timestamp`.
 function enqueuer_refresh_timestamp(mpsc_t* q, int rank)
+  old_timestamp = q->queues[rank].min_timestamp
   front = spsc_enqueuer_read_front(&q->queues[rank].queue)
   if (front == NULL)
-    q->queues[rank].min_timestamp = MAX_TIMESTAMP
+    return CAS(&q->queues[rank].min_timestamp, old_timestamp, MAX_TIMESTAMP)
   else
-    q->queues[rank].min_timestamp = front.timestamp
+    return CAS(&q->queues[rank].min_timestamp, old_timestamp, front.timestamp)
 
 function propagate(mpsc_t* q, tree_node_t* node)
   current_node = node
