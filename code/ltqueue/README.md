@@ -230,11 +230,12 @@ function enqueuer_refresh_self_node(mpsc_t* q, int rank)
   current_rank = node->min_timestamp_rank
   current_timestamp = node->min_timestamp
   if (front == NULL)
-    return CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
-        && CAS(&node->min_timestamp, current_timestamp, (MAX_TIMESTAMP, current_timestamp.version + 1))
+    rank_succ = CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
+    ts_succ = CAS(&node->min_timestamp, current_timestamp, (MAX_TIMESTAMP, current_timestamp.version + 1))
   else
-    return CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
-        && CAS(&node->min_timestamp, current_timestamp, (front.timestamp, current_timestamp.version + 1))
+    rank_succ = CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
+    ts_succ = CAS(&node->min_timestamp, current_timestamp, (front.timestamp, current_timestamp.version + 1))
+  return rank_succ && ts_succ
 
 function dequeuer_refresh_self_node(mpsc_t* q, int rank)
   front = spsc_dequeuer_read_front(&q->queues[rank].queue)
@@ -242,11 +243,12 @@ function dequeuer_refresh_self_node(mpsc_t* q, int rank)
   current_rank = node->min_timestamp_rank
   current_timestamp = node->min_timestamp
   if (front == NULL)
-    return CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
-        && CAS(&node->min_timestamp, current_timestamp, (MAX_TIMESTAMP, current_timestamp.version + 1))
+    rank_succ = CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
+    ts_succ = CAS(&node->min_timestamp, current_timestamp, (MAX_TIMESTAMP, current_timestamp.version + 1))
   else
-    return CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
-        && CAS(&node->min_timestamp, current_timestamp, (front.timestamp, current_timestamp.version + 1))
+    rank_succ = CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
+    ts_succ = CAS(&node->min_timestamp, current_timestamp, (front.timestamp, current_timestamp.version + 1))
+  return rank_succ && ts_succ
 
 function refresh(mpsc_t* q, tree_node_t* node)
   current_rank = node->min_timestamp_rank
@@ -260,8 +262,9 @@ function refresh(mpsc_t* q, tree_node_t* node)
     if (cur_timestamp < min_timestamp)
        min_timestamp = cur_timestamp
        min_timestamp_rank = cur_rank
-  return CAS(&current_node->min_timestamp_rank, current_rank.value, (min_timestamp_rank, current_rank.version + 1))
-      && CAS(&current_node->min_timestamp, current_timestamp.value, (min_timestamp, current_timestamp.version + 1))
+  rank_succ = CAS(&current_node->min_timestamp_rank, current_rank.value, (min_timestamp_rank, current_rank.version + 1))
+  ts_succ = CAS(&current_node->min_timestamp, current_timestamp.value, (min_timestamp, current_timestamp.version + 1))
+  return rank_succ && ts_succ
 ```
 
 #### Linearizability
