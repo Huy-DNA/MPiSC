@@ -182,7 +182,7 @@ struct enqueuer_t
   timestamp_t min_timestamp
 
 struct mpsc_t
-  enqueuer_t queues[ENQUEUERS]
+  enqueuer_t enqueuers[ENQUEUERS]
   tree_node_t* root
   int counter
 
@@ -191,7 +191,7 @@ function create_mpsc()
 
 function mpsc_enqueue(mpsc_t* q, int rank, value_t value)
   timestamp = FAA(q->counter)
-  spsc_enqueue(&q->queues[rank].queue, (value, timestamp))
+  spsc_enqueue(&q->enqueuers[rank].queue, (value, timestamp))
   if (!enqueuer_refresh_timestamp(q, rank))
     enqueuer_refresh_timestamp(q, rank)
   propagate(q, rank)
@@ -199,26 +199,26 @@ function mpsc_enqueue(mpsc_t* q, int rank, value_t value)
 function mpsc_dequeue(mpsc_t* q)
   rank = q->root->rank.value
   if (rank == NONE) return NULL
-  ret = spsc_dequeue(&q->queues[rank].queue)
+  ret = spsc_dequeue(&q->enqueuers[rank].queue)
   if (!dequeuer_refresh_timestamp(q, rank))
     dequeuer_refresh_timestamp(q, rank)
   propagate(q, rank)
   return ret.val
 
 function dequeuer_refresh_timestamp(mpsc_t* q, int rank)
-  min_timestamp = spsc_dequeuer_read_front(&q->queues[rank].queue).timestamp
-  current_timestamp = q->queues[rank].min_timestamp
-  return CAS(&q->queues[rank].min_timestamp, current_timestamp, (min_timestamp, current_timestamp.version + 1))
+  min_timestamp = spsc_dequeuer_read_front(&q->enqueuers[rank].queue).timestamp
+  current_timestamp = q->enqueuers[rank].min_timestamp
+  return CAS(&q->enqueuers[rank].min_timestamp, current_timestamp, (min_timestamp, current_timestamp.version + 1))
 
 function enqueuer_refresh_timestamp(mpsc_t* q, int rank)
-  min_timestamp = spsc_enqueuer_read_front(&q->queues[rank].queue).timestamp
-  current_timestamp = q->queues[rank].min_timestamp
-  return CAS(&q->queues[rank].min_timestamp, current_timestamp, (min_timestamp, current_timestamp.version + 1))
+  min_timestamp = spsc_enqueuer_read_front(&q->enqueuers[rank].queue).timestamp
+  current_timestamp = q->enqueuers[rank].min_timestamp
+  return CAS(&q->enqueuers[rank].min_timestamp, current_timestamp, (min_timestamp, current_timestamp.version + 1))
 
 function propagate(mpsc_t* q, int rank)
   if (!refresh_self_node(q, rank))
     refresh_self_node(q, rank)
-  current_node = q->queues[rank].tree_node
+  current_node = q->enqueuers[rank].tree_node
   repeat
     current_node = parent(current_node)
     if (!refresh(q, current_node))
@@ -226,9 +226,9 @@ function propagate(mpsc_t* q, int rank)
   until (current_node == q->root)
 
 function refresh_self_node(mpsc_t* q, int rank)
-  node = q->queues[rank].tree_node
+  node = q->enqueuers[rank].tree_node
   current_rank = node->min_timestamp_rank
-  if (q->queues[rank].min_timestamp.value == MAX_TIMESTAMP)
+  if (q->enqueuers[rank].min_timestamp.value == MAX_TIMESTAMP)
     return CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
   else
     return CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
@@ -240,7 +240,7 @@ function refresh(mpsc_t* q, tree_node_t* node)
   for child_node in children(node)
     cur_rank = child_node->min_timestamp_rank.value
     if (cur_rank == NONE) continue
-    cur_timestamp = q->queues[cur_rank].min_timestamp.value
+    cur_timestamp = q->enqueuers[cur_rank].min_timestamp.value
     if (cur_timestamp < min_timestamp)
        min_timestamp = cur_timestamp
        min_timestamp_rank = cur_rank
