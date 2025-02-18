@@ -106,7 +106,20 @@ The ABA problem still remains. However, because `rank` is now a full-flexed 64-b
 
 ![image](https://github.com/user-attachments/assets/d6d715f7-6bdd-4972-8a80-cf73d71b21ee)
 
-There's a nuance though. In the original version, the `timestamp` at each internal node is guaranteed to be minimum among the timestamps in the subtree rooted at the internal node. However, with our version, suppose in the above visualization, we dequeue so that the min-timestamp of rank 1 changes and becomes bigger than min-timestamp of rank 2, still, right at that moment, some internal nodes still point to rank 1, implicitly implies that the new min-timestamp of rank 1 is the min-timestamp of the whole subtree, which is incorrect.
+There's a nuance though. In the original version, the `timestamp` at each internal node is guaranteed to be minimum among the timestamps in the subtree rooted at the internal node (not really, if changes have not been propagated yet). However, with our version, suppose in the above visualization, we dequeue so that the min-timestamp of rank 1 changes and becomes bigger than min-timestamp of rank 2, still, right at that moment, some internal nodes still point to rank 1, implicitly implies that the new min-timestamp of rank 1 is the min-timestamp of the whole subtree, which is incorrect.
+
+Cons:
+  - Each time we read the internal node, we have to dereference the rank at the node to access the timestamp. This doubles network activities when accessing the internal node. 
+
+##### Scheme 2: Split `rank` from `timestamp` 
+
+The problem we cannot use the monotonic version tag scheme alone for the `timestamp` at the internal nodes is because of practicality: there aren't enough bits. We can split `rank` and `timestamp` into 2 variables and attach a version tag for each. 
+
+The problem is that we cannot now atomically CAS both `rank` and `timestamp`.
+
+![image](https://github.com/user-attachments/assets/738aa51f-da30-4953-8a23-f1a62c2305fa)
+
+However, the nature of the algorithm allows certain mismatches between `rank` and `timestamp` and it could work if we adapt the algorithm correctly.
 
 ### Pseudo code after removing LL/SC
 
@@ -174,44 +187,36 @@ Modified MPSC after replacing all LL/SC:
 ```C
 struct tree_node_t
   rank_t min_timestamp_rank
-  ...
+  timestamp_t min_timestamp
 
 struct enqueuer_t
   spsc_t queue
   tree_node_t* tree_node
-  int min_timestamp
 
 struct mpsc_t
-  enqueuer_t queues[ENQUEUERS]
+  enqueuer_t enqueuers[ENQUEUERS]
   tree_node_t* root
-  int counter
 
 function create_mpsc()
-  // logic to build the tree
+  // logic to build the mpsc and the tree
 
 function mpsc_enqueue(mpsc_t* q, int rank, value_t value)
   timestamp = FAA(q->counter)
   spsc_enqueue(&q->queues[rank].queue, (value, timestamp))
-  if (!enqueuer_refresh_timestamp(q, rank))
-    enqueuer_refresh_timestamp(q, rank)
+  if (!enqueuer_refresh_self_node(q, rank))
+    enqueuer_refresh_self_node(q, rank)
   propagate(q, rank)
 
 function mpsc_dequeue(mpsc_t* q)
   rank = q->root->rank.value
   if (rank == NONE) return NULL
   ret = spsc_dequeue(&q->queues[rank].queue)
-  if (!dequeuer_refresh_timestamp(q, rank))
-    dequeuer_refresh_timestamp(q, rank)
+  if (!dequeuer_refresh_self_node(q, rank))
+    dequeuer_refresh_self_node(q, rank)
   propagate(q, rank)
   return ret.val
 
-function dequeuer_refresh_timestamp(mpsc_t* q, int rank)
-
-function enqueuer_refresh_timestamp(mpsc_t* q, int rank)
-
 function propagate(mpsc_t* q, int rank)
-  if (!refresh_self_node(q, rank))
-    refresh_self_node(q, rank)
   current_node = q->queues[rank].tree_node
   repeat
     current_node = parent(current_node)
@@ -219,26 +224,44 @@ function propagate(mpsc_t* q, int rank)
       refresh(q, current_node)
   until (current_node == q->root)
 
-function refresh_self_node(mpsc_t* q, int rank)
+function enqueuer_refresh_self_node(mpsc_t* q, int rank)
+  front = spsc_enqueuer_read_front(&q->queues[rank].queue)
   node = q->queues[rank].tree_node
   current_rank = node->min_timestamp_rank
-  if (q->queues[rank].min_timestamp == MAX_TIMESTAMP)
+  current_timestamp = node->min_timestamp
+  if (front == NULL)
     return CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
+        && CAS(&node->min_timestamp, current_timestamp, (MAX_TIMESTAMP, current_timestamp.version + 1))
   else
     return CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
+        && CAS(&node->min_timestamp, current_timestamp, (front.timestamp, current_timestamp.version + 1))
+
+function dequeuer_refresh_self_node(mpsc_t* q, int rank)
+  front = spsc_dequeuer_read_front(&q->queues[rank].queue)
+  node = q->queues[rank].tree_node
+  current_rank = node->min_timestamp_rank
+  current_timestamp = node->min_timestamp
+  if (front == NULL)
+    return CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
+        && CAS(&node->min_timestamp, current_timestamp, (MAX_TIMESTAMP, current_timestamp.version + 1))
+  else
+    return CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
+        && CAS(&node->min_timestamp, current_timestamp, (front.timestamp, current_timestamp.version + 1))
 
 function refresh(mpsc_t* q, tree_node_t* node)
-  current_rank = current_node->min_timestamp_rank
+  current_rank = node->min_timestamp_rank
+  current_timestamp = node->min_timestamp
   min_timestamp = MAX_TIMESTAMP
   min_timestamp_rank = NONE
   for child_node in children(node)
     cur_rank = child_node->min_timestamp_rank.value
+    cur_timestamp = child_node->min_timestamp.value
     if (cur_rank == NONE) continue
-    cur_timestamp = q->queues[cur_rank].min_timestamp
     if (cur_timestamp < min_timestamp)
        min_timestamp = cur_timestamp
        min_timestamp_rank = cur_rank
-  return CAS(&current_node->min_timestamp_rank, current_rank, (min_timestamp_rank, current_rank.version + 1))
+  return CAS(&current_node->min_timestamp_rank, current_rank.value, (min_timestamp_rank, current_rank.version + 1))
+      && CAS(&current_node->min_timestamp, current_timestamp.value, (min_timestamp, current_timestamp.version + 1))
 ```
 
 #### Linearizability
