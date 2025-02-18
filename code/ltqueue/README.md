@@ -262,8 +262,8 @@ function refresh(mpsc_t* q, tree_node_t* node)
     if (cur_timestamp < min_timestamp)
        min_timestamp = cur_timestamp
        min_timestamp_rank = cur_rank
-  rank_succ = CAS(&current_node->min_timestamp_rank, current_rank.value, (min_timestamp_rank, current_rank.version + 1))
-  ts_succ = CAS(&current_node->min_timestamp, current_timestamp.value, (min_timestamp, current_timestamp.version + 1))
+  rank_succ = CAS(&current_node->min_timestamp_rank, current_rank, (min_timestamp_rank, current_rank.version + 1))
+  ts_succ = CAS(&current_node->min_timestamp, current_timestamp, (min_timestamp, current_timestamp.version + 1))
   return rank_succ && ts_succ
 ```
 
