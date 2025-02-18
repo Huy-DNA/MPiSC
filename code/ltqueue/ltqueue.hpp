@@ -667,7 +667,6 @@ private:
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
     } else {
-
       const timestamp_t new_timestamp = {min_timestamp,
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
@@ -753,8 +752,6 @@ private:
         min_timestamp_rank = child_node.rank;
       }
     }
-    MPI_Win_unlock_all(this->_tree_win);
-    MPI_Win_lock_all(0, this->_tree_win);
     const tree_node_t new_node = {min_timestamp_rank, current_node.tag + 1};
     tree_node_t result_node;
     MPI_Compare_and_swap(&new_node, &current_node, &result_node,
