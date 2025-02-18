@@ -163,7 +163,9 @@ private:
         return;
       }
       data_t data;
-      MPI_Get_accumulate(NULL, 0, MPI_INT, &data, 1, this->_data_type, this->_self_rank, first, 1, this->_data_type, MPI_NO_OP, this->_data_win);
+      MPI_Get_accumulate(NULL, 0, MPI_INT, &data, 1, this->_data_type,
+                         this->_self_rank, first, 1, this->_data_type,
+                         MPI_NO_OP, this->_data_win);
       MPI_Win_flush(this->_self_rank, this->_data_win);
       MPI_Win_unlock_all(this->_first_win);
       MPI_Win_unlock_all(this->_last_win);
@@ -570,13 +572,14 @@ private:
         return;
       }
       data_t data;
-      MPI_Get_accumulate(&data, 1, this->_data_type, this->_self_rank, first, 1,
-                         this->_data_type, this->_data_win);
+      MPI_Get_accumulate(NULL, 0, MPI_INT, &data, 1, this->_data_type,
+                         this->_self_rank, first, 1, this->_data_type,
+                         MPI_NO_OP, this->_data_win);
       MPI_Win_flush(this->_self_rank, this->_data_win);
       MPI_Win_unlock_all(this->_first_win);
       MPI_Win_unlock_all(this->_last_win);
       MPI_Win_unlock_all(this->_data_win);
-      output_timestamp = data.timestamp;
+      *output_timestamp = data.timestamp;
     }
   } _spsc;
 
@@ -692,23 +695,23 @@ private:
 
     MPI_Win_lock_all(0, this->_tree_win);
     MPI_Get_accumulate(NULL, 0, MPI_INT, &self_node, 1, this->_tree_node_type,
-                       this->_dequeuer_rank, self_index, 1,
-                       this->_tree_node_type, MPI_NO_OP, this->_tree_win);
+                       this->_self_rank, self_index, 1, this->_tree_node_type,
+                       MPI_NO_OP, this->_tree_win);
     MPI_Win_flush(this->_self_rank, this->_tree_win);
     if (min_timestamp.timestamp == MAX_TIMESTAMP) {
       const tree_node_t new_node = {DUMMY_RANK, self_node.tag + 1};
       tree_node_t result_node;
       MPI_Compare_and_swap(&new_node, &self_node, &result_node,
-                           this->_tree_node_type, this->_dequeuer_rank,
-                           self_index, this->_tree_win);
+                           this->_tree_node_type, this->_self_rank, self_index,
+                           this->_tree_win);
       res = result_node.tag == self_node.tag &&
             result_node.rank == self_node.rank;
     } else {
       const tree_node_t new_node = {this->_self_rank, self_node.tag + 1};
       tree_node_t result_node;
       MPI_Compare_and_swap(&new_node, &self_node, &result_node,
-                           this->_tree_node_type, this->_dequeuer_rank,
-                           self_index, this->_tree_win);
+                           this->_tree_node_type, this->_self_rank, self_index,
+                           this->_tree_win);
       res = result_node.tag == self_node.tag &&
             result_node.rank == self_node.rank;
     }
@@ -716,22 +719,20 @@ private:
     return res;
   }
 
-  void refresh(int current_index) {
+  bool _refresh(int current_index) {
     tree_node_t current_node;
     uint32_t min_timestamp = MAX_TIMESTAMP;
     int32_t min_timestamp_rank = DUMMY_RANK;
     MPI_Win_lock_all(0, this->_tree_win);
     MPI_Get_accumulate(NULL, 0, MPI_INT, &current_node, 1,
-                       this->_tree_node_type, this->_dequeuer_rank,
-                       current_index, 1, this->_tree_node_type, MPI_NO_OP,
-                       this->_tree_win);
+                       this->_tree_node_type, this->_self_rank, current_index,
+                       1, this->_tree_node_type, MPI_NO_OP, this->_tree_win);
     MPI_Win_flush_all(this->_tree_win);
     for (const int child_index : this->_get_children_indexes(current_index)) {
       tree_node_t child_node;
       MPI_Get_accumulate(NULL, 0, MPI_INT, &child_node, 1,
-                         this->_tree_node_type, this->_dequeuer_rank,
-                         child_index, 1, this->_tree_node_type, MPI_NO_OP,
-                         this->_tree_win);
+                         this->_tree_node_type, this->_self_rank, child_index,
+                         1, this->_tree_node_type, MPI_NO_OP, this->_tree_win);
       MPI_Win_flush_all(this->_tree_win);
       if (child_node.rank == DUMMY_RANK) {
         continue;
@@ -753,8 +754,8 @@ private:
     const tree_node_t new_node = {min_timestamp_rank, current_node.tag + 1};
     tree_node_t result_node;
     MPI_Compare_and_swap(&new_node, &current_node, &result_node,
-                         this->_tree_node_type, this->_dequeuer_rank,
-                         current_index, this->_tree_win);
+                         this->_tree_node_type, this->_self_rank, current_index,
+                         this->_tree_win);
     MPI_Win_unlock_all(this->_tree_win);
     return result_node.tag == current_node.tag &&
            result_node.rank == current_node.rank;
