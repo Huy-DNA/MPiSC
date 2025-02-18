@@ -90,8 +90,6 @@ CAS(svar, old_pointer, new_pointer)
 ```
 If we never free the pointers, ABA never occurs. However, this is apparently unacceptable, we have to free the pointers at some point. This risks introducing the ABA problem & unsafe memory usage: The *safe memory reclamation problem*. This problem can be solved using *harzard pointer*. However, pointers are hard to deal with in distributed computing & hazard pointer is pretty heavyweight.
 
-##### Scheme 1: Ranks as implicit pointers
-
 Coming back to the very nature of [LTQueue](/refs/LTQueue/README.md), we can propose a specialized solution inspired by both the version tag and the idea of introducing a level of indirection.
 
 ![image](https://github.com/user-attachments/assets/2e25d85e-cb6a-4155-8a42-7792e0d78805)
@@ -110,16 +108,6 @@ There's a nuance though. In the original version, the `timestamp` at each intern
 
 Cons:
   - Each time we read the internal node, we have to dereference the rank at the node to access the timestamp. This doubles network activities when accessing the internal node. 
-
-##### Scheme 2: Split `rank` from `timestamp` 
-
-The problem we cannot use the monotonic version tag scheme alone for the `timestamp` at the internal nodes is because of practicality: there aren't enough bits. We can split `rank` and `timestamp` into 2 variables and attach a version tag for each. 
-
-The problem is that we cannot now atomically CAS both `rank` and `timestamp`.
-
-![image](https://github.com/user-attachments/assets/738aa51f-da30-4953-8a23-f1a62c2305fa)
-
-However, the nature of the algorithm allows certain mismatches between `rank` and `timestamp` and it could work if we adapt the algorithm correctly.
 
 ### Pseudo code after removing LL/SC
 
@@ -187,36 +175,49 @@ Modified MPSC after replacing all LL/SC:
 ```C
 struct tree_node_t
   rank_t min_timestamp_rank
-  timestamp_t min_timestamp
 
 struct enqueuer_t
   spsc_t queue
   tree_node_t* tree_node
+  timestamp_t min_timestamp
 
 struct mpsc_t
-  enqueuer_t enqueuers[ENQUEUERS]
+  enqueuer_t queues[ENQUEUERS]
   tree_node_t* root
+  int counter
 
 function create_mpsc()
-  // logic to build the mpsc and the tree
+  // logic to build the tree
 
 function mpsc_enqueue(mpsc_t* q, int rank, value_t value)
   timestamp = FAA(q->counter)
   spsc_enqueue(&q->queues[rank].queue, (value, timestamp))
-  if (!enqueuer_refresh_self_node(q, rank))
-    enqueuer_refresh_self_node(q, rank)
+  if (!enqueuer_refresh_timestamp(q, rank))
+    enqueuer_refresh_timestamp(q, rank)
   propagate(q, rank)
 
 function mpsc_dequeue(mpsc_t* q)
   rank = q->root->rank.value
   if (rank == NONE) return NULL
   ret = spsc_dequeue(&q->queues[rank].queue)
-  if (!dequeuer_refresh_self_node(q, rank))
-    dequeuer_refresh_self_node(q, rank)
+  if (!dequeuer_refresh_timestamp(q, rank))
+    dequeuer_refresh_timestamp(q, rank)
   propagate(q, rank)
   return ret.val
 
+function dequeuer_refresh_timestamp(mpsc_t* q, int rank)
+  min_timestamp = spsc_dequeuer_read_front(&q->queues[rank].queue).timestamp
+  current_timestamp = q->queues[rank].min_timestamp
+  return CAS(&q->queues[rank].min_timestamp, current_timestamp, (min_timestamp, current_timestamp.version + 1))
+
+function enqueuer_refresh_timestamp(mpsc_t* q, int rank)
+  min_timestamp = spsc_enqueuer_read_front(&q->queues[rank].queue).timestamp
+  current_timestamp = q->queues[rank].min_timestamp
+  return CAS(&q->queues[rank].min_timestamp, current_timestamp, (min_timestamp, current_timestamp.version + 1))
+
 function propagate(mpsc_t* q, int rank)
+  if (!refresh_self_node(q, rank))
+    refresh_self_node(q, rank)
   current_node = q->queues[rank].tree_node
   repeat
     current_node = parent(current_node)
@@ -224,47 +225,26 @@ function propagate(mpsc_t* q, int rank)
       refresh(q, current_node)
   until (current_node == q->root)
 
-function enqueuer_refresh_self_node(mpsc_t* q, int rank)
-  front = spsc_enqueuer_read_front(&q->queues[rank].queue)
+function refresh_self_node(mpsc_t* q, int rank)
   node = q->queues[rank].tree_node
   current_rank = node->min_timestamp_rank
-  current_timestamp = node->min_timestamp
-  if (front == NULL)
-    rank_succ = CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
-    ts_succ = CAS(&node->min_timestamp, current_timestamp, (MAX_TIMESTAMP, current_timestamp.version + 1))
+  if (q->queues[rank].min_timestamp.value == MAX_TIMESTAMP)
+    return CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
   else
-    rank_succ = CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
-    ts_succ = CAS(&node->min_timestamp, current_timestamp, (front.timestamp, current_timestamp.version + 1))
-  return rank_succ && ts_succ
-
-function dequeuer_refresh_self_node(mpsc_t* q, int rank)
-  front = spsc_dequeuer_read_front(&q->queues[rank].queue)
-  node = q->queues[rank].tree_node
-  current_rank = node->min_timestamp_rank
-  current_timestamp = node->min_timestamp
-  if (front == NULL)
-    rank_succ = CAS(&node->min_timestamp_rank, current_rank, (NONE, current_rank.version + 1))
-    ts_succ = CAS(&node->min_timestamp, current_timestamp, (MAX_TIMESTAMP, current_timestamp.version + 1))
-  else
-    rank_succ = CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
-    ts_succ = CAS(&node->min_timestamp, current_timestamp, (front.timestamp, current_timestamp.version + 1))
-  return rank_succ && ts_succ
+    return CAS(&node->min_timestamp_rank, current_rank, (rank, current_rank.version + 1))
 
 function refresh(mpsc_t* q, tree_node_t* node)
-  current_rank = node->min_timestamp_rank
-  current_timestamp = node->min_timestamp
+  current_rank = current_node->min_timestamp_rank
   min_timestamp = MAX_TIMESTAMP
   min_timestamp_rank = NONE
   for child_node in children(node)
     cur_rank = child_node->min_timestamp_rank.value
-    cur_timestamp = child_node->min_timestamp.value
     if (cur_rank == NONE) continue
+    cur_timestamp = q->queues[cur_rank].min_timestamp.value
     if (cur_timestamp < min_timestamp)
        min_timestamp = cur_timestamp
        min_timestamp_rank = cur_rank
-  rank_succ = CAS(&current_node->min_timestamp_rank, current_rank, (min_timestamp_rank, current_rank.version + 1))
-  ts_succ = CAS(&current_node->min_timestamp, current_timestamp, (min_timestamp, current_timestamp.version + 1))
-  return rank_succ && ts_succ
+  return CAS(&current_node->min_timestamp_rank, current_rank, (min_timestamp_rank, current_rank.version + 1))
 ```
 
 #### Linearizability
