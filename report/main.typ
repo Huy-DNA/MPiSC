@@ -14,7 +14,7 @@
 #import "@preview/numbly:0.1.0": numbly
 #set heading(
   numbering: numbly(
-    "Chapter {1:I}:",
+    "Chapter {1:I}",
     "{1}.{2}",
     "{1}.{2}.{3}",
     "{1}.{2}.{3}.{4}",
