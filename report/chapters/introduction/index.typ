@@ -18,16 +18,14 @@ This thesis aims to:
 
 The rest of this report is structured as follows:
 
-@background[]
+@background[] discusses the theoretical foundation this thesis is based on and the technical terminology that's heavily utilized in this domain. As mentioned, this thesis investigates state-of-the-art shared-memory MPSCs. Therefore, we discuss the theory related to the design of concurrent algorithms such as lock-freedom and linearizability, the practical challenges such as the ABA problem and safe memory reclamation problem. We then explore the utilities offered by C++11 to implement concurrent algorithms and MPI-3 to port shared memory algorithms.
 
-@approach
+@approach[] discusses the general idea we use to port shared-memory algorithms while keeping their lock-freedom characteristic using MPI-3 RMA. We further discuss the possibilities of further optimization using MPI-3 SHM and C++11 to optimize intra-node communication. This presents a potential performance boost for NUMA-aware shared-memory algorithms
 
-@literature-review
+@literature-review[] surveys the shared-memory literature for state-of-the-art queue algorithms, specifically MPSC and SPSC algorithms (as SPSC can be modified to implement MPSC). We specifically focus on algorithms that have the potential to be ported efficiently to distributed context, such as NUMA-aware or can be made to be NUMA-aware. We then conclude with a comparison of the most potential shared-memory queue algorithms.
 
-@porting
+@porting[] selects some of the algorithms we have surveyed and introduce modification to fit the distributed context. We further introduce optimization based on our domain knowledge, which the shared-memory algorithms, in their inception, are oblivious to.
 
-@evaluation
+@evaluation[] introduces our setup and benchmarking processes. We also analyze the result to assess the various factors that affect the performance of an algorithm and its implementation.
 
-@conclusion
-
-@future
+@conclusion[] and @future[] concludes what we have accomplished in this thesis and considers future possible improvements to our research.
