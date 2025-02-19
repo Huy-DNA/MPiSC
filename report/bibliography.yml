@@ -36,6 +36,19 @@ lamport-leslie:
   page-range: 190–222
   page-total: 33
 
+dqueue:
+  type: article
+  author: ["Wang, Junchang", "Jin, Qi", "Fu, Xiong", "Li, Yun", "Shi, Peichang"]
+  journal:
+    value: "IEEE Access"
+  title: "Accelerating Wait-Free Algorithms: Pragmatic Solutions on Cache-Coherent Multicore Architectures"
+  date: 2019
+  volume: 7
+  page-range: 74653-74669
+  serial-number:
+    doi: 10.1109/ACCESS.2019.2920781
+
+
 jiffy:
   type: article
   author: ["Adas, Dolev", "Friedman, Roy"]
