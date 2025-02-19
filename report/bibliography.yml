@@ -63,3 +63,51 @@ ltqueue:
   page-range: 408–419
   page-total: 12
   location: "Hyderabad, India"
+
+mpi-cpp:
+  type: article
+  author: ["Quaranta, Lionel", "Maddegedara, Lalith"]
+  title: "A novel MPI+MPI hybrid approach combining MPI-3 shared memory windows and C11/C++11 memory model"
+  date: 2021
+  publisher: "Academic Press, Inc."
+  address: "USA"
+  volume: "157"
+  number: "C"
+  serial-number:
+    issn: 0743-7315
+    doi: 10.1016/j.jpdc.2021.06.008
+  journal:
+    value: "J. Parallel Distrib. Comput."
+  page-range: 125–144
+  page-total: 20
+
+dinan:
+  type: article
+  author: ["Dinan, James", "Balaji, Pavan", "Buntinas, Darius", "Goodell, David", "Gropp, William", "Thakur, Rajeev"]
+  title: "An implementation and evaluation of the MPI 3.0 one-sided communication interface"
+  date: 2016
+  publisher: "John Wiley and Sons Ltd."
+  address: "GBR"
+  volume: 28
+  number: 17
+  serial-number:
+    issn: 1532-0626
+    doi: 10.1002/cpe.3758
+  page-range: 4385–4404
+  page-total: 20
+
+mpi-3.1:
+  type: book
+  author: "Message Passing Interface Forum"
+  title: "MPI: A Message-Passing Interface Standard Version 3.1"
+  url: "https://www.mpi-forum.org/docs/mpi-4.1/mpi41-report.pdf"
+  date: 2015
+
+cpp-conc:
+  type: book
+  title: "C++ Concurrency in Action"
+  author: ["Williams, A."]
+  serial-number:
+    isbn: 9781638356356
+  date: 2019
+  publisher: "Manning"
