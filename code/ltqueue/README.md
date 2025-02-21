@@ -255,7 +255,7 @@ Definition 1: We define `TREE` to be the tree constructed by the algorithm.
 
 Definition 2: We define `ROOT` to be the root of `TREE`.
 
-Definition 3: For a node `S` in `TREE`, we define `rank(S)` to be the rank that the node `S` currently holds.
+Definition 3: For a node `S` in `TREE`, we define `rank(S, t)` to be the rank that the node `S` holds at time `t`.
 
 Definition 4: For a node `S` in `TREE`, we define `subtree(S)` to be the subtree of `TREE` of which `S` is the root.
 
