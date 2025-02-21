@@ -92,17 +92,17 @@ If we never free the pointers, ABA never occurs. However, this is apparently una
 
 Coming back to the very nature of [LTQueue](/refs/LTQueue/README.md), we can propose a specialized solution inspired by both the version tag and the idea of introducing a level of indirection.
 
-![image](https://github.com/user-attachments/assets/2e25d85e-cb6a-4155-8a42-7792e0d78805)
+![image](https://github.com/user-attachments/assets/8f5e0e2c-7ebd-4b87-a06d-7524b193358b)
 
 Notice that, except right in the middle of a dequeue, for a specific `rank`, there's only one corresponding `min-timestamp` in the internal node. How about restructuring the tree like this:
 
-![image](https://github.com/user-attachments/assets/5abcca30-738d-4adb-9fb4-3fbb746b1575)
+![image](https://github.com/user-attachments/assets/040cea8f-4d21-4597-8b95-5ce3eb84d1eb)
 
 `rank` in this case acts like a pointer - it points to specific min-timestamp in a node with that rank - with one extra benefit: we don't need `malloc` or `free`, so no need for safe memory reclamation.
 
 The ABA problem still remains. However, because `rank` is now a full-flexed 64-bit number, we can just split `rank` into `rank` and `version tag`.
 
-![image](https://github.com/user-attachments/assets/d6d715f7-6bdd-4972-8a80-cf73d71b21ee)
+![image](https://github.com/user-attachments/assets/f4500f36-79e2-4729-bb2d-3b5e841500fa)
 
 There's a nuance though. In the original version, the `timestamp` at each internal node is guaranteed to be minimum among the timestamps in the subtree rooted at the internal node (not really, if changes have not been propagated yet). However, with our version, suppose in the above visualization, we dequeue so that the min-timestamp of rank 1 changes and becomes bigger than min-timestamp of rank 2, still, right at that moment, some internal nodes still point to rank 1, implicitly implies that the new min-timestamp of rank 1 is the min-timestamp of the whole subtree, which is incorrect.
 
@@ -248,6 +248,8 @@ function refresh(mpsc_t* q, tree_node_t* node)
 ```
 
 #### Linearizability
+
+
 
 #### ABA problem
 
