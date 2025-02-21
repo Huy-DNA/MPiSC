@@ -327,7 +327,7 @@ Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
 </details>
 
 <details>
-  <summary>Theorem 7: After an <code>mpsc_dequeue</code> at the enqueuer <code>E</code> starting at <code>t0</code> and ending at <code>t2</code>, if the `spsc_dequeue` ends at time <code>t1</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t2) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t1</code>.
+  <summary>Theorem 7: After an <code>mpsc_dequeue</code> at the enqueuer <code>E</code> starting at <code>t0</code> and ending at <code>t2</code>, if the `<code>spsc_dequeue</code> ends at time <code>t1</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t2) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t1</code>.
 </details>
 
 #### ABA problem
