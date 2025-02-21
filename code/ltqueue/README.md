@@ -54,7 +54,7 @@ As LL/SC is not supported by MPI, we'll have to replace them using some other su
      ```python
      old_val = ll(svar)
      new_val = f(old_val) # new-value-computation time-frame
-     sc(location)
+     sc(svar, new_val)
      ```
      with this CAS sequence:
      ```python
