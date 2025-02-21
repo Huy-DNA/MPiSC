@@ -323,11 +323,11 @@ Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
 </details>
 
 <details>
-  <summary>Theorem 6: During an <code>mpsc_dequeue</code> at the enqueuer <code>E</code> starting at <code>t0</code> and ending at <code>t2</code>, at any time <code>t0 <= t1 <= t2</code>, for all nodes in <code>S</code> in <code>TREE</code> and not in `path(E)`, <code>rank(S, t1) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t1 >= t' >= t0</code>.
+  <summary>Theorem 6: During an <code>mpsc_dequeue</code> at the enqueuer <code>E</code> starting at <code>t0</code> and ending at <code>t2</code>, at any time <code>t0 <= t1 <= t2</code>, for all nodes in <code>S</code> in <code>TREE</code> and not in <code>path(E)</code>, <code>rank(S, t1) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t1 >= t' >= t0</code>.
 </details>
 
 <details>
-  <summary>Theorem 7: After an <code>mpsc_dequeue</code> at the enqueuer <code>E</code> starting at <code>t0</code> and ending at <code>t2</code>, if the `<code>spsc_dequeue</code> completes at time <code>t1</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t2) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t1</code>.
+  <summary>Theorem 7: After an <code>mpsc_dequeue</code> at the enqueuer <code>E</code> starting at <code>t0</code> and ending at <code>t2</code>, if the <code>spsc_dequeue</code> completes at time <code>t1</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t2) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t1</code>.
 </details>
 
 #### ABA problem
