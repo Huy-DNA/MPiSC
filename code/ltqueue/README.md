@@ -273,6 +273,10 @@ Definition 10: For an enqueuer `E`, we define `timestamp(E, t)` to be the timest
 
 Definition 11: For an enqueuer `E`, we define `min-timestamp-spsc(E, t)` to be the minimum timestamp that the SPSC queue of `E` holds at time `t`.
 
+Definition 12: For a rank `r`, we define `E(r)` to be the enqueuer with rank `r`.
+
+Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
+
 <details>
   <summary>Theorem 1: For all nodes S in TREE, rank(S, 0) = DUMMY.</summary>
 
@@ -313,6 +317,9 @@ Definition 11: For an enqueuer `E`, we define `min-timestamp-spsc(E, t)` to be t
   The same line of arguments holds for `dequeuer_refresh_timestamp`.
 </details>
 
+<details>
+  <summary>Theorem 5: For an E, during an mpsc_enqueue call starting at t0, if propagate completes at time t1 and no dequeue has been running between t0 and t1, for all nodes in S in TREE, rank(S, t1) = rank(E_S) where min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t') for all E in subtree(S0) and some t' >= t0 </summary>
+</details>
 
 #### ABA problem
 
