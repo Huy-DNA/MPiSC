@@ -269,6 +269,21 @@ Definition 8: For a node `S` in `TREE`, we define `path(S)` to be the path from 
 
 Definition 9: For an enqueuer `E`, we define `path(E)` to be `path(leaf(E))`.
 
+Definition 10: For an enqueuer `E`, we define `timestamp(E, t)` to be the timestamp that `E` holds at time `t`. 
+
+<details>
+  <summary>Theorem 1: For all nodes `S` in `TREE`, `rank(S, 0) = DUMMY`.</summary>
+
+  This is straightforward. The algorithm [initializes](https://github.com/Huy-DNA/distributed-mpsc-with-hybrid-mpi/blob/ed00ec4f4cdfd286089f71fe6ce6c19a83285f4f/code/ltqueue/ltqueue.hpp#L803-L805) all the tree nodes to `DUMMY` rank.
+</details>
+
+<details>
+  <summary>Theorem 2: For all enqueuers `E`, `timestamp(E, 0) = MAX_TIMESTAMP`.</summary>
+
+  This is straightforward. The algorithm [initializes](https://github.com/Huy-DNA/distributed-mpsc-with-hybrid-mpi/blob/ed00ec4f4cdfd286089f71fe6ce6c19a83285f4f/code/ltqueue/ltqueue.hpp#L391) all the enqueuers' timestamps to `MAX_TIMESTAMP`.
+</details>
+
+
 #### ABA problem
 
 #### Safe memory reclamation
