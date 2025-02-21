@@ -267,7 +267,7 @@ Definition 7: For an enqueuer `E`, we define `leaf(E)` to be the leaf node that 
 
 Definition 8: For a node `S` in `TREE`, we define `path(S)` to be the path from `ROOT` to `S` in `TREE`.
 
-Definition 9: For an enqueuer `E, we define `path(E)` to be `path(leaf(E))`.
+Definition 9: For an enqueuer `E`, we define `path(E)` to be `path(leaf(E))`.
 
 #### ABA problem
 
