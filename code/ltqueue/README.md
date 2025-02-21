@@ -274,26 +274,26 @@ Definition 10: For an enqueuer `E`, we define `timestamp(E, t)` to be the timest
 Definition 11: For an enqueuer `E`, we define `min-timestamp-spsc(E, t)` to be the minimum timestamp that the SPSC queue of `E` holds at time `t`.
 
 <details>
-  <summary>Theorem 1: For all nodes `S` in `TREE`, `rank(S, 0) = DUMMY`.</summary>
+  <summary>Theorem 1: For all nodes S in TREE, rank(S, 0) = DUMMY.</summary>
 
   This is straightforward. The algorithm [initializes](https://github.com/Huy-DNA/distributed-mpsc-with-hybrid-mpi/blob/ed00ec4f4cdfd286089f71fe6ce6c19a83285f4f/code/ltqueue/ltqueue.hpp#L803-L805) all the tree nodes to `DUMMY` rank.
 </details>
 
 <details>
-  <summary>Theorem 2: For all enqueuers `E`, `timestamp(E, 0) = MAX_TIMESTAMP`.</summary>
+  <summary>Theorem 2: For all enqueuers E, timestamp(E, 0) = MAX_TIMESTAMP.</summary>
 
   This is straightforward. The algorithm [initializes](https://github.com/Huy-DNA/distributed-mpsc-with-hybrid-mpi/blob/ed00ec4f4cdfd286089f71fe6ce6c19a83285f4f/code/ltqueue/ltqueue.hpp#L391) all the enqueuers' timestamps to `MAX_TIMESTAMP`.
 </details>
 
 
 <details>
-  <summary>Theorem 3: For all enqueuers `E`, its timestamp is ever changed by `enqueuer_refresh_timestamp` and `dequeuer_refresh_timestamp`. Only one `enqueuer_refresh_timestamp` and `dequeuer_refresh_timestamp` can run at a time.</summary>
+  <summary>Theorem 3: For all enqueuers E, its timestamp is ever changed by enqueuer_refresh_timestamp and dequeuer_refresh_timestamp. Only one enqueuer_refresh_timestamp and dequeuer_refresh_timestamp can run at a time.</summary>
 
   This is straightforward. Only the enqueuer `E` can call `enqueuer_refresh_timestamp` to update its timestamp, and only the dequeuer can call `dequeuer_refresh_timestamp` on `E` to update `E`'stimestamp.
 </details>
 
 <details>
-  <summary>Theorem 4: For an `E`, during an `mpsc_enqueue` call, if `spsc_enqueue` completes at time `t0`, the two `enqueuer_refresh_timestamp` calls complete at time `t1`, `timestamp(E, t1) = min-timestamp-spsc(E, t2)` where `t2 > t0`. Similarly, For an `E`, during an `mpsc_dequeue` call targeted at `E`, if `spsc_dequeue` completes at time `t0'`, the two `dequeuer_refresh_timestamp` calls complete at time `t1'`, `timestamp(E, t1') = min-timestamp-spsc(E, t2')` where `t2' > t0'`.</summary>
+  <summary>Theorem 4: For an E, during an mpsc_enqueue call, if spsc_enqueue completes at time t0, the two enqueuer_refresh_timestamp calls complete at time t1, timestamp(E, t1) = min-timestamp-spsc(E, t2) where t2 > t0. Similarly, For an E, during an mpsc_dequeue call targeted at E, if spsc_dequeue completes at time t0', the two dequeuer_refresh_timestamp calls complete at time t1', timestamp(E, t1') = min-timestamp-spsc(E, t2') where t2' > t0'.</summary>
 
   What `enqueuer_refresh_timestamp` does:
   1. Get the current minimum timestamp of the SPSC of `E`, or `min-timestamp-spsc(E, t')` with `t' > t0`.
@@ -308,7 +308,7 @@ Definition 11: For an enqueuer `E`, we define `min-timestamp-spsc(E, t)` to be t
 
   If the first `enqueuer_refresh_timestamp` succeeds, then `timestamp(E, t''') = min-timestamp-spsc(E, t')` with `t''' > t'' > t' > t0`, and because `t1 > t'''`, either `timestamp(E, t1) = timestamp(E, t''')` or `timestamp(E, T1) = min-timestamp-spsc(E, t'''')` with `t'''' > t > t0'` due to being updated by `dequeuer_refresh_timestamp`. Anyways, the statement that `timestamp(E, t1) = min-timestamp-spsc(E, t2)` where `t2 > t0` holds.
   
-  If the first `enqueuer_refresh_timestamp` fails, that means due to theorem 3, `dequeuer_refresh_timestamp` has changed it somewhere between step 2 and step 3. We retry `enqueuer_refresh_timestamp` again. If it succeeds, the previous argument still holds. If it fails again. It means another `dequeuer_refresh_timestamp` has changed it between step 2 and step 3 of the second trial. However, this `dequeuer_refresh_timestamp` must have read the the minimum timestamp of `E`'s SPSC after step 3 of the first trial, which means it saw that minimum timestamp after `t0` and update the timestamp of `E` to be so.  Therefore,  the statement that `timestamp(E, t1) = min-timestamp-spsc(E, t2)` where `t2 > t0` holds.
+  If the first `enqueuer_refresh_timestamp` fails, that means due to theorem 3, `dequeuer_refresh_timestamp` has changed it somewhere between step 2 and step 3. We retry `enqueuer_refresh_timestamp` again. If it succeeds, the previous argument still holds. If it fails again. It means another `dequeuer_refresh_timestamp` has changed it between step 2 and step 3 of the second trial. However, this `dequeuer_refresh_timestamp` must have read the the minimum timestamp of `E`'s SPSC after step 2 of the first trial (because only one dequeue is allowed to run at a time), which means it saw that minimum timestamp after `t0` and update the timestamp of `E` to be so.  Therefore,  the statement that `timestamp(E, t1) = min-timestamp-spsc(E, t2)` where `t2 > t0` holds.
 
   The same line of arguments holds for `dequeuer_refresh_timestamp`.
 </details>
