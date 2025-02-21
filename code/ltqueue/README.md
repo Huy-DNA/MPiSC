@@ -279,7 +279,7 @@ Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
 
 <details>
   <summary>Theorem 1: For all nodes <code>S</code> in <code>TREE</code>, <code>rank(S, 0) = DUMMY</code>.</summary>
-
+  
   This is straightforward. The algorithm [initializes](https://github.com/Huy-DNA/distributed-mpsc-with-hybrid-mpi/blob/ed00ec4f4cdfd286089f71fe6ce6c19a83285f4f/code/ltqueue/ltqueue.hpp#L803-L805) all the tree nodes to `DUMMY` rank.
 </details>
 
@@ -319,7 +319,7 @@ Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
 </details>
 
 <details>
-  <summary>Theorem 5: For an enqueuer <code>E</code>, during an <code>mpsc_enqueue</code> call starting at <code>t0</code> and ending at <code>t2></code>, if the `spsc_enqueue` ends at time <code>t1</code> and no <code>mpsc_dequeue</code> has been running between <code>t0</code> and <code>t2</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t2) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t1</code>. </summary>
+  <summary>Theorem 5: For an enqueuer <code>E</code>, during an <code>mpsc_enqueue</code> call starting at <code>t0</code> and ending at <code>t2></code>, if the `spsc_enqueue` completes at time <code>t1</code> and no <code>mpsc_dequeue</code> has been running between <code>t0</code> and <code>t2</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t2) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t1</code>. </summary>
 </details>
 
 <details>
@@ -327,14 +327,20 @@ Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
 </details>
 
 <details>
-  <summary>Theorem 7: After an <code>mpsc_dequeue</code> at the enqueuer <code>E</code> starting at <code>t0</code> and ending at <code>t2</code>, if the `<code>spsc_dequeue</code> ends at time <code>t1</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t2) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t1</code>.
+  <summary>Theorem 7: After an <code>mpsc_dequeue</code> at the enqueuer <code>E</code> starting at <code>t0</code> and ending at <code>t2</code>, if the `<code>spsc_dequeue</code> completes at time <code>t1</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t2) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t1</code>.
 </details>
 
 #### ABA problem
 
+ABA is unlikely to occur because every place we use `CAS`, we increase the version tag.
+
 #### Safe memory reclamation
 
+This is safe as proven in the original paper.
+
 #### Lockfree-ness
+
+This is trivial.
 
 ### Porting
 
