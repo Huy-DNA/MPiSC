@@ -299,6 +299,7 @@ Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
 <details>
   <summary>Theorem 4: For an enqueuer <code>E</code>, during an <code>mpsc_enqueue</code> call, if <code>spsc_enqueue</code> completes at time t0, the two <code>enqueuer_refresh_timestamp</code> calls complete at time <code>t1</code>, <code>timestamp(E, t1) = min-timestamp-spsc(E, t2)</code> where <code>t2 > t0</code>. Similarly, for an enqueuer <code>E</code>, during an <code>mpsc_dequeue</code> call targeted at <code>E</code>, if <code>spsc_dequeue</code> completes at time <code>t0'</code>, the two <code>dequeuer_refresh_timestamp</code> calls complete at time <code>t1'</code>, <code>timestamp(E, t1') = min-timestamp-spsc(E, t2')</code> where <code>t2' > t0'</code>.</summary>
 
+
   What `enqueuer_refresh_timestamp` does:
   1. Get the current minimum timestamp of the SPSC of `E`, or `min-timestamp-spsc(E, t')` with `t' > t0`.
   2. Get the current timestamp of `E`, or `timestamp(E, t'')` with `t'' > t' > t0`.
@@ -318,7 +319,15 @@ Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
 </details>
 
 <details>
-  <summary>Theorem 5: For an enqueuer <code>E</code>, during an <code>mpsc_enqueue</code> call starting at <code>t0</code>, if <code>propagate</code> completes at time <code>t1</code> and no <code>mpsc_dequeue</code> has been running between <code>t0</code> and <code>t1</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t1) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t0</code> </summary>
+  <summary>Theorem 5: For an enqueuer <code>E</code>, during an <code>mpsc_enqueue</code> call starting at <code>t0</code> and ending at <code>t2></code>, if the `spsc_enqueue` ends at time <code>t1</code> and no <code>mpsc_dequeue</code> has been running between <code>t0</code> and <code>t2</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t2) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t1</code>. </summary>
+</details>
+
+<details>
+  <summary>Theorem 6: During an <code>mpsc_dequeue</code> at the enqueuer <code>E</code> starting at <code>t0</code> and ending at <code>t2</code>, at any time <code>t0 <= t1 <= t2</code>, for all nodes in <code>S</code> in <code>TREE</code> and not in `path(E)`, <code>rank(S, t1) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t1 >= t' >= t0</code>.
+</details>
+
+<details>
+  <summary>Theorem 7: After an <code>mpsc_dequeue</code> at the enqueuer <code>E</code> starting at <code>t0</code> and ending at <code>t2</code>, if the `spsc_dequeue` ends at time <code>t1</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t2) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t1</code>.
 </details>
 
 #### ABA problem
