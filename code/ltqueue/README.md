@@ -278,26 +278,26 @@ Definition 12: For a rank `r`, we define `E(r)` to be the enqueuer with rank `r`
 Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
 
 <details>
-  <summary>Theorem 1: For all nodes S in TREE, rank(S, 0) = DUMMY.</summary>
+  <summary>Theorem 1: For all nodes <code>S</code> in <code>TREE</code>, <code>rank(S, 0) = DUMMY</code>.</summary>
 
   This is straightforward. The algorithm [initializes](https://github.com/Huy-DNA/distributed-mpsc-with-hybrid-mpi/blob/ed00ec4f4cdfd286089f71fe6ce6c19a83285f4f/code/ltqueue/ltqueue.hpp#L803-L805) all the tree nodes to `DUMMY` rank.
 </details>
 
 <details>
-  <summary>Theorem 2: For all enqueuers E, timestamp(E, 0) = MAX_TIMESTAMP.</summary>
+  <summary>Theorem 2: For all enqueuers <code>E</code>, <code>timestamp(E, 0) = MAX_TIMESTAMP</code>.</summary>
 
   This is straightforward. The algorithm [initializes](https://github.com/Huy-DNA/distributed-mpsc-with-hybrid-mpi/blob/ed00ec4f4cdfd286089f71fe6ce6c19a83285f4f/code/ltqueue/ltqueue.hpp#L391) all the enqueuers' timestamps to `MAX_TIMESTAMP`.
 </details>
 
 
 <details>
-  <summary>Theorem 3: For all enqueuers E, its timestamp is ever changed by enqueuer_refresh_timestamp and dequeuer_refresh_timestamp. Only one enqueuer_refresh_timestamp and dequeuer_refresh_timestamp can run at a time.</summary>
+  <summary>Theorem 3: For all enqueuers <code>E</code>, its timestamp is ever changed by <code>enqueuer_refresh_timestamp</code> and <code>dequeuer_refresh_timestamp</code>. Only one <code>enqueuer_refresh_timestamp</code> and <code>dequeuer_refresh_timestamp</code> can run at a time.</summary>
 
   This is straightforward. Only the enqueuer `E` can call `enqueuer_refresh_timestamp` to update its timestamp, and only the dequeuer can call `dequeuer_refresh_timestamp` on `E` to update `E`'stimestamp.
 </details>
 
 <details>
-  <summary>Theorem 4: For an E, during an mpsc_enqueue call, if spsc_enqueue completes at time t0, the two enqueuer_refresh_timestamp calls complete at time t1, timestamp(E, t1) = min-timestamp-spsc(E, t2) where t2 > t0. Similarly, For an E, during an mpsc_dequeue call targeted at E, if spsc_dequeue completes at time t0', the two dequeuer_refresh_timestamp calls complete at time t1', timestamp(E, t1') = min-timestamp-spsc(E, t2') where t2' > t0'.</summary>
+  <summary>Theorem 4: For an enqueuer <code>E</code>, during an <code>mpsc_enqueue</code> call, if <code>spsc_enqueue</code> completes at time t0, the two <code>enqueuer_refresh_timestamp</code> calls complete at time <code>t1</code>, <code>timestamp(E, t1) = min-timestamp-spsc(E, t2)</code> where <code>t2 > t0</code>. Similarly, for an enqueuer <code>E</code>, during an <code>mpsc_dequeue</code> call targeted at <code>E</code>, if <code>spsc_dequeue</code> completes at time <code>t0'</code>, the two <code>dequeuer_refresh_timestamp</code> calls complete at time <code>t1'</code>, <code>timestamp(E, t1') = min-timestamp-spsc(E, t2')</code> where <code>t2' > t0'</code>.</summary>
 
   What `enqueuer_refresh_timestamp` does:
   1. Get the current minimum timestamp of the SPSC of `E`, or `min-timestamp-spsc(E, t')` with `t' > t0`.
@@ -318,7 +318,7 @@ Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
 </details>
 
 <details>
-  <summary>Theorem 5: For an E, during an mpsc_enqueue call starting at t0, if propagate completes at time t1 and no dequeue has been running between t0 and t1, for all nodes in S in TREE, rank(S, t1) = rank(E_S) where min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t') for all E in subtree(S0) and some t' >= t0 </summary>
+  <summary>Theorem 5: For an enqueuer <code>E</code>, during an <code>mpsc_enqueue</code> call starting at <code>t0</code>, if <code>propagate</code> completes at time <code>t1</code> and no <code>mpsc_dequeue</code> has been running between <code>t0</code> and <code>t1</code>, for all nodes in <code>S</code> in <code>TREE</code>, <code>rank(S, t1) = rank(E_S)</code> where <code>min-timestamp-spsc(E_S, t') <= min-timestamp-spsc(E, t')</code> for all <code>E</code> in <code>subtree(S0)</code> and some <code>t' >= t0</code> </summary>
 </details>
 
 #### ABA problem
