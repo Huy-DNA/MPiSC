@@ -17,15 +17,15 @@ As LL/SC is not supported by MPI, we'll have to replace them using some other su
   ```python
   old_val = ll(svar)
   new_val = f(old_val) # new-value-computation time-frame
-  sc(location)
+  sc(svar, new_val)
   ```
   `sc` will succeed if `location` is not accessed in the time between `ll` and `sc`, even if `location` is written the same value. Therefore, LL/SC allows us to set a location to a new value if it hasn't been accessed since last read.
   
   Ignoring the ABA problem, this should be roughly equivalent:
   ```python
-  old_val = location
+  old_val = svar
   new_val = f(old_val) # new-value-computation timeframe
-  CAS(location, old_val, new_val)
+  CAS(svar, old_val, new_val)
   ```
   This lies on the assumption that *if a memory location checked at two times is not changed, it hasn't been accessed within this period*. Put it other way, the above sequence allows us to set a location to a new value if its value hasn't changed since last read. Note the difference, and hence, that's why the ABA problem exists for CAS.
 
