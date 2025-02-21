@@ -249,7 +249,25 @@ function refresh(mpsc_t* q, tree_node_t* node)
 
 #### Linearizability
 
+![image](https://github.com/user-attachments/assets/870c85fb-4d24-4838-98ad-22b68e346079)
 
+Definition 1: We define `TREE` to be the tree constructed by the algorithm.
+
+Definition 2: We define `ROOT` to be the root of `TREE`.
+
+Definition 3: For a node `S` in `TREE`, we define `rank(S)` to be the rank that the node `S` currently holds.
+
+Definition 4: For a node `S` in `TREE`, we define `subtree(S)` to be the subtree of `TREE` of which `S` is the root.
+
+Definition 5: For a node `S` in `TREE`, we define `children(S)` to be the set of immediate descendants of `S` in `TREE`.
+
+Definition 6: For a node `S` in `TREE` which is not `ROOT`, we define `parent(S)` to be the parent of `S` in `TREE`.
+
+Definition 7: For an enqueuer `E`, we define `leaf(E)` to be the leaf node that corresponds with the enqueuer `E`.
+
+Definition 8: For a node `S` in `TREE`, we define `path(S)` to be the path from `ROOT` to `S` in `TREE`.
+
+Definition 9: For an enqueuer `E, we define `path(E)` to be `path(leaf(E))`.
 
 #### ABA problem
 
