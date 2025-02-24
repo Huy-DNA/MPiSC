@@ -28,21 +28,23 @@ Then, linerizability means that if we have $l_1 < l_2 < ... < l_n$, the effect o
 == ABA problem
 
 In implementing concurrent lock-free algorithms, hardware atomic instructions are utilized to achieve linearizability. The most popular atomic operation instruction is compare-and-swap (CAS). The reason for its popularity is (1) CAS is a *universal atomic instruction* - it has the *concensus number* of $infinity$ - which means it's the most powerful atomic instruction @herlihy-hierarchy (2) CAS is implemented in most hardware (3) some concurrent lock-free data structures such as MPSC can only be implemented using powerful atomic instruction such as CAS. The semantic of CAS is as follows. Given the instruction `CAS(memory location, old value, new value)`, atomically compares the value at `memory location` to see if it equals `old value`; if so, sets the value at `memory location` to `new value` and returns true; otherwise, leaves the value at `memory location` unchanged and returns false. Concurrent algorithms often utilize CAS as follows:
-  1. Read the current value `old value = read(memory location)`.
-  2. Compute `new value` from `old value` by manipulating some resources associated with `old value` and allocating new resources for `new value`.
-  3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up `new value` because `old value` is no longer there, so its associated resources are not valid.
+1. Read the current value `old value = read(memory location)`.
+2. Compute `new value` from `old value` by manipulating some resources associated with `old value` and allocating new resources for `new value`.
+3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up `new value` because `old value` is no longer there, so its associated resources are not valid.
 This scheme is susceptible to the notorious ABA problem:
-  1. Process 1 reads the current value of `memory location` and reads out `A`.
-  2. Process 1 manipulates resources associated with `A`, and allocates resources based on these resources.
-  3. Process 1 suspends.
-  4. Process 2 reads the current value of `memory location` and reads out `A`.
-  5. Process 2 `CAS(memory location, A, B)` so that resources associated with `A` are no longer valid.
-  6. Process 3 `CAS(memory location, B, A)` and allocates new resources associated with `A`.
-  7. Process 1 continues and `CAS(memory location, A, new value)` relying on the fact that the old resources associated with `A` are still valid while in fact they aren't.
+1. Process 1 reads the current value of `memory location` and reads out `A`.
+2. Process 1 manipulates resources associated with `A`, and allocates resources based on these resources.
+3. Process 1 suspends.
+4. Process 2 reads the current value of `memory location` and reads out `A`.
+5. Process 2 `CAS(memory location, A, B)` so that resources associated with `A` are no longer valid.
+6. Process 3 `CAS(memory location, B, A)` and allocates new resources associated with `A`.
+7. Process 1 continues and `CAS(memory location, A, new value)` relying on the fact that the old resources associated with `A` are still valid while in fact they aren't.
 
 To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls `CAS` on that location, there's no possibility another process has `CAS` the memory location to the same value. Some notable schemes are *monotonic version tag* (used in @michael-scott) and *hazard pointer* (introduced in @hazard-pointer).
 
 == Safe memory reclamation problem
+
+The problem of safe memory reclamation often arises in concurrent algorithms that dynamically allocate memory. In such algorithms, dynamically-allocated memory must be freed at some point. However, there's a good chance that while a process is freeing memory, other processes contending for the same memory are keeping a reference to that memory. Therefore, the other processes may try to access deallocated memory, which is erroneneous. Solutions to this problem require that memory is freed only when no other processes are holding references to that memory, such as *hazard pointer* (introduced in @hazard-pointer).
 
 == C++11 concurrency
 
