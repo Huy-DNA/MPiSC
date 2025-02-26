@@ -111,7 +111,7 @@ Cons:
 
 ### Pseudo code after removing LL/SC
 
-Disclaimer: This is only an informal sketch. More formal treatment is given in the Typst project in the [accompanying report](./report).
+Disclaimer: This is only an informal sketch. More formal treatment is given in the [accompanying report](./report).
 
 SPSC is kept intact, and due to Prasad Jayanti and Srdjan Petrovic:
 
@@ -251,7 +251,7 @@ function refresh(mpsc_t* q, tree_node_t* node)
 
 #### Linearizability
 
-Disclaimer: This is only an informal sketch. More formal treatment is given in the Typst project in the [accompanying report](./report).
+Disclaimer: This is only an informal sketch. More formal treatment is given in the [accompanying report](./report).
 
 ![image](https://github.com/user-attachments/assets/870c85fb-4d24-4838-98ad-22b68e346079)
 
@@ -336,19 +336,19 @@ Definition 13: For an enqueuer `E`, we define `rank(E)` to be the rank of `E`.
 
 #### ABA problem
 
-Disclaimer: This is only an informal sketch. More formal treatment is given in the Typst project in the [accompanying report](./report).
+Disclaimer: This is only an informal sketch. More formal treatment is given in the [accompanying report](./report).
 
 ABA is unlikely to occur because every place we use `CAS`, we increase the version tag.
 
 #### Safe memory reclamation
 
-Disclaimer: This is only an informal sketch. More formal treatment is given in the Typst project in the [accompanying report](./report).
+Disclaimer: This is only an informal sketch. More formal treatment is given in the [accompanying report](./report).
 
 This is safe as proven in the original paper.
 
 #### Lockfree-ness
 
-Disclaimer: This is only an informal sketch. More formal treatment is given in the Typst project in the [accompanying report](./report).
+Disclaimer: This is only an informal sketch. More formal treatment is given in the [accompanying report](./report).
 
 This is trivial.
 
