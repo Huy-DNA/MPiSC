@@ -260,7 +260,7 @@ The `refresh` procedure is by itself simple: we access all child nodes to determ
 #figure(
   kind: "image",
   supplement: "Image",
-  image("/assets/double-refresh.png", height: 220pt, fit: "stretch"),
+  image("/assets/double-refresh.png", height: 200pt, fit: "stretch"),
   caption: [
     Even though two `refresh`s fails, the `currentNode`'s timestamp is still updated correctly
   ],
