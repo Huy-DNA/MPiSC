@@ -251,7 +251,7 @@ LTQueue's idea is to maintain a tree structure: Each leaf node corresponds to th
   ),
 )
 
-Similarly, the proofs of LTQueue's linearizability, wait-freedom, memory-safety and logarithmic-time complexity of enqueue and dequeue operations are given in @ltqueue. One notable technique that allows LTQueue to be both correct and wait-free is the double-refresh trick during the propagation process on line 8-9. Because this propagation process is important in our modified version of LTQueue, we'll focus on the `propagate` and `refresh` procedures.
+Similarly, the proofs of LTQueue's linearizability, wait-freedom, memory-safety and logarithmic-time complexity of enqueue and dequeue operations are given in @ltqueue. One notable technique that allows LTQueue to be both correct and wait-free is the double-refresh trick during the propagation process on line 14-15.
 
 The idea behind the `propagate` procedure is simple: Each time an SPSC queue is modified (inserted/deleted), the timestamp of a leaf has changed so the timestamps of all nodes on the path from that leaf to the root can potentially change. Therefore, we have to propagate the change towards the root, starting from the leaf (line 11-16).
 
@@ -260,7 +260,7 @@ The `refresh` procedure is by itself simple: we access all child nodes to determ
 #figure(
   kind: "image",
   supplement: "Image",
-  image("/assets/double-refresh.png"),
+  image("/assets/double-refresh.png", height: 220pt, fit: "stretch"),
   caption: [
     Even though two `refresh`s fails, the `currentNode`'s timestamp is still updated correctly
   ],
