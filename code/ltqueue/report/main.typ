@@ -1,4 +1,5 @@
-#let title = [Modified LTQueue without Load-Link/Store-Conditional]
+#let title = [
+  Modified LTQueue without Load-Link/Store-Conditional]
 
 #set text(
   font: "Libertinus Serif",
@@ -15,12 +16,17 @@
   float: true,
   scope: "parent",
   clearance: 2em,
-  text(17pt)[
+  text(18pt)[
     *#title*
   ],
 )
 
 #set par(justify: true)
+
+#show heading: name => [
+  #name
+  #v(10pt)
+]
 
 #import "@preview/lovelace:0.3.0": *
 
