@@ -1,0 +1,16 @@
+# Hayagriva format bibliography file
+# Read this https://github.com/typst/hayagriva/blob/main/docs/file-format.md
+
+ltqueue:
+  type: article
+  author: ["Jayanti, Prasad", "Petrovic, Srdjan"]
+  title: "Logarithmic-time single deleter, multiple inserter wait-free queues and stacks"
+  date: 2005
+  serial-number:
+    isbn: 3540304959
+    doi: 10.1007/11590156_33
+  publisher: Springer-Verlag
+  address: "Berlin, Heidelberg"
+  page-range: 408–419
+  page-total: 12
+  location: "Hyderabad, India"
