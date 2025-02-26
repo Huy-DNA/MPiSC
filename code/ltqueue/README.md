@@ -111,6 +111,8 @@ Cons:
 
 ### Pseudo code after removing LL/SC
 
+Disclaimer: This is only an informal sketch. More formal treatment is given in the Typst project in this folder.
+
 SPSC is kept intact, and due to Prasad Jayanti and Srdjan Petrovic:
 
 ```C
@@ -248,6 +250,8 @@ function refresh(mpsc_t* q, tree_node_t* node)
 ```
 
 #### Linearizability
+
+Disclaimer: This is only an informal sketch. More formal treatment is given in the Typst project in this folder.
 
 ![image](https://github.com/user-attachments/assets/870c85fb-4d24-4838-98ad-22b68e346079)
 
