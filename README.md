@@ -131,11 +131,11 @@ We need to evaluate at least 3 levels:
 ### Performance
 - Performance: The less time it takes to serve common workloads on the target platform the better.
 
-### Lockfree-ness
-- Lockfree-ness: A process suspended while using the queue should not prevent other processes from making progress using the queue.
+### Lock-freedom
+- Lock-freedom: A process suspended while using the queue should not prevent other processes from making progress using the queue.
 
 <details>
-  <summary>Caution - Lockfree-ness of dependencies</summary>
+  <summary>Caution - Lock-freedom of dependencies</summary>
   A lock-free algorithm often *assumes* that some synchronization primitive is lock-free. This depends on the target platform and during implementation, the library used. Care must be taken to avoid accidental non-lock-free operation usage.
 </details>
 
