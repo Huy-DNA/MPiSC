@@ -123,9 +123,9 @@ We need to evaluate at least 3 levels:
   - Dynamic verification: *Verify* its behavior at runtime & *Benchmark*.
 
 ### Correctness
-- Correctness:
-  - Linearizability
-  - No ABA problem
+- Linearizability
+- No problematic ABA problem
+- Memory safety:
   - Safe memory reclamation
 
 ### Performance
