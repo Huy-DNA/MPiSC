@@ -42,8 +42,8 @@ This section presents the SPSC data structure proposed in @ltqueue. Beside the u
 
 #pseudocode-list(line-numbering: none)[
   + *Types*
-    + `data_t`
-    + `node_t` =
+    + `data_t` = The type of data stored in linked-list's nodes
+    + `node_t` = The type of linked-link's nodes
       + *record*
         + `val`: `data_t`
         + `next`: *pointer to* `node_t`
@@ -164,7 +164,7 @@ LTQueue's idea is to maintain a tree structure: Each leaf node corresponds to th
 
 #pseudocode-list(line-numbering: none)[
   + *Types*
-    + `data_t`
+    + `data_t` = The type of the data to be stored in LTQueue
     + `spsc_t` = The type of the local SPSC
     + `tree_t` = The type of the tree constructed by LTQueue
     + `node_t` = The node type of `tree_t`, containing a 64-bit timestamp value, packing a monotonic counter and the enqueuer's rank.
