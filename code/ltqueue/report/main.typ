@@ -213,7 +213,7 @@ LTQueue's idea is to maintain a tree structure as in @ltqueue-tree. Each enqueue
     numbered-title: [`dequeue()` *returns* `data_t`],
   )[
     + `[count, rank] = read(root(T))               `
-    + *if* `(q == `$bot$`)` *return* $bot$
+    + *if* `(rank == `$bot$`)` *return* $bot$
     + `ret = spsc_dequeue(Q[rank])`
     + `propagate(Q[rank])`
     + *return* `ret.val`
