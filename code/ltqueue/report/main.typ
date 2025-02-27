@@ -474,7 +474,7 @@ This section proves that the algorithm given in the last section is linearizable
 
 == Linearizability
 
-== Safe memory reclamation
+== Memory safety
 
 == Wait-freedom
 
