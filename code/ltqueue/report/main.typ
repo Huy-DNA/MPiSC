@@ -222,7 +222,7 @@ LTQueue's idea is to maintain a tree structure as in @ltqueue-tree. Each enqueue
 
 The followings are the timestamp propagation procedures.
 
-Note that compare to the original paper @ltqueue, we have make some trivial modification on line 11-12 to handle the leaf node case, which was left unspecified in the original algorithm. In many ways, this modification is in the same light with the mechanism the algorithm is already using, so intuitively, it should not affect the algorithm's correctness or wait-freedom. Note that on line 25 of `refreshLeaf`, we omit which version of `readFront` it's calling, simply assume that the dequeuer and the enqueuer should call their corresponding version of `readFront`.
+Note that compare to the original paper @ltqueue, we have make some trivial modification on line 11-12 to handle the leaf node case, which was left unspecified in the original algorithm. In many ways, this modification is in the same light with the mechanism the algorithm is already using, so intuitively, it should not affect the algorithm's correctness or wait-freedom. Note that on line 25 of `refreshLeaf`, we omit which version of `spsc_readFront` it's calling, simply assume that the dequeuer and the enqueuer should call their corresponding version of `spsc_readFront`.
 
 #figure(
   kind: "algorithm",
@@ -268,7 +268,7 @@ Note that compare to the original paper @ltqueue, we have make some trivial modi
   )[
     + `leafNode = leafNode(spsc)                      `
     + `LL(leafNode)`
-    + `SC(leafNode, readFront(spsc))`
+    + `SC(leafNode, spsc_readFront(spsc))`
   ],
 )
 
@@ -335,11 +335,6 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
     + `enqueuers`: *array* `[1..n]` *of* `enqueuer_t`
 ]
 
-#pseudocode-list(line-numbering: none)[
-  + *Initialization*
-    + `counter = 0`
-    + construct the tree structure and set `root` to the root node
-]
 
 #place(
   center + bottom,
@@ -355,6 +350,14 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
     ) <modified-ltqueue-tree>
   ],
 )
+
+#pseudocode-list(line-numbering: none)[
+  + *Initialization*
+    + `counter = 0`
+    + construct the tree structure and set `root` to the root node
+    + initialize every node in the tree to contain `DUMMY` rank and version `0`
+    + initialize every enqueuer's `timestamp` to `MAX` and version `0`
+]
 
 #figure(
   kind: "algorithm",
@@ -386,14 +389,93 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
   ],
 )
 
+We omit the description of procedures `parent`, `leafNode`, `children`, leaving how the tree is constructed and children-parent relationship is determined to the implementor. The tree structure used by LTQueue is read-only so a wait-free implementation of these procedures is trivial.
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 9,
+    booktabs: true,
+    numbered-title: [`propagate(rank: uint32_t)`],
+  )[
+    + *if* $not$`refreshTimestamp(rank)                 `
+      + `refreshTimestamp(rank)`
+    + *if* $not$`refreshLeaf(rank)`
+      + `refreshLeaf(rank)`
+    + `currentNode = leafNode(rank)`
+    + *repeat*
+      + `currentNode = parent(currentNode)`
+      + *if* $not$`refresh(currentNode)`
+        + `refresh(currentNode)`
+    + *until* `currentNode == root(T)`
+  ],
+)
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 19,
+    booktabs: true,
+    numbered-title: [`refresh(currentNode:` *pointer* to `node_t)`],
+  )[
+    + `[old-rank, old-version] = currentNode->rank`
+    + `min-rank = DUMMY`
+    + `min-timestamp = MAX`
+    + *for* `childNode` in `children(currentNode)`
+      + `[child-rank, ...] = childNode->rank`
+      + *if* `(child-rank == DUMMY)` *continue*
+      + `child-timestamp = enqueuers[child-rank].min-timestamp`
+      + *if* `(child-timestamp < min-timestamp)`
+        + `min-timestamp = child-timestamp`
+        + `min-rank = child-rank`
+    + `CAS(&currentNode->rank, [old-rank, old-version], [min-rank, old-version + 1])`
+  ],
+)
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 23,
+    booktabs: true,
+    numbered-title: [`refreshTimestamp(rank: uint32_t)`],
+  )[
+    + `[old-timestamp, old-version] = enqueuers[rank].timestamp`
+    + `front = spsc_readFront(enqueuers[rank].spsc)`
+    + *if* `(front == `$bot$`)`
+      + `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [MAX, old-version + 1])`
+    + *else*
+      + `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [front.timestamp, old-version + 1])`
+  ],
+)
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 29,
+    booktabs: true,
+    numbered-title: [`refreshLeaf(rank: uint32_t)`],
+  )[
+    + `leafNode = leafNode(spsc)                      `
+    + `[old-rank, old-version] = leafNode->rank`
+    + `[timestamp, ...] = enqueuers[rank].timestamp`
+    + `CAS(&leafNode->rank, [old-rank, old-version], [timestamp == MAX ? DUMMY : rank, old-version + 1])`
+  ],
+)
+
+Notice that we omit which version of `spsc_readFront` we're calling on line 25, simply assuming that the producer and each enqueuer are calling their respective version.
+
 = Proof of correctness
+
+This section proves that the algorithm given in the last section is linearizable, memory-safe and wait-free.
 
 == Linearizability
 
 == Safe memory reclamation
 
 == Wait-freedom
-
-== Logarithm-time complexity for enqueues and dequeues
 
 #bibliography("/bibliography.yml", title: [References])
