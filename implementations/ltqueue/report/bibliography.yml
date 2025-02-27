@@ -14,3 +14,12 @@ ltqueue:
   page-range: 408–419
   page-total: 12
   location: "Hyderabad, India"
+
+art-of-multiprocessor-programming:
+  type: book
+  title: "The Art of Multiprocessor Programming, Revised Reprint"
+  author: ["Herlihy, M.", "Shavit, N."]
+  serial-number:
+    isbn: 9780123977953
+  date: 2012
+  publisher: Morgan Kaufmann

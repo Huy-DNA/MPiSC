@@ -24,6 +24,9 @@
 
 #set par(justify: true)
 
+#set heading(numbering: "1.")
+#show heading.where(level: 3): set heading(numbering: none)
+
 #show heading: name => [
   #name
   #v(10pt)
@@ -32,6 +35,19 @@
 #show figure.where(kind: "algorithm"): set align(start)
 
 #import "@preview/lovelace:0.3.0": *
+#import "@preview/lemmify:0.1.7": *
+#let (
+  definition,
+  theorem,
+  lemma,
+  corollary,
+  remark,
+  proposition,
+  example,
+  proof,
+  rules: thm-rules,
+) = default-theorems("thm-group", lang: "en")
+#show: thm-rules
 
 = Original LTQueue
 
@@ -473,6 +489,50 @@ Notice that we omit which version of `spsc_readFront` we're calling on line 25, 
 This section proves that the algorithm given in the last section is linearizable, memory-safe and wait-free.
 
 == Linearizability
+
+Within the next two sections, we formalize what it means for an MPSC to be linearizable.
+
+=== Definition of linearizability
+
+The following discussion of linearizability is based on @art-of-multiprocessor-programming by Herlihy and Shavit.
+
+For a concurrent object `S`, we can call some methods on `S` concurrently. A method call on the object `S` is said to have an *invocation event* when it starts and a *response event* when it ends.
+
+#definition[An *invocation event* is a triple $(S, t, a r g s)$, where $S$ is the object the method is invoked on, $t$ is the timestamp of when the event happens and $a r g s$ is the arguments passed to the method call.]
+
+#definition[A *response event* is a triple $(S, t, r e s)$, where $S$ is the object the method is invoked on, $t$ is the timestamp of when the event happens and $r e s$ is the results of the method call.]
+
+#definition[A *method call* is a tuple of $(i, r)$ where $i$ is an invocation event and $r$ is a response event or the special value $bot$ indicating that its response event haven't happened yet. A well-formed *method call* should have a reponse event with a larger timestamp than its invocation event or the response event haven't happened yet.]
+
+#definition[A *history* is a set of well-formed *method calls*.]
+
+#definition[An extension of *history* $H$ is a *history* $H'$ such that any method call with $bot$ response event is replaced by a valid response event.]
+
+We can define a *strict partial order* on the set of well-formed method calls: 
+
+#definition[$->$ is a relation on the set of well-formed method calls. With two method calls $X$ and $Y$, we have $X -> Y <=>$ $X$'s response event is not $bot$ and its response timestamp is not greater than $Y$'s invocation timestamp.]
+
+#definition[Given a *history* H, $->$#sub($H$) is a relation on $H$ such that for two method calls $X$ and $Y$ in $H$, $X ->$#sub($H$)$ Y <=> X -> Y$.]
+
+#definition[A *sequential history* $H$ is a *history* such that $->$#sub($H$) is a total order on $H$.]
+
+Now that we have formalized the way to describe the order of events via *histories*, we can now formalize the mechanism to determine if a *history* is valid. The easier case is for a *sequential history*:
+
+#definition[For a concurrent object $S$, a *sequential specification* of $S$ is a function that either returns `true` (valid) or `false` (invalid) for a *sequential history* $H$.]
+
+The harder case is handled via the notion of *linearizable*:
+
+#definition[A history $H$ on a concurrent object $S$ is *linearizable* if it has an extension $H'$ and there exists a _sequential history_ $H_S$ such that:
+  1. The *sequential specification* of $S$ accepts $H_S$.
+  2. There exists a one-to-one mapping $M$ of a method call $(i, r) in H'$ to a method call $(i_S, r_S) in H_S$ with the properties that:
+    - $i$ must be the same as $i_S$ except for the timestamp.
+    - $r$ must be the same $r_S$ except for the timestamp or $r$.
+  3. For any two method calls $X$ and $Y$ in $H'$, #linebreak() $X ->$#sub($H'$)$Y => $ $M(X) ->$#sub($H_S$)$M(Y)$.
+]
+
+We consider a history to be valid if it's linearizable.
+
+=== Definition of linearizable MPSC
 
 == Memory safety
 
