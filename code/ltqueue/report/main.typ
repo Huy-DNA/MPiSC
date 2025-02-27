@@ -85,7 +85,7 @@ Enqueuer's procedures are given as follows.
     + `tmp.next = newNode`
     + `Last = newNode`
   ],
-)
+) <spsc-enqueue>
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
@@ -102,7 +102,7 @@ Enqueuer's procedures are given as follows.
     + *else* `retval = tmp.val`
     + *return* `retval`
   ],
-)
+) <spsc-enqueuer-readFront>
 
 Dequeuer's procedures are given as follows.
 
@@ -126,7 +126,8 @@ Dequeuer's procedures are given as follows.
     + *else* `free(tmp)`
     + *return* `retval`
   ],
-)
+) <spsc-dequeue>
+
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
@@ -140,7 +141,7 @@ Dequeuer's procedures are given as follows.
       + *return* $bot$
     + *return* `tmp.val`
   ],
-)
+) <spsc-dequeuer-readFront>
 
 The treatment of linearizability, wait-freedom and memory safety is given in the original paper @ltqueue. However, we can establish some intuition by looking at the procedures.
 
@@ -221,7 +222,7 @@ LTQueue's idea is to maintain a tree structure as in @ltqueue-tree. Each enqueue
 
 The followings are the timestamp propagation procedures.
 
-Note that compare to the original paper @ltqueue, we have make some trivial modification on line 11-12 to handle the leaf node case, which was left unspecified in the original algorithm. In many ways, this modification is in the same light with the mechanism the algorithm is already using, so intuitively, it should not affect the algorithm's correctness or wait-freedom.
+Note that compare to the original paper @ltqueue, we have make some trivial modification on line 11-12 to handle the leaf node case, which was left unspecified in the original algorithm. In many ways, this modification is in the same light with the mechanism the algorithm is already using, so intuitively, it should not affect the algorithm's correctness or wait-freedom. Note that on line 25 of `refreshLeaf`, we omit which version of `readFront` it's calling, simply assume that the dequeuer and the enqueuer should call their corresponding version of `readFront`.
 
 #figure(
   kind: "algorithm",
@@ -293,6 +294,8 @@ The `refresh` procedure is by itself simple: we access all child nodes to determ
 )
 
 = Adaption of LTQueue without load-link/store-conditional
+
+The SPSC data structure in the original LTQueue is kept in tact so one may refer to @spsc-enqueue, @spsc-enqueuer-readFront, @spsc-dequeue, @spsc-dequeuer-readFront.
 
 = Proof of correctness
 
