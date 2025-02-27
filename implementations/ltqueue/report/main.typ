@@ -508,7 +508,7 @@ For a concurrent object `S`, we can call some methods on `S` concurrently. A met
 
 #definition[An extension of *history* $H$ is a *history* $H'$ such that any method call with $bot$ response event is replaced by a valid response event.]
 
-We can define a *strict partial order* on the set of well-formed method calls: 
+We can define a *strict partial order* on the set of well-formed method calls:
 
 #definition[$->$ is a relation on the set of well-formed method calls. With two method calls $X$ and $Y$, we have $X -> Y <=>$ $X$'s response event is not $bot$ and its response timestamp is not greater than $Y$'s invocation timestamp.]
 
@@ -535,14 +535,59 @@ We consider a history to be valid if it's linearizable.
 === Definition of linearizable MPSC
 
 An MPSC supports 2 *methods*:
-  - `enqueue` which accepts a value and returns nothing
-  - `dequeue` which doesn't accept anything and returns a value
+- `enqueue` which accepts a value and returns nothing
+- `dequeue` which doesn't accept anything and returns a value
 
 An MPSC has the same *sequential specification* as a FIFO: `dequeue` returns values in the same order as they was `enqueue`d.
 
 An MPSC places a special constraint on *the set of histories* it can produce: Any history $H$ must not have overlapping `dequeue` method calls.
 
 #definition[An MPSC is *linearizable* if and only if any history produced from the MPSC that does not have overlapping `dequeue` method calls is _linearizable_ according to the _FIFO sequential specification_.]
+
+=== Proof of linearizability
+
+We starts with some assumptions:
+- We have constructed a modified LTQueue with $n$ enqueuers.
+- The modified LTQueue is in its initial state at time $t = 0$.
+
+We consider the state of the modified LTQueue over a timeline starting at $t = 0$.
+
+#definition[For an enqueuer $E$, the timestamp of the first element in $E$'s local SPSC (among the elements between `First` and `Last`) at time $t_0$ is denoted as $m i n\- s p s c \-t s(E, t_0)$.]
+
+#theorem[If an enqueuer $E$ invokes `spsc_readFront`#sub[`e`] (@spsc-enqueuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 lt.eq m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.]
+
+#proof[
+  In this proof, in the procedure `spsc_dequeue` (@spsc-dequeue), we say an _item dequeue_ happens on line 17.
+
+  In $E$'s local SPSC, only $E$ and another dequeuer can modify the SPSC.
+
+  If the dequeuer doesn't run during $t_0$ until the end of `spsc_readFront`#sub[`e`], then it's trivial that this is true.
+
+  If an `spsc_dequeue` overlaps with this timestamp, then there's three possibilities:
+  1. $bot$ is returned.
+    - If $bot$ is returned before the _item dequeue_, at the end of `spsc_dequeue` which is at time $t_1 gt.eq t_0$, $M A X = m i n\-s p s c \- t s (E, t_1)$.
+    - If $bot$ is returned at time $t_1 gt.eq t_0$, after the _item dequeue_, it's easy to see that $M A X = m i n\-s p s c \- t s (E, t_1)$.
+  2. `Help` is returned (line 10 in @spsc-enqueuer-readFront). In this case, between line 6 and line 9 of @spsc-enqueuer-readFront, an _item dequeue_ has happened at time $t_1$ and put the item in `Help`, so of course, `Help`'s timestamp would be $ lt.eq m i n\- s p s c \-t s(E, t_1)$. Because the _item dequeue_ happens after line 6, $t_1 gt.eq t_0$. Therefore, the theorem holds.
+  3. `tmp.val` is returned (line 11 in @spsc-enqueuer-readFront). In this case, an _item dequeue_ hasn't been performed yet between line 6 and line 9 of @spsc-enqueuer-readFront. Therefore, after the _item dequeue_ has actually happened at time $t_1 gt.eq t_0$, the new minimum timestamp of the local SPSC would be of course greater than the returned timestamp, so the theorem holds.
+]
+
+#theorem[If the dequeuer invokes `spsc_readFront`#sub[`d`] (@spsc-dequeuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 lt.eq m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.]
+
+#proof[
+  In an enqueuer $E$'s local SPSC, only $E$ and another dequeuer can modify the SPSC.
+
+  If the enqueuer $E$ doesn't run during $t_0$ until the end of `spsc_readFront`#sub[`e`], then it's trivial that this is true.
+
+  If the SPSC isn't empty at $t_0$, obviously the theorem holds true as an enqueuer cannot modify the minimum timestamp of the local SPSC if it's not empty.
+
+  If the SPSC is empty at $t_0$, there are two possibilities:
+  1. $bot$ is returned at time $t_1 gt.eq t_0$. This means the enqueuer $E$ hasn't updated `Last` yet (line 5 of @spsc-enqueue) at time $t_1$. This means $M A X = m i n\- s p s c \-t s(E, t_1)$
+  2. Some value other than $bot$ is returned at time $t_1$. This means this value must be the first item in the SPSC. Therefore, the theorem holds.
+]
+
+#definition[For an enqueuer $E$, the value of the `min-timestamp` variable stored in $E$'s enqueuer node at time $t_0$ is denoted as $m i n \- t s(E, t_0)$.]
+
+#definition[For a tree node $n o d e$, the rank stored in $n o d e$ at time $t_0$ is denoted as $r a n k (n o d e, t_0)$.]
 
 == Memory safety
 
