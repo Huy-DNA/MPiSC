@@ -214,8 +214,8 @@ LTQueue's idea is to maintain a tree structure as in @ltqueue-tree. Each enqueue
   )[
     + `[count, rank] = read(root(T))               `
     + *if* `(q == `$bot$`)` *return* $bot$
-    + `ret = spsc_dequeue(&Q[rank])`
-    + `propagate(&Q[rank])`
+    + `ret = spsc_dequeue(Q[rank])`
+    + `propagate(Q[rank])`
     + *return* `ret.val`
   ],
 )
@@ -230,9 +230,9 @@ Note that compare to the original paper @ltqueue, we have make some trivial modi
   pseudocode-list(
     line-numbering: i => i + 10,
     booktabs: true,
-    numbered-title: [`propagate(spsc:` *pointer* to `spsc_t)`],
+    numbered-title: [`propagate(spsc: spsc_t)`],
   )[
-    + *if* $not$`refreshLeaf(spsc)                   `
+    + *if* $not$`refreshLeaf(spsc)                       `
       + `refreshLeaf(spsc)`
     + `currentNode = leafNode(spsc)`
     + *repeat*
@@ -264,7 +264,7 @@ Note that compare to the original paper @ltqueue, we have make some trivial modi
   pseudocode-list(
     line-numbering: i => i + 22,
     booktabs: true,
-    numbered-title: [`refreshLeaf(spsc:` *pointer* to `spsc_t)`],
+    numbered-title: [`refreshLeaf(spsc: spsc_t)`],
   )[
     + `leafNode = leafNode(spsc)                      `
     + `LL(leafNode)`
@@ -296,6 +296,79 @@ The `refresh` procedure is by itself simple: we access all child nodes to determ
 = Adaption of LTQueue without load-link/store-conditional
 
 The SPSC data structure in the original LTQueue is kept in tact so one may refer to @spsc-enqueue, @spsc-enqueuer-readFront, @spsc-dequeue, @spsc-dequeuer-readFront for the supported SPSC procedures.
+
+The followings are the rewritten LTQueue's algorithm without LL/SC.
+
+#pagebreak()
+
+The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom nodes (represented by the type `enqueuer_t`), besides the local SPSC, the minimum-timestamp within the SPSC is also stored. The internal nodes no longer store a timestamp but a rank of an enqueuer. This rank corresponds to the enqueuer with the minimum timestamp among the node's children's ranks. Note that if a local SPSC is empty, the minimum-timestamp of the corresponding bottom node is set to `MAX` and its leaf node's rank is set to a `DUMMY` rank.
+
+#pseudocode-list(line-numbering: none)[
+  + *Types*
+    + `data_t` = The type of the data to be stored in LTQueue
+    + `spsc_t` = The type of the local SPSC
+    + `rank_t` = The rank of an enqueuer
+      + *struct*
+        + `value`: `uint32_t`
+        + `version`: `uint32_t`
+      + *end*
+    + `timestamp_t` =
+      + *struct*
+        + `value`: `uint32_t`
+        + `version`: `uint32_t`
+      + *end*
+    + `enqueuer_t` =
+      + *struct*
+        + `spsc`: `spsc_t`
+        + `min-timestamp`: `timestamp_t`
+      + *end*
+    + `node_t` = The node type of the tree constructed by LTQueue
+      + *struct*
+        + `rank`: `rank_t`
+      + *end*
+]
+
+#pseudocode-list(line-numbering: none)[
+  + *Shared variables*
+    + `counter`: `uint64_t`
+    + `root`: *pointer to* `node_t`
+    + `Q`: *array* `[1..n]` *of* `enqueuer_t`
+]
+
+#pseudocode-list(line-numbering: none)[
+  + *Initialization*
+    + `counter = 0`
+    + construct the tree structure and set `root` to the root node
+]
+
+#place(
+  center + bottom,
+  float: true,
+  scope: "parent",
+  [#figure(
+      kind: "image",
+      supplement: "Image",
+      image("/assets/modified-ltqueue.png"),
+      caption: [
+        Modified LTQueue's structure
+      ],
+    ) <modified-ltqueue-tree>
+  ],
+)
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    booktabs: true,
+    numbered-title: [`enqueue(rank: int, value: data_t)`],
+  )[
+    + `count = FAA(counter)                        `
+    + `timestamp = (count, rank)`
+    + `spsc_enqueue(Q[rank], (value, timestamp))`
+    + `propagate(Q[rank])`
+  ],
+)
 
 = Proof of correctness
 
