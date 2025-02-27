@@ -295,7 +295,7 @@ The `refresh` procedure is by itself simple: we access all child nodes to determ
 
 = Adaption of LTQueue without load-link/store-conditional
 
-The SPSC data structure in the original LTQueue is kept in tact so one may refer to @spsc-enqueue, @spsc-enqueuer-readFront, @spsc-dequeue, @spsc-dequeuer-readFront.
+The SPSC data structure in the original LTQueue is kept in tact so one may refer to @spsc-enqueue, @spsc-enqueuer-readFront, @spsc-dequeue, @spsc-dequeuer-readFront for the supported SPSC procedures.
 
 = Proof of correctness
 
