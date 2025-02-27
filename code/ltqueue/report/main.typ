@@ -332,7 +332,7 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
   + *Shared variables*
     + `counter`: `uint64_t`
     + `root`: *pointer to* `node_t`
-    + `Q`: *array* `[1..n]` *of* `enqueuer_t`
+    + `enqueuers`: *array* `[1..n]` *of* `enqueuer_t`
 ]
 
 #pseudocode-list(line-numbering: none)[
@@ -365,8 +365,24 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
   )[
     + `count = FAA(counter)                        `
     + `timestamp = (count, rank)`
-    + `spsc_enqueue(Q[rank], (value, timestamp))`
-    + `propagate(Q[rank])`
+    + `spsc_enqueue(enqueuers[rank].spsc, (value, timestamp))`
+    + `propagate(rank)`
+  ],
+)
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 4,
+    booktabs: true,
+    numbered-title: [`dequeue()` *returns* `data_t`],
+  )[
+    + `[rank, version] = root->rank               `
+    + *if* `(rank == DUMMY)` *return* $bot$
+    + `ret = spsc_dequeue(enqueuers[rank].spsc)`
+    + `propagate(rank)`
+    + *return* `ret.val`
   ],
 )
 
