@@ -387,7 +387,7 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
     + `spsc_enqueue(enqueuers[rank].spsc, (value, timestamp))`
     + `propagate(rank)`
   ],
-)
+) <lt-enqueue>
 
 #figure(
   kind: "algorithm",
@@ -403,7 +403,7 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
     + `propagate(rank)`
     + *return* `ret.val`
   ],
-)
+) <lt-dequeue>
 
 We omit the description of procedures `parent`, `leafNode`, `children`, leaving how the tree is constructed and children-parent relationship is determined to the implementor. The tree structure used by LTQueue is read-only so a wait-free implementation of these procedures is trivial.
 
@@ -426,7 +426,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
         + `refresh(currentNode)`
     + *until* `currentNode == root(T)`
   ],
-)
+) <lt-propagate>
 
 #figure(
   kind: "algorithm",
@@ -448,7 +448,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
         + `min-rank = child-rank`
     + `CAS(&currentNode->rank, [old-rank, old-version], [min-rank, old-version + 1])`
   ],
-)
+) <lt-refresh>
 
 #figure(
   kind: "algorithm",
@@ -465,7 +465,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
     + *else*
       + `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [front.timestamp, old-version + 1])`
   ],
-)
+) <lt-refresh-timestamp>
 
 #figure(
   kind: "algorithm",
@@ -480,7 +480,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
     + `[timestamp, ...] = enqueuers[rank].timestamp`
     + `CAS(&leafNode->rank, [old-rank, old-version], [timestamp == MAX ? DUMMY : rank, old-version + 1])`
   ],
-)
+) <lt-refresh-leaf>
 
 Notice that we omit which version of `spsc_readFront` we're calling on line 25, simply assuming that the producer and each enqueuer are calling their respective version.
 
@@ -554,7 +554,7 @@ We consider the state of the modified LTQueue over a timeline starting at $t = 0
 
 #definition[For an enqueuer $E$, the timestamp of the first element in $E$'s local SPSC (among the elements between `First` and `Last`) at time $t_0$ is denoted as $m i n\- s p s c \-t s(E, t_0)$.]
 
-#theorem[If an enqueuer $E$ invokes `spsc_readFront`#sub[`e`] (@spsc-enqueuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 = m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.]
+#theorem[If an enqueuer $E$ invokes `spsc_readFront`#sub[`e`] (@spsc-enqueuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 = m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.] <enqueuer-read-front-theorem>
 
 #proof[
   In this proof, in the procedure `spsc_dequeue` (@spsc-dequeue), we say an _item dequeue_ happens on line 17. Note that _item dequeue_ is atomic.
@@ -571,7 +571,7 @@ We consider the state of the modified LTQueue over a timeline starting at $t = 0
   3. `tmp.val` is returned (line 11 in @spsc-enqueuer-readFront) at time $t_1 gt.eq t_0$. In this case, an _item dequeue_ hasn't been performed yet between line 6 and line 9 of @spsc-enqueuer-readFront. Therefore, the returned timestamp $ = m i n\-s p s c \- t s (E, t_1)$. The theorem also holds in this case.
 ]
 
-#theorem[If the dequeuer invokes `spsc_readFront`#sub[`d`] (@spsc-dequeuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 = m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.]
+#theorem[If the dequeuer invokes `spsc_readFront`#sub[`d`] (@spsc-dequeuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 = m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.] <dequeuer-read-front-theorem>
 
 #proof[
   In an enqueuer $E$'s local SPSC, only $E$ and another dequeuer can modify the SPSC.
@@ -587,7 +587,31 @@ We consider the state of the modified LTQueue over a timeline starting at $t = 0
 
 #definition[For an enqueuer $E$, the value of the `min-timestamp` variable stored in $E$'s enqueuer node at time $t_0$ is denoted as $m i n \- t s(E, t_0)$.]
 
-#definition[For a tree node $n o d e$, the rank stored in $n o d e$ at time $t_0$ is denoted as $r a n k (n o d e, t_0)$.]
+#definition[For a tree node $n o d e$, the rank stored in $n o d e$ at time $t_0$ is denoted as $m i n \- r a n k (n o d e, t_0)$.]
+
+#definition[For an enqueuer $E$, its rank is denoted as $r a n k(E)$.]
+
+#theorem[If an enqueuer $E$ calls `propagate` (@lt-propagate) and enters line 10 at time $t_0$ and finishes line 11 at $t_2$, $m i n \- t s(E, t_2) = m i n \- s p s c \- t s(E, t_1)$ for some time $t_2 gt.eq t_1 gt.eq t_0$.]
+
+#proof[
+  Only $E$ and another dequeuer can modify the `min-timestamp` of $E$'s enqueuer node.
+
+  If line 10 of @lt-propagate succeeds, that means the `CAS` in `refreshTimestamp` (@lt-refresh-timestamp) succeeds. Applying @enqueuer-read-front-theorem, on line 25, `front` contains a timestamp $t s_0 = m i n\- s p s c \-t s(E, t_1 ')$ for some $t_1 ' gt.eq t_0$. Therefore, $m i n \- t s(E, t_2) = m i n \- s p s c \- t s(E, t_1 ')$ and $t_2 gt.eq t_1 ' gt.eq t_0$.
+
+  If line 10 fails but line 11 of @lt-propagate succeeds, the same line of reasoning suffices.
+
+  If both line 10 and line 11 of @lt-propagate fail:
+  - Because line 10 fails, the dequeuer has CAS-ed `min-timestamp` to another timestamp using `refreshTimestamp` (@lt-refresh-timestamp) after the enqueuer has got past the start line 10.
+  - Because line 11 fails, the dequeuer has CAS-ed `min-timestamp` to another timestamp using `refreshTimestamp` (@lt-refresh-timestamp). Because only one dequeue can happen at a time, this second dequeue must have happened after the enqueuer has got past the start of line 10. Therefore, this second dequeue must have CAS-ed `min-timestamp` using the result of `spsc_readFront`#sub(`d`) after the start of line 10. Applying @enqueuer-read-front-theorem, we can see that the theorem holds.
+] <enqueuer-min-timestamp-theorem>
+
+#theorem[If the dequeuer calls `propagate` (@lt-propagate) on the rank of $E$ and enters line 10 at time $t_0$ and finishes line 11 at $t_2$, $m i n \- t s(E, t_2) = m i n \- s p s c \- t s(E, t_1)$ for some time $t_2 gt.eq t_1 gt.eq t_0$.] <dequeuer-min-timestamp-theorem>
+
+#proof[
+  Only $E$ and the dequeuer can modify the `min-timestamp` of $E$'s enqueuer node.
+
+  In a similar manner to @enqueuer-min-timestamp-theorem, we can prove this theorem.
+]
 
 == Memory safety
 
