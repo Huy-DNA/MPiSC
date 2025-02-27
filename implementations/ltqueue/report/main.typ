@@ -534,6 +534,16 @@ We consider a history to be valid if it's linearizable.
 
 === Definition of linearizable MPSC
 
+An MPSC supports 2 *methods*:
+  - `enqueue` which accepts a value and returns nothing
+  - `dequeue` which doesn't accept anything and returns a value
+
+An MPSC has the same *sequential specification* as a FIFO: `dequeue` returns values in the same order as they was `enqueue`d.
+
+An MPSC places a special constraint on *the set of histories* it can produce: Any history $H$ must not have overlapping `dequeue` method calls.
+
+#definition[An MPSC is *linearizable* if and only if any history produced from the MPSC that does not have overlapping `dequeue` method calls is _linearizable_ according to the _FIFO sequential specification_.]
+
 == Memory safety
 
 == Wait-freedom
