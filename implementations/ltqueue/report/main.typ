@@ -554,10 +554,10 @@ We consider the state of the modified LTQueue over a timeline starting at $t = 0
 
 #definition[For an enqueuer $E$, the timestamp of the first element in $E$'s local SPSC (among the elements between `First` and `Last`) at time $t_0$ is denoted as $m i n\- s p s c \-t s(E, t_0)$.]
 
-#theorem[If an enqueuer $E$ invokes `spsc_readFront`#sub[`e`] (@spsc-enqueuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 lt.eq m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.]
+#theorem[If an enqueuer $E$ invokes `spsc_readFront`#sub[`e`] (@spsc-enqueuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 = m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.]
 
 #proof[
-  In this proof, in the procedure `spsc_dequeue` (@spsc-dequeue), we say an _item dequeue_ happens on line 17.
+  In this proof, in the procedure `spsc_dequeue` (@spsc-dequeue), we say an _item dequeue_ happens on line 17. Note that _item dequeue_ is atomic.
 
   In $E$'s local SPSC, only $E$ and another dequeuer can modify the SPSC.
 
@@ -567,11 +567,11 @@ We consider the state of the modified LTQueue over a timeline starting at $t = 0
   1. $bot$ is returned.
     - If $bot$ is returned before the _item dequeue_, at the end of `spsc_dequeue` which is at time $t_1 gt.eq t_0$, $M A X = m i n\-s p s c \- t s (E, t_1)$.
     - If $bot$ is returned at time $t_1 gt.eq t_0$, after the _item dequeue_, it's easy to see that $M A X = m i n\-s p s c \- t s (E, t_1)$.
-  2. `Help` is returned (line 10 in @spsc-enqueuer-readFront). In this case, between line 6 and line 9 of @spsc-enqueuer-readFront, an _item dequeue_ has happened at time $t_1$ and put the item in `Help`, so of course, `Help`'s timestamp would be $ lt.eq m i n\- s p s c \-t s(E, t_1)$. Because the _item dequeue_ happens after line 6, $t_1 gt.eq t_0$. Therefore, the theorem holds.
-  3. `tmp.val` is returned (line 11 in @spsc-enqueuer-readFront). In this case, an _item dequeue_ hasn't been performed yet between line 6 and line 9 of @spsc-enqueuer-readFront. Therefore, after the _item dequeue_ has actually happened at time $t_1 gt.eq t_0$, the new minimum timestamp of the local SPSC would be of course greater than the returned timestamp, so the theorem holds.
+  2. `Help` is returned (line 10 in @spsc-enqueuer-readFront). In this case, between line 6 and line 9 of @spsc-enqueuer-readFront, an _item dequeue_ has atomically happened and the old `First` item is put in `Help`. Take $t_1 gt.eq t_0$ to be some time between line 6 and right before the _item dequeue_. At $t_1$, the first item in the SPSC is exactly the `Help` value that is returned. Therefore, the returned `Help`'s timestamp $ = m i n\-s p s c \- t s (E, t_1)$. Therefore, the theorem holds.
+  3. `tmp.val` is returned (line 11 in @spsc-enqueuer-readFront) at time $t_1 gt.eq t_0$. In this case, an _item dequeue_ hasn't been performed yet between line 6 and line 9 of @spsc-enqueuer-readFront. Therefore, the returned timestamp $ = m i n\-s p s c \- t s (E, t_1)$. The theorem also holds in this case.
 ]
 
-#theorem[If the dequeuer invokes `spsc_readFront`#sub[`d`] (@spsc-dequeuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 lt.eq m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.]
+#theorem[If the dequeuer invokes `spsc_readFront`#sub[`d`] (@spsc-dequeuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 = m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.]
 
 #proof[
   In an enqueuer $E$'s local SPSC, only $E$ and another dequeuer can modify the SPSC.
