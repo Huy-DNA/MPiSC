@@ -317,7 +317,7 @@ The followings are the rewritten LTQueue's algorithm without LL/SC.
 
 #pagebreak()
 
-The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom nodes (represented by the type `enqueuer_t`), besides the local SPSC, the minimum-timestamp within the SPSC is also stored. The internal nodes no longer store a timestamp but a rank of an enqueuer. This rank corresponds to the enqueuer with the minimum timestamp among the node's children's ranks. Note that if a local SPSC is empty, the minimum-timestamp of the corresponding bottom node is set to `MAX` and its leaf node's rank is set to a `DUMMY` rank.
+The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom *enqueuer nodes* (represented by the type `enqueuer_t`), besides the local SPSC, the minimum-timestamp among the elements in the SPSC is also stored. The *internal nodes* no longer store a timestamp but a rank of an enqueuer. This rank corresponds to the enqueuer with the minimum timestamp among the node's children's ranks. Note that if a local SPSC is empty, the minimum-timestamp of the corresponding bottom node is set to `MAX` and its leaf node's rank is set to a `DUMMY` rank.
 
 #pseudocode-list(line-numbering: none)[
   + *Types*
@@ -504,9 +504,11 @@ For a concurrent object `S`, we can call some methods on `S` concurrently. A met
 
 #definition[A *method call* is a tuple of $(i, r)$ where $i$ is an invocation event and $r$ is a response event or the special value $bot$ indicating that its response event haven't happened yet. A well-formed *method call* should have a reponse event with a larger timestamp than its invocation event or the response event haven't happened yet.]
 
+#definition[A *method call* is *pending* if its invocation event is $bot$.]
+
 #definition[A *history* is a set of well-formed *method calls*.]
 
-#definition[An extension of *history* $H$ is a *history* $H'$ such that any method call with $bot$ response event is replaced by a valid response event.]
+#definition[An extension of *history* $H$ is a *history* $H'$ such that any pending method call is given a response event such that the resulting method call is well-formed.]
 
 We can define a *strict partial order* on the set of well-formed method calls:
 
