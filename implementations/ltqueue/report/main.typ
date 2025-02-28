@@ -548,72 +548,63 @@ An MPSC places a special constraint on *the set of histories* it can produce: An
 
 === Proof of linearizability
 
-We starts with some assumptions:
-- We have constructed a modified LTQueue with $n$ enqueuers.
-- The modified LTQueue is in its initial state at time $t = 0$.
+We consider the state of the modified LTQueue on a timeline starting at 0. Initially, at $t = 0$, the modified LTQueue is in an empty-initialized state.
 
-We consider the state of the modified LTQueue over a timeline starting at $t = 0$.
+#theorem[Only the dequeuer and the owner enqueuer can operate on an enqueuer node.]
 
-#definition[For an enqueuer $E$, the timestamp of the first element in $E$'s local SPSC (among the elements between `First` and `Last`) at time $t_0$ is denoted as $m i n\- s p s c \-t s(E, t_0)$.]
+#proof[This is trivial.]
 
-#theorem[If an enqueuer $E$ invokes `spsc_readFront`#sub[`e`] (@spsc-enqueuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 = m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.] <enqueuer-read-front-theorem>
+We immediately obtain the following result.
 
-#proof[
-  In this proof, in the procedure `spsc_dequeue` (@spsc-dequeue), we say an _item dequeue_ happens on line 17. Note that _item dequeue_ is atomic.
+#corollary[Only one `dequeue` operation and one `enqueue` operation can operate concurrently on an enqueuer node.]
 
-  In $E$'s local SPSC, only $E$ and another dequeuer can modify the SPSC.
+#proof[This is trivial.]
 
-  If the dequeuer doesn't run during $t_0$ until the end of `spsc_readFront`#sub[`e`], then it's trivial that this is true.
+#definition[The subtree rooted at a node $n o d e$ is denoted as $s u b t r e e(n o d e)$.]
 
-  If an `spsc_dequeue` overlaps with this timestamp, then there's three possibilities:
-  1. $bot$ is returned.
-    - If $bot$ is returned before the _item dequeue_, at the end of `spsc_dequeue` which is at time $t_1 gt.eq t_0$, $M A X = m i n\-s p s c \- t s (E, t_1)$.
-    - If $bot$ is returned at time $t_1 gt.eq t_0$, after the _item dequeue_, it's easy to see that $M A X = m i n\-s p s c \- t s (E, t_1)$.
-  2. `Help` is returned (line 10 in @spsc-enqueuer-readFront). In this case, between line 6 and line 9 of @spsc-enqueuer-readFront, an _item dequeue_ has atomically happened and the old `First` item is put in `Help`. Take $t_1 gt.eq t_0$ to be some time between line 6 and right before the _item dequeue_. At $t_1$, the first item in the SPSC is exactly the `Help` value that is returned. Therefore, the returned `Help`'s timestamp $ = m i n\-s p s c \- t s (E, t_1)$. Therefore, the theorem holds.
-  3. `tmp.val` is returned (line 11 in @spsc-enqueuer-readFront) at time $t_1 gt.eq t_0$. In this case, an _item dequeue_ hasn't been performed yet between line 6 and line 9 of @spsc-enqueuer-readFront. Therefore, the returned timestamp $ = m i n\-s p s c \- t s (E, t_1)$. The theorem also holds in this case.
-]
+#definition[The root node of the modified LTQueue is denoted as $r o o t$.]
 
-#theorem[If the dequeuer invokes `spsc_readFront`#sub[`d`] (@spsc-dequeuer-readFront) at time $t_0$, then it returns an item with a timestamp $t s_0$ such that $t s_0 = m i n\- s p s c \-t s(E, t_1)$ for some $t_1 gt.eq t_0$.] <dequeuer-read-front-theorem>
+#definition[The rank stored in a tree node $n o d e$ is denoted as $r a n k(n o d e)$.]
 
-#proof[
-  In an enqueuer $E$'s local SPSC, only $E$ and another dequeuer can modify the SPSC.
+#definition[For an `enqueue` operation $E$, $r a n k(E)$ is the rank of the enqueuer node that the `enqueue` affects.]
 
-  If the enqueuer $E$ doesn't run during $t_0$ until the end of `spsc_readFront`#sub[`e`], then it's trivial that this is true.
+#definition[For a `dequeue` operation $D$, $r a n k(D)$ is the rank of the enqueuer node that the `dequeue` affects.]
 
-  If the SPSC isn't empty at $t_0$, obviously the theorem holds true as an enqueuer cannot modify the minimum timestamp of the local SPSC if it's not empty.
+#definition[For an `enqueue` operation $E$, $t s(E)$ is the timestamp the `enqueue` obtains.]
 
-  If the SPSC is empty at $t_0$, there are two possibilities:
-  1. $bot$ is returned at time $t_1 gt.eq t_0$. This means the enqueuer $E$ hasn't updated `Last` yet (line 5 of @spsc-enqueue) at time $t_1$. This means $M A X = m i n\- s p s c \-t s(E, t_1)$
-  2. Some value other than $bot$ is returned at time $t_1$. This means this value must be the first item in the SPSC. Therefore, the theorem holds.
-]
+#definition[For a `dequeue` operation $D$, $t s(D)$ is the timestamp of the item the `dequeue` dequeues.]
 
-#definition[For an enqueuer $E$, the value of the `min-timestamp` variable stored in $E$'s enqueuer node at time $t_0$ is denoted as $m i n \- t s(E, t_0)$.]
+#definition[For an enqueuer node $e n o d e$, $m i n \- t s(e n o d e)$ is the value of the `min-timestamp` variable stored in $e n o d e$.]
 
-#definition[For a tree node $n o d e$, the rank stored in $n o d e$ at time $t_0$ is denoted as $m i n \- r a n k (n o d e, t_0)$.]
+#definition[An `enqueue` operation is said to be *relevant* to a subtree if that `enqueue` operation affects a leaf node of that subtree.]
 
-#definition[For an enqueuer $E$, its rank is denoted as $r a n k(E)$.]
+#definition[An `enqueue` operation is said to be *relevant* to an enqueuer node if that `enqueue` operation affects it.]
 
-#theorem[If an enqueuer $E$ calls `propagate` (@lt-propagate) and enters line 10 at time $t_0$ and finishes line 11 at $t_2$, $m i n \- t s(E, t_2) = m i n \- s p s c \- t s(E, t_1)$ for some time $t_2 gt.eq t_1 gt.eq t_0$.]
+#definition[A `dequeue` operation is said to be *relevant* to a subtree if that `dequeue` operation affects a leaf node of that subtree.]
 
-#proof[
-  Only $E$ and another dequeuer can modify the `min-timestamp` of $E$'s enqueuer node.
+#definition[A `dequeue` operation is said to be *relevant* to an enqueuer node if that `dequeue` operation affects it.]
 
-  If line 10 of @lt-propagate succeeds, that means the `CAS` in `refreshTimestamp` (@lt-refresh-timestamp) succeeds. Applying @enqueuer-read-front-theorem, on line 25, `front` contains a timestamp $t s_0 = m i n\- s p s c \-t s(E, t_1 ')$ for some $t_1 ' gt.eq t_0$. Therefore, $m i n \- t s(E, t_2) = m i n \- s p s c \- t s(E, t_1 ')$ and $t_2 gt.eq t_1 ' gt.eq t_0$.
+#theorem[Consider an enqueuer node $e n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* `enqueue`s $C$ and a set of _pending_ *relevant* `enqueue`s $P$ while no *relevant* `dequeue` has been observed yet. If $C equiv.not emptyset$, at time $t_0$, $m i n \- t s(e n o d e) = t s(E_0)$ for $E_0 in C$ and $t s (E_0) = min_(E in C) t s (E)$.]
 
-  If line 10 fails but line 11 of @lt-propagate succeeds, the same line of reasoning suffices.
+#theorem[Consider an enqueuer node $e n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* `enqueue`s $C$ and a set of _pending_ *relevant* `enqueue`s $P$ while no *relevant* `dequeue` has been observed yet. If $C equiv emptyset$, at time $t_0$, $m i n \- t s(e n o d e) = M A X$ or $m i n \- t s(e n o d e) = t s(E)$ for $E in P$.]
 
-  If both line 10 and line 11 of @lt-propagate fail:
-  - Because line 10 fails, the dequeuer has CAS-ed `min-timestamp` to another timestamp using `refreshTimestamp` (@lt-refresh-timestamp) after the enqueuer has got past the start line 10.
-  - Because line 11 fails, the dequeuer has CAS-ed `min-timestamp` to another timestamp using `refreshTimestamp` (@lt-refresh-timestamp). Because only one dequeue can happen at a time, this second dequeue must have happened after the enqueuer has got past the start of line 10. Therefore, this second dequeue must have CAS-ed `min-timestamp` using the result of `spsc_readFront`#sub(`d`) after the start of line 10. Applying @enqueuer-read-front-theorem, we can see that the theorem holds.
-] <enqueuer-min-timestamp-theorem>
+#theorem[Consider a subtree rooted at $n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* `enqueue`s $C$ and a set of _pending_ *relevant* `enqueue`s $P$ while no *relevant* `dequeue` has been observed yet. If $C equiv.not emptyset$, at time $t_0$, $r a n k(n o d e) = r a n k(E_0)$ for $E_0 in C$ and $t s (E_0) = min_(E in C) t s (E)$.]
 
-#theorem[If the dequeuer calls `propagate` (@lt-propagate) on the rank of $E$ and enters line 10 at time $t_0$ and finishes line 11 at $t_2$, $m i n \- t s(E, t_2) = m i n \- s p s c \- t s(E, t_1)$ for some time $t_2 gt.eq t_1 gt.eq t_0$.] <dequeuer-min-timestamp-theorem>
+#theorem[Consider a subtree rooted at $n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* `enqueue`s $C$ and a set of _pending_ *relevant* `enqueue`s $P$ while no *relevant* `dequeue` has been observed yet. If $C equiv emptyset$, at time $t_0$, $r a n k(n o d e) = D U M M Y$ or $r a n k(r o o t) = r a n k(E)$ for some $E in P$.]
 
-#proof[
-  Only $E$ and the dequeuer can modify the `min-timestamp` of $E$'s enqueuer node.
+#definition[A `dequeue` operation $D$ is said to *match* an `enqueue` operation $E$ if $t s(D) = t s(E)$. Similarly, $E$ is said to *match* $D$. In short, both $D$ and $E$ are said to be *matched*.]
 
-  In a similar manner to @enqueuer-min-timestamp-theorem, we can prove this theorem.
-]
+#definition[A `dequeue` operation $D$ is said to be *unmatched* if $t s(D) = M A X$.]
+
+#definition[An `enqueue` operation $E$ is said to be *unmatched* if no `dequeue` operation has matched it.]
+
+#theorem[Consider an enqueuer node $e n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* *unmatched* `enqueue`s $C$ and a set of _pending_ *relevant* *unmatched* `enqueue`s $P$ while there's no _pending_ *relevant* `dequeue`. If $C equiv.not emptyset$, at time $t_0$, $m i n \- t s(e n o d e) = t s(E_0)$ for $E_0 in C$ and $t s (E_0) = min_(E in C) t s (E)$.]
+
+#theorem[Consider an enqueuer node $e n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* *unmatched* `enqueue`s $C$ and a set of _pending_ *relevant* *unmatched* `enqueue`s $P$ while there's no _pending_ *relevant* `dequeue`. If $C equiv emptyset$, at time $t_0$, $m i n \- t s(e n o d e) = M A X$ or $m i n \- t s(e n o d e) = t s(E)$ for $E in P$.]
+
+#theorem[Consider a subtree rooted at $n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* *unmatched* `enqueue`s $C$ and a set of _pending_ *relevant* *unmatched* `enqueue`s $P$ while there's no _pending_ *relevant* `dequeue`. If $C equiv.not emptyset$, at time $t_0$, $r a n k(n o d e) = r a n k(E_0)$ for $E_0 in C$ and $t s (E_0) = min_(E in C) t s (E)$.]
+
+#theorem[Consider a subtree rooted at $n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* *unmatched* `enqueue`s $C$ and a set of _pending_ *relevant* *unmatched* `enqueue`s $P$ while there's no _pending_ *relevant* `dequeue`. If $C equiv emptyset$, at time $t_0$, $r a n k(n o d e) = D U M M Y$ or $r a n k(r o o t) = r a n k(E)$ for some $E in P$.]
 
 == Memory safety
 
