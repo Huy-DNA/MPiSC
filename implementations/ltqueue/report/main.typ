@@ -556,9 +556,15 @@ We consider the state of the modified LTQueue on a timeline starting at 0. Initi
 
 We immediately obtain the following result.
 
-#corollary[Only one `dequeue` operation and one `enqueue` operation can operate concurrently on an enqueuer node.]
+#corollary[Only one `dequeue` operation and one `enqueue` operation can operate concurrently on an enqueuer node.] <one-dequeue-one-enqueue-corollary>
 
 #proof[This is trivial.]
+
+#theorem[The SPSC at an enqueuer node contains items with increasing timestamps.] <increasing-timestamp-theorem>
+
+#proof[
+  Each `enqueue` would `FAA` the shared counter (line 1 in @lt-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @one-dequeue-one-enqueue-corollary, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FFA`-ing the shared counter. The theorem holds.
+]
 
 #definition[The subtree rooted at a node $n o d e$ is denoted as $s u b t r e e(n o d e)$.]
 
@@ -586,7 +592,23 @@ We immediately obtain the following result.
 
 #theorem[Consider an enqueuer node $e n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* `enqueue`s $C$ and a set of _pending_ *relevant* `enqueue`s $P$ while no *relevant* `dequeue` has been observed yet. If $C equiv.not emptyset$, at time $t_0$, $m i n \- t s(e n o d e) = t s(E_0)$ for $E_0 in C$ and $t s (E_0) = min_(E in C) t s (E)$.]
 
-#theorem[Consider an enqueuer node $e n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* `enqueue`s $C$ and a set of _pending_ *relevant* `enqueue`s $P$ while no *relevant* `dequeue` has been observed yet. If $C equiv emptyset$, at time $t_0$, $m i n \- t s(e n o d e) = M A X$ or $m i n \- t s(e n o d e) = t s(E)$ for $E in P$.]
+#proof[
+  The `enqueue` procedure is given in @lt-enqueue. It calls `propagate` which calls `refreshTimestamp`.
+
+  Because we have only observed relevant `enqueue`s and no relevant `dequeue`, the local SPSC inside $e n o d e$ is always non-empty when `refreshTimestamp` is called. Therefore, `refreshTimestamp` will try to CAS `min-timestamp` of $e n o d e$ to the front element's timestamp. Applying @one-dequeue-one-enqueue-corollary and the fact there's no `dequeue`, this CAS always succeeds.
+
+  Applying @increasing-timestamp-theorem and the fact there's no `dequeue`, we know that the front element is the element enqueued by the `enqueue` $E_0$ that obtains the earliest timestamp, so $t s(E_0) = min_(E in C union P) t s(E)$. This `enqueue` must not be pending because `enqueue`s are run one at a time, so $E_0 in C$. Therefore, after this `enqueue`, `min-timestamp` of $e n o d e$ is set to $t s(E_0)$ at some time before $t_0$.
+
+  Because there's no `dequeue` up until $t_0$, `min-timestamp` of $e n o d e$ remains constant and equal $t s(E_0)$. Consequently, at time $t_0$, $m i n \- t s(e n o d e) = t s(E_0)$ for $E_0 in C$ and $t s (E_0) = min_(E in C) t s (E)$.
+]
+
+#theorem[Consider an enqueuer node $e n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* `enqueue`s $C$ and a set of _pending_ *relevant* `enqueue`s $P$ while no *relevant* `dequeue` has been observed yet. If $C equiv emptyset$, at time $t_0$, $m i n \- t s(e n o d e) = M A X$ or $m i n \- t s(e n o d e) = t s(E)$ for some $E in P$.]
+
+#proof[
+  If no pending `enqueue` has CAS-ed `min-timestamp` of $e n o d e$ up until time $t_0$, because there's no completed relevant `enqueue`, so `min-timestamp` has not ever been set, `min-timestamp` must be $M A X$ or $m i n \- t s(e n o d e) = M A X$.
+
+  If some pending `enqueue` has CAS-ed `min-timestamp` of $e n o d e$ some time before $t_0$, then obviously, at time $t_0$, $m i n \- t s(e n o d e) = t s(E)$ for some $E in P$.
+]
 
 #theorem[Consider a subtree rooted at $n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* `enqueue`s $C$ and a set of _pending_ *relevant* `enqueue`s $P$ while no *relevant* `dequeue` has been observed yet. If $C equiv.not emptyset$, at time $t_0$, $r a n k(n o d e) = r a n k(E_0)$ for $E_0 in C$ and $t s (E_0) = min_(E in C) t s (E)$.]
 
@@ -600,7 +622,9 @@ We immediately obtain the following result.
 
 #theorem[Consider an enqueuer node $e n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* *unmatched* `enqueue`s $C$ and a set of _pending_ *relevant* *unmatched* `enqueue`s $P$ while there's no _pending_ *relevant* `dequeue`. If $C equiv.not emptyset$, at time $t_0$, $m i n \- t s(e n o d e) = t s(E_0)$ for $E_0 in C$ and $t s (E_0) = min_(E in C) t s (E)$.]
 
-#theorem[Consider an enqueuer node $e n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* *unmatched* `enqueue`s $C$ and a set of _pending_ *relevant* *unmatched* `enqueue`s $P$ while there's no _pending_ *relevant* `dequeue`. If $C equiv emptyset$, at time $t_0$, $m i n \- t s(e n o d e) = M A X$ or $m i n \- t s(e n o d e) = t s(E)$ for $E in P$.]
+#proof[ ]
+
+#theorem[Consider an enqueuer node $e n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* *unmatched* `enqueue`s $C$ and a set of _pending_ *relevant* *unmatched* `enqueue`s $P$ while there's no _pending_ *relevant* `dequeue`. If $C equiv emptyset$, at time $t_0$, $m i n \- t s(e n o d e) = M A X$ or $m i n \- t s(e n o d e) = t s(E)$ for some $E in P$.]
 
 #theorem[Consider a subtree rooted at $n o d e$. Suppose at time $t_0$, we have observed a set of _completed_ *relevant* *unmatched* `enqueue`s $C$ and a set of _pending_ *relevant* *unmatched* `enqueue`s $P$ while there's no _pending_ *relevant* `dequeue`. If $C equiv.not emptyset$, at time $t_0$, $r a n k(n o d e) = r a n k(E_0)$ for $E_0 in C$ and $t s (E_0) = min_(E in C) t s (E)$.]
 
