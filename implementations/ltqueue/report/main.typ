@@ -548,7 +548,13 @@ An MPSC places a special constraint on *the set of histories* it can produce: An
 
 === Proof of linearizability
 
-#theorem[Only the dequeuer and the owner enqueuer can operate on an enqueuer node.]
+#definition[An `enqueue` operation $e$ is said to *match* a `dequeue` operation $d$ if $d$ returns a timestamp that $e$ enqueues. Similarly, $d$ is said to match $e$. In this case, both $e$ and $d$ are said to be *matched*.]
+
+#definition[An `enqueue` operation $e$ is said to be *unmatched* if no `dequeue` operation *matches* it.]
+
+#definition[A `dequeue` operation $d$ is said to be *unmatched* if no `enqueue` operation *matches* it, in other word, $d$ returns $bot$.]
+
+#theorem[Only the dequeuer and an enqueuer can operate on its enqueuer node.]
 
 #proof[This is trivial.]
 
@@ -563,6 +569,16 @@ We immediately obtain the following result.
 #proof[
   Each `enqueue` would `FAA` the shared counter (line 1 in @lt-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @one-dequeue-one-enqueue-corollary, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FFA`-ing the shared counter. The theorem holds.
 ]
+
+#theorem[An `enqueue` $e$ will eventually be matched with a `dequeue` $d$ if there's an infinite sequence of `dequeue`s.]
+
+#theorem[An `enqueue` $e$ can only be matched by a `dequeue` $d$ that overlaps or succeeds $e$.]
+
+#theorem[If an `enqueue` $e_0$ precedes another `enqueue` $e_1$, $e_0$ will be matched before $e_1$ if there's an infinite sequence of `dequeue`s.]
+
+#theorem[If a `dequeue` $d_0$ precedes another `dequeue` $d_1$, if $d_0$ matches $e_0$ and $d_1$ matches $e_1$ then either $e_0$ overlaps with $e_1$ or $e_0$ precedes $e_1$.]
+
+#theorem[If a `dequeue` $d$ precedes another `enqueue` $e$, $d$ will never be matched with $e$.]
 
 == Memory safety
 
