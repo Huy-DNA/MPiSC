@@ -570,6 +570,14 @@ We immediately obtain the following result.
   Each `enqueue` would `FAA` the shared counter (line 1 in @lt-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @one-dequeue-one-enqueue-corollary, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FFA`-ing the shared counter. The theorem holds.
 ]
 
+#definition[For a tree node $n$, the subtree rooted at $n$ is denoted as $s u b t r e e(n)$.]
+
+#definition[For an `enqueue` $e$, the set of nodes that call `refresh` or `refreshLeaf` is denoted as $p a t h(e)$.]
+
+#theorem[For an `enqueue` $e$, if $e$ modifies an enqueuer node and this enqueuer node is attached to a leaf node $l$, then $p a t h(e)$ is the set of nodes lying on the path from $l$ to the root node.]
+
+#proof[This is trivial considering how `propagate` (@lt-propagate) works.]
+
 #theorem[An `enqueue` $e$ will eventually be matched with a `dequeue` $d$ if there's an infinite sequence of `dequeue`s.]
 
 #theorem[An `enqueue` $e$ can only be matched by a `dequeue` $d$ that overlaps or succeeds $e$.]
