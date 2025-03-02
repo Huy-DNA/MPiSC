@@ -578,7 +578,9 @@ We immediately obtain the following result.
 
 #definition[For an enqueuer $E$, the minimum timestamp among the elements between `First` and `Last` in the local SPSC at time $t$ is denoted as $m i n \- s p s c \- t s(E, t)$. If $E$ is dummy, $m i n \- s p s c \- t s(E, t)$ is `MAX`.]
 
-#definition[For an `enqueue` $e$, the set of nodes that call `refresh` or `refreshLeaf` is denoted as $p a t h(e)$.]
+#definition[For an `enqueue` $e$, the set of nodes that it calls `refresh` or `refreshLeaf` on is denoted as $p a t h(e)$.]
+
+#definition[For an `dequeue` $d$, the set of nodes that it calls `refresh` or `refreshLeaf` on is denoted as $p a t h(d)$.]
 
 #theorem[For an `enqueue` $e$, if $e$ modifies an enqueuer node and this enqueuer node is attached to a leaf node $l$, then $p a t h(e)$ is the set of nodes lying on the path from $l$ to the root node.]
 
@@ -590,17 +592,17 @@ We immediately obtain the following result.
 
 #proof[This is trivial considering how `refresh` and `refreshLeaf` works.]
 
-#definition[A non-leaf node $n$ is said to be *consistent* at time $t$ with respect to time $t_0$, with $t_0 lt.eq t$, if for every child node $c$ of $n$, there exists a time $t_c$ and $t'$, $t_0 lt.eq t_c, t' lt.eq t$, such that $m i n \- t s(r a n k(n, t), t') lt.eq m i n \- t s(r a n k(c, t_c), t_c)$.
+#definition[A non-leaf node $n$ is said to be *consistent* at time $t$ with respect to time $t_0$, with $t_0 lt.eq t$, if for every child node $c$ of $n$, there exists a time $t_r$, $t_s$, $t_0 lt.eq t_r, t_s lt.eq t$, such that $m i n \- t s(r a n k(n, t), t_s) lt.eq m i n \- t s(r a n k(c, t_r), t_s)$, furthermore, there exists a child node $c$ of $n$ such that $r a n k(n, t) = r a n k(c, t_r)$.
 ]
 
-#definition[A leaf node $n$ is said to be *consistent* at time $t$ with respect to time $t_0$, with $t_0 lt.eq t$, if there exists a time $t'$, $t_0 lt.eq t' lt.eq t$, such that $m i n \- t s(r a n k(n, t), t') = m i n \- t s(r a n k(E), t')$ with $E$ being the enqueuer attached to $n$.
+#definition[A leaf node $n$ is said to be *consistent* at time $t$ with respect to time $t_0$, with $t_0 lt.eq t$, if there exists a time $t_s$, $t_0 lt.eq t_r lt.eq t$, such that $m i n \- t s(r a n k(n, t), t_s) = m i n \- t s(r a n k(E), t_s)$ with $E$ being the enqueuer attached to $n$.
 ]
 
 #theorem[At some time $t=delta$, with $delta$ arbitrarily small, any node is *consistent* with respect to $t = delta'$ for any $delta' lt.eq delta$.]
 
 #proof[This is trivial. After initialization, the modified LTQueue is in an empty state from time $t=0$ up until the first operation. We can take $delta$ to be a time point right before the first operation.]
 
-#theorem[Consider an `enqueue` or `dequeue` operation. Take $N$ to be the set of nodes that this `enqueue` calls `refreshLeaf` or `refresh` on. Suppose $t_0$ is the time the first `refresh` or `refreshLeaf` is called by the `enqueue` or `dequeue`. Suppose $t_1$ is the time the last `refresh` or `refreshLeaf` is finished by the `enqueue` or `dequeue`. Then, for any node $n in N$, $n$ is consistent at time $t_1$ with respect to time $t_0$.] <consistent-theorem>
+#theorem[Consider an `enqueue` or `dequeue` operation. Take $N$ to be the set of nodes that this `enqueue` calls `refreshLeaf` or `refresh` on. Suppose $t_0$ is the time the first `refresh` or `refreshLeaf` is called by the `enqueue` or `dequeue`. Suppose $t_1$ is the time the last `refresh` or `refreshLeaf` is finished by the `enqueue` or `dequeue`. Then, for any node $n in N$, $n$ is consistent at time $t_1$ with respect to time $t_0$.] <refresh-retry-theorem>
 
 #proof[
   Consider a node $n in N$.
@@ -615,16 +617,94 @@ We immediately obtain the following result.
 
   Using $(*)$, there exists a successful $n$-refresh call between $t_0$ and $t_1$.
 
-  Consider such _last_ successful refresh between $t_0$ and $t_1$. Suppose it succeeds at time $t$, where $t_0 lt.eq t lt.eq t_1$.
+  Consider one such successful refresh between $t_0$ and $t_1$. Suppose it succeeds at time $t$, where $t_0 lt.eq t lt.eq t_1$.
 
-  If $n$ is a leaf node, the $n$-refresh call is `refreshLeaf(`$n$`)` (@lt-refresh-leaf). Then, applying @possible-ranks-theorem, either $r a n k(n, t)$ is `DUMMY` or $E$, with $E$ being the enqueuer attached to $n$. If $E$'s `min-timestamp` is read at time $t'$, $t_0 lt.eq t' lt.eq t$. If `MAX` is read out, $r a n k(n, t) = $ `DUMMY`. If some other value is read out, $r a n k(n, t) = r a n k(E)$. In both case, $m i n \- t s(r a n k(n, t), t') = m i n \- t s(E, t')$.
+  If $n$ is a leaf node, the $n$-refresh call is `refreshLeaf(`$n$`)` (@lt-refresh-leaf). Then, applying @possible-ranks-theorem, either $r a n k(n, t)$ is `DUMMY` or $E$, with $E$ being the enqueuer attached to $n$. If $E$'s `min-timestamp` is read at time $t_r$, $t_0 lt.eq t_s lt.eq t$. If `MAX` is read out, $r a n k(n, t_s) = $ `DUMMY`. If some other value is read out, $r a n k(n, t_s) = r a n k(E)$. In both case, $m i n \- t s(r a n k(n, t), t_s) = m i n \- t s(E, t_s)$.
 
-  If $n$ is not a leaf node, the $n$-refresh call is `refresh(`$n$`)` (@lt-refresh). Then, by the way `refresh` is defined, for each child $c$ of $n$, there exists $t'$, $t_0 lt.eq t' lt.eq t_1$, $m i n \- t s(r a n k(n, t), t') lt.eq m i n \- t s (r a n k(c, t_r(c)), t_s(c))$. $t_r(c)$ is the time we read the rank stored in $c$ and $t_s(c)$ is the time we read the value of `min-timestamp` stored in the enqueuer of that rank so $t_0 lt.eq t_r(c) lt.eq t_s(c) lt.eq t_1$. Because this `refresh` is the _last_ successful one until $t_1$, $r a n k(c, t_r(c)) = r a n k(c, t_s(c))$. Therefore, $m i n \- t s(r a n k(n, t), t') lt.eq m i n \- t s (r a n k(c, t_s(c)), t_s(c))$. By definition, $n$ is consistent at time $t_1$ with respect to time $t_0$.
+  If $n$ is not a leaf node, the $n$-refresh call is `refresh(`$n$`)` (@lt-refresh). Then, by the way `refresh` is defined, for each child $c$ of $n$, $m i n \- t s(r a n k(n, t), t_s(c)) lt.eq m i n \- t s (r a n k(c, t_r(c)), t_s(c))$. $t_r(c)$ is the time we read the rank stored in $c$ and $t_s(c)$ is the time we read the value of `min-timestamp` stored in the enqueuer of that rank so $t_0 lt.eq t_r(c) lt.eq t_s(c) lt.eq t_1$. Furthermore, by the way `refresh` is defined, there exists a child $c$ of $n$ such that $r a n k(n, t) = r a n k(c, t_r(c))$. By definition, $n$ is consistent at time $t_1$ with respect to time $t_0$.
 
   We have proved the theorem.
 ]
 
-#theorem[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, we have $m i n \- s p s c \- t s(r a n k(r o o t, t'), t') lt.eq c$ for every $t'$ such that $t_0 lt.eq t' < t_1$ and $t'$ is not within a `dequeue`.]
+#theorem[If `refresh` on a non-leaf node $n$ finishes line 20 at time $t_0$ and finishes successfully at $t_1$. Then, for any node $n in N$, $n$ is consistent at time $t_1$ with respect to time $t_0$.] <refresh-theorem>
+
+#proof[
+  By the way `refresh` is defined, for each child $c$ of $n$, $m i n \- t s(r a n k(n, t), t_s(c)) lt.eq m i n \- t s (r a n k(c, t_r(c)), t_s(c))$. $t_r(c)$ is the time we read the rank stored in $c$ and $t_s(c)$ is the time we read the value of `min-timestamp` stored in the enqueuer of that rank so $t_0 lt.eq t_r(c) lt.eq t_s(c) lt.eq t_1$. Furthermore, by the way `refresh` is defined, there exists a child $c$ of $n$ such that $r a n k(n, t) = r a n k(c, t_r(c))$. By definition, $n$ is consistent at time $t_1$ with respect to time $t_0$.
+]
+
+#theorem[If there's no `dequeue` happening from $t_0$ to $t_1$, then for any node $n$, $m i n - t s(r a n k(n, t_x), t_y)$ is monotonically decreasing with any $t_x, t_y in [t_0, t_1]$.]
+
+#proof[
+  During $t_0$ and $t_1$, only `enqueue`s can run. Therefore, for any rank $r$, $m i n - s p s c - t s(r, t)$ is monotonically decreasing for $t in [t_0, t_1]$. $(1)$
+
+  Due to @one-dequeue-one-enqueue-corollary, for any rank $r$, the only `enqueue` will always succeed in `refreshTimestamp`. Due to $(1)$, $m i n - t s(r, t)$ is also monotonically decreasing for $t in [t_0, t_1]$. $(2)$
+
+  From $(2)$, it's easy to see that for any node $n$, if we fix $t_x$, $m i n - t s(r a n k(n, t_x), t_y)$ is monotonically decreasing with any $t_y in [t_0, t_1]$. $(3)$
+
+  For any leaf node $l$, only one `enqueue` that can modify it at a time. Therefore, the only `enqueue` will always succeed in `refreshLeaf` at $t_(r\-e n d\-0)$. Due to how `refreshLeaf` is defined and due to $(2)$, $m i n - t s(r a n k(l, t_x), t_y)$ is monotonically decreasing for $t_x, t_y in [t_0, t_1]$.
+
+  Consider any non-leaf node $n$.
+
+  Suppose there's a sequence of successful `refresh` calls ending at $t_(r\-e n d\-1) < t_(r\-e n d\-2) < ... < t_(r\-e n d\-k)$. Suppose also they finishes line 20 (@lt-refresh) at $t_(r\-s t a r t\-1)$, $t_(r\-s t a r t\-2)$, ..., $t_(r\-s t a r t\-k)$. Obviously, $t_(r\-e n d\-(i - 1)) lt.eq t_(r\-s t a r t\-i)$, because otherwise, the `CAS` in the `refresh` calls cannot be successful.
+
+  For every child node $c$ of $n$, $t_(r\-i)(c)$ is the time the `i`-th `refresh` reads the rank stored in $c$ and $t_(s\-i)(c)$ is the time it reads the value of `min-timestamp` stored in the enqueuer of that rank. Therefore, $t_(r\-s t a r t\- i) lt.eq t_(r\-i)(c) lt.eq t_(s\-i)(c) lt.eq t_(r\-e n d\-i)$.
+
+  Suppose the theorem already holds for every child node $c$ of $n$. $(4)$
+
+  Applying @refresh-theorem:
+  - For any child $c$,
+    #linebreak()
+    $m i n \- t s(r a n k(n, t_(r\-e n d \- i)), t_(s\-i)(c)) lt.eq m i n \- t s(r a n k(c, t_(r\-i)(c)), t_(s\-i)(c))$. $(5)$
+  - There exists a child node $c_i$ of $n$ such that
+    #linebreak()
+    $r a n k(n, t_(r\-e n d \- i)) = r a n k(c_i, t_(r\-i)(c_i))$. $(6)$
+
+  Combining $(5)$ with $c=c_(i-1)$ in $(6)$, we have
+  
+  $m i n \- t s(r a n k(n, t_(r\-e n d \- i)), t_(s\-i)(c_(i-1)))
+  #linebreak()
+  lt.eq m i n \- t s(r a n k(c_(i-1), t_(r\-i)(c_(i-1))), t_(s\-i)(c_(i-1)))$. $(7)$
+
+  Combing $(4)$ with $(7)$,
+
+  $m i n \- t s(r a n k(n, t_(r\-e n d \- i)), t_(s\-i)(c_(i-1)))$
+  #linebreak()
+  $lt.eq m i n \- t s(r a n k(c_(i-1), t_(r\-i)(c_(i-1))), t_(s\-i)(c_(i-1)))$
+  #linebreak()
+  $lt.eq m i n \- t s(r a n k(c_(i-1), t_(r\-(i-1))(c_(i-1))), t_(s\-(i-1))(c_(i-1)))$ $= m i n \- t s(r a n k(n, t_(r\-e n d \- (i-1))), t_(s\-(i-1))(c_(i-1)))$.
+
+  So after every `refresh`, $m i n \- t s(r a n k(n, t_x), t_y)$ can only decrease. The theorem therefore holds.
+]
+
+#theorem[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, we have $m i n \- s p s c \- t s(r a n k(r o o t, t), t) lt.eq c$ for every $t$ such that $t_0 lt.eq t < t_1$ and $t$ is not within a `dequeue`.]
+
+#proof[
+  We take $r_e$ to be the rank of enqueuer $e$.
+
+  Suppose the item with timestamp $c$ is enqueued at time $t_(e n q u e u e)$. Because $e$ is unmatched up until $t_1$, $c$ is always in the local SPSC from $t_(e n q u e u e)$ to $t_1$. In other words, $m i n \- t s(r_e, t) lt.eq c$ for any $t$ that $t_(e n q u e u e) lt.eq t lt.eq t_1$. $(1)$
+
+  We consider $e$'s propagation process (@lt-propagate).
+
+  Suppose the two `refreshTimestamp` calls on line 10-11 start at $t_(t s \_ s t a r t) lt.eq t_(e n q u e u e)$ and end at $t_(t s \_ e n d)$.
+  - If one of the two succeeds, due to $(1)$, $m i n \- t s(r_e, t) lt.eq c$ for any $t$ that $t_(t s \_ e n d) lt.eq t lt.eq t_1$.
+  - If both fail, following the same reasoning in a previous theorem, there must be some other successful `refreshTimestamp` on the same node starts after $t_(t s \_ s t a r t)$ and ends before $t_(t s \_ e n d)$. Due to $(1)$, $m i n \- t s(r_e, t) lt.eq c$ for any $t$ that $t_(t s \_ e n d) lt.eq t lt.eq t_1$.
+  Therefore, $m i n \- t s(r_e, t) lt.eq c$ for any $t$ that $t_(t s \_ e n d) lt.eq t lt.eq t_1$. $(2)$
+
+  Suppose the two `refreshLeaf` calls on the leaf node $n_0$ on line 12-13 start at $t_(0 \- s t a r t)$ and end at $t_(0 \- e n d)$. Applying @possible-ranks-theorem, the leaf node $n_0$ can only store `DUMMY` rank or $r_e$.
+  - If one of the two refresh calls succeeds, due to $(2)$, $r a n k(n_0, t) eq.not$ `DUMMY` for any $t$ that $t_(0 \- e n d) lt.eq t lt.eq t_1$. In other words, $r a n k(n_0, t) eq r_e$ for any $t$ that $t_(0 \- e n d) lt.eq t lt.eq t_1$.
+  - If both fail, following the same reasoning in a previous theorem, there must be some other successful `refreshLeaf` on the same node starts after $t_(0 \- s t a r t)$ and ends before $t_(0 \- e n d)$. Similarly, we can obtain $r a n k(n_0, t) eq r_e$ for any $t$ that $t_(0 \- e n d) lt.eq t lt.eq t_1$.
+  Therefore, $r a n k(n_0, t) eq r_e$ for any $t$ that $t_(0 \- e n d) lt.eq t lt.eq t_1$. Or due to $(2)$, $m i n \- t s(r a n k(n_0, t), t) lt.eq c$ for any $t$ that $t_(0 \- e n d) lt.eq t lt.eq t_1$. $(3)$
+
+  Consider all the non-leaf nodes $n_i in p a t h(e)$, $i gt.eq 1$, with $n_i$ being the parent of $n_(i - 1)$. Suppose the two `refresh` calls on line 17-18 start at $t_(i \- s t a r t)$ and end at $t_(i \- e n d)$ $(4)$. We will prove by induction that $m i n \- t s(r a n k(n_i, t), t) lt.eq c$ for any $t$ that $t_(i \- e n d) lt.eq t lt.eq t_1$ and if at $t$ there's a `dequeue` $d$ such that $n_i in p a t h(d)$, $t$ must be after $d$'s call to `refresh(`$n_i$`)`. $(*)$
+
+  $(*)$ already holds for $i = 0$.
+
+  Suppose $(*)$ holds for $i = k - 1$, in other words, $m i n \- t s(r a n k(n_(k-1), t), t) lt.eq c$ for any $t$ that $t_((k-1) \- e n d) lt.eq t lt.eq t_1$ and if at $t$ there's a `dequeue` $d$ such that $n_(k-1) in p a t h(d)$, $t$ must be after $d$'s call to `refresh(`$n_(k-1)$`)`. $(4)$
+
+  We will prove that $(*)$ also holds for $i = k$, in other words, $m i n \- t s(r a n k(n_k, t), t) lt.eq c$ for any $t$ that $t_(k \- e n d) lt.eq t lt.eq t_1$ and if at $t$ there's a `dequeue` $d$ such that $n_k in p a t h(d)$, $t$ must be after $d$'s call to `refresh(`$n_k$`)`.
+
+  First case: $t_(k \- e n d)$ is either not in a `dequeue` $d$ such that $n_k in p a t h(d)$ or is after $d$'s call to `refresh(`$n_k$`)`. Applying @refresh-retry-theorem, we have $n_k$ is consistent at $t_(k \- e n d)$ with respect to $t_(k \- s t a r t)$. This means, there exists $t_k$ and $t_(k-1)$, with $t_(k \- s t a r t) lt.eq t_k, t_(k-1) lt.eq t_(k \- e n d)$, such that $m i n \- t s(r a n k(n_k, t_(k \- e n d)), t_k) lt.eq m i n \- t s(r a n k(n_(k-1), t_(k-1)), t_(k-1))$.
+]
 
 #theorem[An `enqueue` $e$ will eventually be matched with a `dequeue` $d$ if there's an infinite sequence of `dequeue`s.]
 
