@@ -570,13 +570,11 @@ We immediately obtain the following result.
   Each `enqueue` would `FAA` the shared counter (line 1 in @lt-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @one-dequeue-one-enqueue-corollary, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FFA`-ing the shared counter. The theorem holds.
 ]
 
-#definition[For a tree node $n$, the subtree rooted at $n$ is denoted as $s u b t r e e(n)$.]
-
 #definition[For a tree node $n$, the enqueuer rank stored in $n$ at time $t$ is denoted as $r a n k(n, t)$.]
 
-#definition[For a tree node $n$, the enqueuer corresponds to $r a n k(n, t)$ is $e n q(n, t)$. If $r a n k(n, t)$ is `DUMMY`, then $e n q(n, t)$ equals `DUMMY`.]
+#definition[For an enqueuer $E$, its rank is denoted as $r a n k(E)$.]
 
-#definition[For an enqueuer $E$, the `min-timestamp` value stored in its enqueuer node at time $t$ is denoted as $m i n \- t s(E, t)$. If $E$ is dummy, $m i n \- t s(E, t)$ is `MAX`.]
+#definition[For an enqueuer $E$ whose rank is $r$, the `min-timestamp` value stored in its enqueuer node at time $t$ is denoted as $m i n \- t s(r, t)$. If $r$ is `DUMMY`, $m i n \- t s(r, t)$ is `MAX`.]
 
 #definition[For an enqueuer $E$, the minimum timestamp among the elements between `First` and `Last` in the local SPSC at time $t$ is denoted as $m i n \- s p s c \- t s(E, t)$. If $E$ is dummy, $m i n \- s p s c \- t s(E, t)$ is `MAX`.]
 
@@ -588,37 +586,45 @@ We immediately obtain the following result.
 
 #definition[Given a subtree rooted at $n$, $overparen(E)(n)$ is the set of enqueuers that have an enqueuer node attached to a leaf node in this subtree.]
 
-#definition[A subtree is said to be *consistent* at time $t$ with respect to time $t_0$, with $t_0 lt.eq t$ if there exists a time $t'$ such that $t_0 lt.eq t' lt.eq t$, for every node $n$ in this subtree, $r a n k(n, t)$ is the rank of an enqueuer $E_0$ such that $m i n \- s p s c \- t s(E_0, t')$ is the minimum within the set of $m i n \- s p s c \- t s(E, t')$ for $E in overparen(E)(n)$.
+#theorem[For any time $t$ and a node $n$, $r a n k(n, t) in overparen(E)(n) union {$`DUMMY`$}$.] <possible-ranks-theorem>
+
+#proof[This is trivial considering how `refresh` and `refreshLeaf` works.]
+
+#definition[A non-leaf node $n$ is said to be *consistent* at time $t$ with respect to time $t_0$, with $t_0 lt.eq t$, if for every child node $c$ of $n$, there exists a time $t_c$ and $t'$, $t_0 lt.eq t_c, t' lt.eq t$, such that $m i n \- t s(r a n k(n, t), t') lt.eq m i n \- t s(r a n k(c, t_c), t_c)$.
 ]
 
-#theorem[At some time $t=delta$, with $delta$ arbitrarily small, the modified LTQueue is *consistent* with respect to $t = delta'$ for any $delta' lt.eq delta$.]
+#definition[A leaf node $n$ is said to be *consistent* at time $t$ with respect to time $t_0$, with $t_0 lt.eq t$, if there exists a time $t'$, $t_0 lt.eq t' lt.eq t$, such that $m i n \- t s(r a n k(n, t), t') = m i n \- t s(r a n k(E), t')$ with $E$ being the enqueuer attached to $n$.
+]
+
+#theorem[At some time $t=delta$, with $delta$ arbitrarily small, any node is *consistent* with respect to $t = delta'$ for any $delta' lt.eq delta$.]
 
 #proof[This is trivial. After initialization, the modified LTQueue is in an empty state from time $t=0$ up until the first operation. We can take $delta$ to be a time point right before the first operation.]
 
-#theorem[Consider an `enqueue` operation $e$ that finishes `spsc_enqueue` at time $t_0$ and ends at time $t_1$. Take $N_e$ to be the set of nodes that this `enqueue` calls `refreshLeaf` or `refresh` on. Take $N_d$ to be the set of nodes that all `dequeue`s overlapping with $e$ calls `refreshLeaf` or `refresh` on. Then, any subtree rooted at nodes within $N_e - N_d$ is consistent at time $t_1$ with respect to time $t'$, for some $t_1 gt.eq t' gt.eq t_0$.]
+#theorem[Consider an `enqueue` or `dequeue` operation. Take $N$ to be the set of nodes that this `enqueue` calls `refreshLeaf` or `refresh` on. Suppose $t_0$ is the time the first `refresh` or `refreshLeaf` is called by the `enqueue` or `dequeue`. Suppose $t_1$ is the time the last `refresh` or `refreshLeaf` is finished by the `enqueue` or `dequeue`. Then, for any node $n in N$, $n$ is consistent at time $t_1$ with respect to time $t_0$.] <consistent-theorem>
 
 #proof[
-  Take $E$ to be the enqueuer that performs $e$.
+  Consider a node $n in N$.
 
-  If $N_e - N_d$ is empty, then we immediately obtain the theorem. For the rest of this proof, we assume that $N_e - N_d$ is non-empty.
+  We refer to `refresh(`$n$`)` and `refreshLeaf(`$n$`)` as an $n$-refresh call.
 
-  We first note that if we form an is-ancestor relation $R$ on $N_e$ (that is, for nodes $A$ and $B$, $A R B$ if and only if $A$ is an ancestor of $B$ or $A equiv B$), it would be a total ordering, due to how the `propagate` function works. Then, obviously $R$ on $N_e - N_d$ is also a total ordering. Because $N_e - N_d$ is of course finite, there exists a node $n_(root)$ that is the ancestor of all other nodes in the set. According to the definition, it suffices to show that at time $t_1$ the subtree rooted at $n_(root)$ is consistent with respect to time $t_0$.
+  We will prove that there's some $n$-refresh call (can be called by some other enqueuer or dequeuer) that starts and ends successfully between $t_0$ and $t_1$. $(*)$
 
-  Applying @one-dequeue-one-enqueue-corollary, the enqueuer node that $e$ modifies is only modified by $e$ during its execution, as if there's a `dequeue` modifies this enqueuer node, $N_e - N_d$ would be empty. Therefore, after `refreshTimestamp`, at any time $t$ after that up until $t_1$, $m i n \- t s(E, t) = m i n \- s p s c \- t s(E, t')$ for any $t' lt.eq t$ after `refreshTimestamp`.
+  Consider the current enqueuer or dequeuer's $n$ refresh calls:
+  - If one of the $n$-refresh calls succeeds in `propagate` (@lt-propagate) then obviously $(*)$ holds.
+  - Both $n$-refresh calls fail. Suppose that $(*)$ doesn't hold. Then, the first refresh call fails because there's a successful call by another process that starts before $t_0$ and ends before $t_1$. Any other successful calls by other processes after that must end after $t_1$ because of our assumption. However, then, the second call must have been successful because it starts after the first failed call and ends before $t_1$ and in this timespan, no other refresh calls is running. Therefore, by contradiction, $(*)$ holds.
 
-  Similarly, the leaf node $n_0$ that $e$ modifies is excusively modified by $e$. Therefore, after `refreshLeaf`, at any $t$ after that up until $t_1$, $e n q (r a n k(l, t))$ is $E_0$ such that $m i n \- s p s c \- t s(E_0, t') = min_(E in overparen(E)(n_0)) m i n \- s p s c \- t s(E, t')$ for any $t' lt.eq t$ after `refreshLeaf`.
+  Using $(*)$, there exists a successful $n$-refresh call between $t_0$ and $t_1$.
 
-  Based on how `refresh` is defined, suppose `refresh(`$n$`)` succeeds at time $t$, where $t_0 lt.eq t lt.eq t_1$, then $e n q(r a n k(n, t)) = E$ such that for each child $c$ of $n$, there exists $t_0 lt.eq t_r(c) lt.eq t_s(c) lt.eq t$ so that, with $E_c = e n q (r a n k(c, t_r(c)))$, $m i n \- t s(E, t) lt.eq m i n \- t s (E_c, t_s(c))$. Note that we have to read the the rank stored in $c$ at time $t_r(c)$ and a while later, we read the value of `min-timestamp` at time $t_s(c)$.
-  - If $r a n k(c, t_r(c)) = D U M M Y$ then $E_c$ is $D U M M Y$. Therefore, $m i n \- t s (E_c, t_s(c)) = M A X = m i n \- s p s c \- t s(E_c, t')$ for any $t_1 gt.eq t' gt.eq t_r(c)$.
-  - If $r a n k(c, t_r(c)) eq.not D U M M Y$, assuming that there's no `dequeue` affecting $E_c$ from $t_r(c)$ to $t_1 gt.eq t_s(c)$ then $m i n \- t s (E_c, t_s(c)) = m i n \- t s (E_c, t_r(c)) = m i n \- s p s c \- t s(E_c, t_r(c)) = m i n \- s p s c \- t s(E_c, t')$ for any $t_1 gt.eq t' gt.eq t_r(c)$.
-  Therefore, if `refresh(`$n$`)` succeeds at time $t$ then $e n q(r a n k(n, t)) = E$ such that for any child $c$ of $n$, $m i n \- t s(E, t) lt.eq m i n \- s p s c \- t s(E_c, t')$ for any $t_1 gt.eq t' gt.eq max_c t_r(c)$ $(*)$.
+  Consider such _last_ successful refresh between $t_0$ and $t_1$. Suppose it succeeds at time $t$, where $t_0 lt.eq t lt.eq t_1$.
 
-  We consider the sequence of nodes $n_1$, $n_2$, ... $n_k$ such that $n_(i+1)$ is a parent of $n_i$ and $n_k equiv n_(root)$. We can prove that all of these nodes $in N_e - N_d$ and so there's no `dequeue` affecting these nodes. Notice that `e` calls `refresh` on these nodes in this order.
+  If $n$ is a leaf node, the $n$-refresh call is `refreshLeaf(`$n$`)` (@lt-refresh-leaf). Then, applying @possible-ranks-theorem, either $r a n k(n, t)$ is `DUMMY` or $E$, with $E$ being the enqueuer attached to $n$. If $E$'s `min-timestamp` is read at time $t'$, $t_0 lt.eq t' lt.eq t$. If `MAX` is read out, $r a n k(n, t) = $ `DUMMY`. If some other value is read out, $r a n k(n, t) = r a n k(E)$. In both case, $m i n \- t s(r a n k(n, t), t') = m i n \- t s(E, t')$.
 
-  Consider any node $n_i$:
-  - `refresh(`$n_i$`)` succeeds either at line 17 or line 18 in `propagate` (@lt-propagate) at time $t_n_i$ then $(*)$ holds for $n = n_i$ and time $t = t_n_i$.
-  - Both `refresh(`$n_i$`)` fail. Suppose that every successful `refresh` by other enqueuers either starts before $t_0$ or ends after $t_1$. The first `refresh` fails because there's a successful `refresh` by another enqueuer that starts before $t_0$ and ends before $t_1$. Any other successful `refresh`s by other enqueuers after that must end after $t_1$ because of our assumption. However, then, the second `refresh` must have been successful because it starts after the first failed `refresh` and ends before $t_1$ and in this timespan, no other `refresh` is running. Therefore, by contradiction, some other enqueuer must have started `refresh(`$n_i$`)` after $t_0$ and ended successfully at $t = t_n_i$ before $t_1$ applying the same reasoning in $(*)$, we can prove that $(*)$ holds for $n = n_i$ and time $t = t_n_i$.
+  If $n$ is not a leaf node, the $n$-refresh call is `refresh(`$n$`)` (@lt-refresh). Then, by the way `refresh` is defined, for each child $c$ of $n$, there exists $t'$, $t_0 lt.eq t' lt.eq t_1$, $m i n \- t s(r a n k(n, t), t') lt.eq m i n \- t s (r a n k(c, t_r(c)), t_s(c))$. $t_r(c)$ is the time we read the rank stored in $c$ and $t_s(c)$ is the time we read the value of `min-timestamp` stored in the enqueuer of that rank so $t_0 lt.eq t_r(c) lt.eq t_s(c) lt.eq t_1$. Because this `refresh` is the _last_ successful one until $t_1$, $r a n k(c, t_r(c)) = r a n k(c, t_s(c))$. Therefore, $m i n \- t s(r a n k(n, t), t') lt.eq m i n \- t s (r a n k(c, t_s(c)), t_s(c))$. By definition, $n$ is consistent at time $t_1$ with respect to time $t_0$.
+
+  We have proved the theorem.
 ]
+
+#theorem[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, we have $m i n \- s p s c \- t s(r a n k(r o o t, t'), t') lt.eq c$ for every $t'$ such that $t_0 lt.eq t' < t_1$ and $t'$ is not within a `dequeue`.]
 
 #theorem[An `enqueue` $e$ will eventually be matched with a `dequeue` $d$ if there's an infinite sequence of `dequeue`s.]
 
