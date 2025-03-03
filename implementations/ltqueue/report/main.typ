@@ -572,17 +572,25 @@ We immediately obtain the following result.
 
 #definition[For a tree node $n$, the enqueuer rank stored in $n$ at time $t$ is denoted as $r a n k(n, t)$.]
 
-#definition[For an enqueuer $E$, its rank is denoted as $r a n k(E)$.]
+#definition[For an `enqueue` or a `dequeue` $op$, the rank of the enqueuer it affects is denoted as $r a n k(op)$.]
 
-#definition[For an enqueuer $E$ whose rank is $r$, the `min-timestamp` value stored in its enqueuer node at time $t$ is denoted as $m i n \- t s(r, t)$. If $r$ is `DUMMY`, $m i n \- t s(r, t)$ is `MAX`.]
+#definition[For an enqueuer whose rank is $r$, the `min-timestamp` value stored in its enqueuer node at time $t$ is denoted as $m i n \- t s(r, t)$. If $r$ is `DUMMY`, $m i n \- t s(r, t)$ is `MAX`.]
 
-#definition[For an enqueuer $E$, the minimum timestamp among the elements between `First` and `Last` in the local SPSC at time $t$ is denoted as $m i n \- s p s c \- t s(E, t)$. If $E$ is dummy, $m i n \- s p s c \- t s(E, t)$ is `MAX`.]
+#definition[For an enqueuer with rank $r$, the minimum timestamp among the elements between `First` and `Last` in the local SPSC at time $t$ is denoted as $m i n \- s p s c \- t s(r, t)$. If $r$ is dummy, $m i n \- s p s c \- t s(r, t)$ is `MAX`.]
 
-#definition[For an `enqueue` $e$, the set of nodes that it calls `refresh` or `refreshLeaf` on is denoted as $p a t h(e)$.]
+#definition[For an `enqueue` or a `dequeue` $op$, the set of nodes that it calls `refresh` or `refreshLeaf` on is denoted as $p a t h(op)$.]
 
-#definition[For an `dequeue` $d$, the set of nodes that it calls `refresh` or `refreshLeaf` on is denoted as $p a t h(d)$.]
+#definition[For an `enqueue` or a `dequeue`, *timestamp-refresh phase* refer to its execution of line 10-11 in `propagate` (@lt-propagate).]
 
-#theorem[For an `enqueue` $e$, if $e$ modifies an enqueuer node and this enqueuer node is attached to a leaf node $l$, then $p a t h(e)$ is the set of nodes lying on the path from $l$ to the root node.]
+#definition[For an `enqueue` or a `dequeue` $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of line 12-13 (if $n$ is a leaf node) and line 17-18 (if $n$ is a non-leaf node) to refresh $n$'s rank in `propagate` (@lt-propagate).]
+
+#definition[`refreshTimestamp` is said to start its *CAS-sequence* if it finishes line 24 in @lt-refresh-timestamp. `refreshTimestamp` is said to end its *CAS-sequence* if it finishes line 27 or line 28 in @lt-refresh-timestamp.]
+
+#definition[`refresh` is said to start its *CAS-sequence* if it finishes line 20 in @lt-refresh. `refresh` is said to end its *CAS-sequence* if it finishes line 30 in @lt-refresh.]
+
+#definition[`refreshLeaf` is said to start its *CAS-sequence* if it finishes line 31 in @lt-refresh-leaf. `refreshLeaf` is said to end its *CAS-sequence* if it finishes line 33 in @lt-refresh-leaf.]
+
+#theorem[For an `enqueue` or a `dequeue` $op$, if $op$ modifies an enqueuer node and this enqueuer node is attached to a leaf node $l$, then $p a t h(op)$ is the set of nodes lying on the path from $l$ to the root node.]
 
 #proof[This is trivial considering how `propagate` (@lt-propagate) works.]
 
@@ -592,9 +600,13 @@ We immediately obtain the following result.
 
 #proof[This is trivial considering how `refresh` and `refreshLeaf` works.]
 
-#theorem[If there's no `dequeue` happening from $t_0$ to $t_1$, then for any node $n$, $m i n - t s(r a n k(n, t_x), t_y)$ is monotonically decreasing with any $t_x, t_y in [t_0, t_1]$.]
+#theorem[If an `enqueue` or a `dequeue` $op$ begins its *timestamp-refresh phase* at $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshTimestamp` on $r a n k(op)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.]
 
-#theorem[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, we have $m i n \- s p s c \- t s(r a n k(r o o t, t), t) lt.eq c$ for any $t$ such that $t_0 lt.eq t < t_1$ and $t$ is not within a `dequeue`.]
+#theorem[If an `enqueue` or a `dequeue` begins its *node-$n$-refresh phase* at $t_0$ and finishes at $t_1$, there's always at least one successful `refresh` on $n$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.]
+
+#theorem[For any node $n$, $m i n - t s(r a n k(n, t_x), t_y)$ is monotonically decreasing with any $t_x, t_y in [t_0, t_1]$ if within $t_0$ and $t_1$, there's no `dequeue` affecting $n$ or hasn't finished its *node-$n$-refresh phase*.]
+
+#theorem[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a dequeue, $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.]
 
 #theorem[An `enqueue` $e$ will eventually be matched with a `dequeue` $d$ if there's an infinite sequence of `dequeue`s.]
 
