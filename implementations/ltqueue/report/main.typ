@@ -602,7 +602,21 @@ We immediately obtain the following result.
 
 #theorem[If an `enqueue` or a `dequeue` $op$ begins its *timestamp-refresh phase* at $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshTimestamp` on $r a n k(op)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.]
 
-#theorem[If an `enqueue` or a `dequeue` begins its *node-$n$-refresh phase* at $t_0$ and finishes at $t_1$, there's always at least one successful `refresh` on $n$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.]
+#proof[
+  If one of the two `refreshTimestamp`s succeeds, then we have obtain the theorem.
+
+  Consider the case where both fail.
+
+  The first `refreshTimestamp` fails because there's another `refreshTimestamp` ending its *CAS-sequence* successfully after $t_0$ but before the end of the first `refreshTimestamp`'s *CAS-sequence*.
+
+  Suppose the contrary that there's no successful `refreshTimestamp` on $r a n k(op)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$. Then, the second `refreshTimestamp` must succeed, because during after the first `refreshTimestamp` and before $t_1$, no other `refreshTimestamp` successfully finishes its *CAS-sequence*.
+
+  We have proved the theorem.
+]
+
+#theorem[If an `enqueue` or a `dequeue` begins its *node-$n$-refresh phase* at $t_0$ and finishes at $t_1$, there's always at least one successful `refresh()` or `refreshLeaf()` on $n$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.]
+
+#proof[This is similar to the above proof.]
 
 #theorem[For any node $n$, $m i n - t s(r a n k(n, t_x), t_y)$ is monotonically decreasing with any $t_x, t_y in [t_0, t_1]$ if within $t_0$ and $t_1$, there's no `dequeue` affecting $n$ or hasn't finished its *node-$n$-refresh phase*.]
 
