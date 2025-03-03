@@ -600,7 +600,7 @@ We immediately obtain the following result.
 
 #proof[This is trivial considering how `refresh` and `refreshLeaf` works.]
 
-#theorem[If an `enqueue` or a `dequeue` $op$ begins its *timestamp-refresh phase* at $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshTimestamp` on $r a n k(op)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.]
+#theorem[If an `enqueue` or a `dequeue` $op$ begins its *timestamp-refresh phase* at $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshTimestamp` on $r a n k(op)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <refresh-timestamp-theorem>
 
 #proof[
   If one of the two `refreshTimestamp`s succeeds, then we have obtain the theorem.
@@ -614,11 +614,46 @@ We immediately obtain the following result.
   We have proved the theorem.
 ]
 
-#theorem[If an `enqueue` or a `dequeue` begins its *node-$n$-refresh phase* at $t_0$ and finishes at $t_1$, there's always at least one successful `refresh()` or `refreshLeaf()` on $n$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.]
+#theorem[If an `enqueue` or a `dequeue` begins its *node-$n$-refresh phase* at $t_0$ and finishes at $t_1$, there's always at least one successful `refresh()` or `refreshLeaf()` on $n$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <refresh-node-theorem>
 
 #proof[This is similar to the above proof.]
 
-#theorem[For any node $n$, $m i n - t s(r a n k(n, t_x), t_y)$ is monotonically decreasing with any $t_x, t_y in [t_0, t_1]$ if within $t_0$ and $t_1$, there's no `dequeue` affecting $n$ or hasn't finished its *node-$n$-refresh phase*.]
+#theorem[For any node $n$, $m i n \- t s(r a n k(n, t_x), t_y)$ is monotonically decreasing for $t_x, t_y in [t_0, t_1]$ if within $t_0$ and $t_1$, any `dequeue` $d$ where $n in p a t h(d)$ has finished its *node-$n$-refresh phase*.] <monotonic-theorem>
+
+#proof[
+  We have the assumption that within $t_0$ and $t_1$, there's no `dequeue` where $n in p a t h(d)$ or hasn't finished its *node-$n$-refresh phase*. Notice that if $n$ satisfies this assumption, any child of $n$ also satisfies this assumption. We will work from the leaf nodes onwards.
+
+  We will prove a stronger version of this theorem: Given a node $n$, time $t_0$ and $t_1$ such that within $[t_0, t_1]$, any `dequeue` $d$ where $n in p a t h(d)$ has finished its *node-$n$-refresh phase*. Take $t_s (n)$ and $t_e (n)$ to be the starting and ending time of the last successful `refresh` call on $n$ during the last `dequeue`'s *node-$n$-refresh phase* not later than $t_0$, or if there is none, $t_s (n) = t_e (n) = 0$. Then, $m i n \- t s(r a n k(n, t_x), t_y)$ is monotonically decreasing for $t_x, t_y in [t_e (n), t_1]$.
+
+  Consider any enqueuer node of rank $r$ that's attached to a satisfied leaf node. For any $n'$ that is a descendant of $n$, during $t_s (n')$ and $t_1$, the local SPSC of this enqueuer node can only be enqueued. Because:
+  - If a `dequeue` starts between $t_0$ and $t_1$, it hasn't finished its *node-$n'$-refresh phase*.
+  - If a `dequeue` starts between $t_s (n')$ and $t_0$, then its *node-$n'$-refresh phase* must start before $t_0$, but this violates our assumption that $t_s (n')$ is the starting time of the last `dequeue`'s *node-$n$-refresh phase* not later than $t_0$.
+  Therefore, $m i n \- s p s c \- t s(r, t_x)$ can only decrease from `MAX` to some timestamp and remain constant for $t_x in [t_s (n'), t_1]$. Such is also the case for $m i n \- t s (r, t_x)$. $(1)$
+
+  Consider any satisfied leaf node $n_0$. Any successful `refreshLeaf` during $[t_e (n_0), t_1]$ can only set $r a n k(n_0, t_x)$ to $r$, which is the rank of the enqueuer node its attached to. This is because `refreshLeaf` is called after a *timestamp-refresh phase* and by theorem @refresh-timestamp-theorem, there must already be a successful `refresh` before this and because of $(1)$, `refreshLeaf` cannot set $r a n k(n_0, t_x)$ to `DUMMY` (the only other possible value for it by @possible-ranks-theorem). Therefore, combining with $(1)$, $m i n \- t s(r a n k(n_0, t_x), t_y)$ is monotonically decreasing for $t_x, t_y in [t_e (n_0), t_1]$. $(2)$
+
+  Consider any satisfied non-leaf node $n'$ that is a descendant of $n$. Suppose during $[t_e (n'), t_1]$, we have a sequence of successful `refresh` calls that start their CAS-sequences at $t_(s t a r t \- 0) lt t_(s t a r t \- 1) lt t_(s t a r t \- 2) lt ... lt t_(s t a r t \- k)$ and end them at $t_(e n d \- 0) lt t_(e n d \- 1) lt t_(e n d\- 2) lt ... lt t_(e n d \- k)$. By definition, $t_(e n d \- 0) = t_e (n')$. We can prove that $t_(e n d \- i) < t_(s t a r t \- (i+1))$ because successful CAS-sequences cannot overlap.
+
+  Due to how `refresh` is defined, for any $k gt.eq i gt.eq 1$:
+  - Suppose $t_(r a n k\-i)(c)$ is the time `refresh` reads the rank stored in the child node $c$, so $t_(s t a r t \- i) lt.eq t_(r a n k\-i)(c) lt.eq t_(e n d \- i)$.
+  - Suppose $t_(t s\-i)(c)$ is the time `refresh` reads the timestamp stored in an enqueuer with the rank read previously, so $t_(s t a r t \- i) lt.eq t_(t s\-i)(c) lt.eq t_(e n d \- i)$.
+  - There exists a child $c_i$ such that $r a n k(n', t_(e n d \- i)) = r a n k(c_i, t_(r a n k\-i)(c_i))$. $(3)$
+  - For every child $c$ of $n'$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(t s\-i)(c_i))$ #linebreak() $lt.eq m i n \- t s (r a n k(c, t_(r a n k\-i)(c)), t_(t s\-i)(c))$. $(4)$
+
+  Suppose the stronger theorem already holds for every child $c$ of $n'$. $(5)$
+
+  We have $t_e (c) lt.eq t_s(n') lt.eq t_(s t a r t \-(i-1)) lt.eq t_(r a n k\-(i-1))(c) lt.eq t_(e n d \-(i-1)) lt.eq t_(r a n k \- i)(c)$ for any $i gt.eq 1$. Combining with $(4)$, $(5)$, we have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(t s\-i)(c_i))$ #linebreak() $lt.eq m i n \- t s (r a n k(c, t_(r a n k\-i)(c)), t_(t s\-i)(c))$ #linebreak() $lt.eq m i n \- t s (r a n k(c, t_(r a n k\-(i-1))(c)), t_(t s\-i)(c))$.
+
+  Choose $c = c_(i-1)$ as in $(3)$. We have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(t s\-i)(c_i))$ #linebreak() $lt.eq m i n \- t s (r a n k(c_(i-1), t_(r a n k\-(i-1))(c_(i-1))),$$ t_(t s\-i)(c_(i-1)))$ #linebreak() $= m i n\- t s(r a n k(n', t_(e n d \- (i-1))), t_(t s \-i)(c_(i-1))$.
+
+  Because $t_(t s \-i)(c_i) lt.eq t_(e n d \- i)$ and $t_(t s \-i)(c_(i-1)) gt.eq t_(e n d \- (i-1))$ and $(1)$, we have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(e n d\-i))$ #linebreak() $lt.eq m i n \- t s (r a n k(n', t_(e n d \- (i-1))), t_(e n d \- (i-1)))$. $(*)$
+
+  $r a n k(n', t_x)$ can only change after each successfully `refresh`, therefore, the sequence of its value is $r a n k(n', t_(e n d \- 0))$, $r a n k(n', t_(e n d \- 1))$, ..., $r a n k(n', t_(e n d \- k))$. $(**)$
+
+  Note that if `refresh` observes that an enqueuer has a `min-timestamp` of `MAX`, it would never try to CAS $n'$'s rank to the rank of that enqueuer (line 22 and line 27 of @lt-refresh). So, if `refresh` actually set the rank of $n'$ to some non-dummy value, the corresponding enqueuer must actually has a non-`MAX` `min-timestamp` _at some point_. Due to $(1)$, this is constant during $t_s (n')$ and $t_1$. Therefore, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 1$. $m i n \- t s(r a n k(n', t_(e n d \- 0)), t))$ is constant for any $t gt.eq t_(e n d \- 0)$ if there's a `refresh` before $t_0$. If there's no `refresh` before $t_0$, it is constant `MAX`. So, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 0$. $(***)$
+
+  Combining $(*)$, $(**)$, $(***)$, we obtain the stronger version of the theorem.
+]
 
 #theorem[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a dequeue, $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.]
 
