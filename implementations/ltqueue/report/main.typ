@@ -712,15 +712,32 @@ We immediately obtain the following result.
   By induction, we have proved the stronger version of the theorem.
 ]
 
-#theorem[An `enqueue` $e$ will eventually be matched with a `dequeue` $d$ if there's an infinite sequence of `dequeue`s.]
+#theorem[If an `enqueue` $e$ precedes another `dequeue` $d$, then either:
+  - $d$ isn't matched.
+  - $d$ matches $e$.
+  - $d$ matches $e'$ and $e'$ precedes $e$.
+  - $d$ matches $e'$ and $e'$ overlaps with $e$.
+]
 
-#theorem[An `enqueue` $e$ can only be matched by a `dequeue` $d$ that overlaps or succeeds $e$.]
+#proof[
+]
 
-#theorem[If an `enqueue` $e_0$ precedes another `enqueue` $e_1$, $e_0$ will be matched before $e_1$ if there's an infinite sequence of `dequeue`s.]
+#theorem[If an `enqueue` $e_0$ precedes another `enqueue` $e_1$, then either:
+  - Both $e_0$ and $e_1$ aren't matched.
+  - $e_0$ is matched but $e_1$ is not matched.
+  - Both $e_0$ and $e_1$ are matched.
+]
 
-#theorem[If a `dequeue` $d_0$ precedes another `dequeue` $d_1$, if $d_0$ matches $e_0$ and $d_1$ matches $e_1$ then either $e_0$ overlaps with $e_1$ or $e_0$ precedes $e_1$.]
+#theorem[If a `dequeue` $d_0$ precedes another `dequeue` $d_1$, then either:
+  - $d_0$ isn't matched.
+  - $d_1$ isn't matched.
+  - $d_0$ matches $e_0$ and $d_1$ matches $e_1$ such that $e_0$ precedes or overlaps with $e_1$.
+]
 
-#theorem[If a `dequeue` $d$ precedes another `enqueue` $e$, $d$ will never be matched with $e$.]
+#theorem[If a `dequeue` $d$ precedes another `enqueue` $e$, then either:
+  - $d$ isn't matched.
+  - $d$ matches $e'$ such that $e'$ precedes or overlaps with $e$.
+]
 
 == Memory safety
 
