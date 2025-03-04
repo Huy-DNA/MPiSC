@@ -712,13 +712,31 @@ We immediately obtain the following result.
   By induction, we have proved the stronger version of the theorem.
 ]
 
+#theorem[Given a rank $r$. If within $[t_0, t_1]$, there's no uncompleted `enqueue`s on rank $r$ and all matching `dequeue`s for any completed `enqueue`s on rank $r$ has finished, then $r a n k(n, t) eq.not r$ for every node $n$ and $t in [t_0, t_1]$.] <matched-enqueue-theorem>
+
+#proof[
+  If $n$ doesn't lie on the path from root to the leaf node that's attached to the enqueuer node with rank $r$, the theorem obviously holds.
+
+  Due to @one-dequeue-one-enqueue-corollary, there can only one `enqueue` and one `dequeue` at a time at an enqueuer node with rank $r$. Therefore, there is a sequential ordering within the `enqueue`s and a sequential ordering within the `dequeue`s. Therefore, it's sensible to talk about the last `enqueue` before $t_0$ and the last matching `dequeue` $d$ before $t_0$.
+
+  Since all of these `dequeue`s and `enqueue`s work on the same local SPSC and the SPSC is linearizable, $d$ must match the last `enqueue`. After this `dequeue` $d$, the local SPSC is empty.
+
+  When $d$ finishes its *timestamp-refresh phase* at $t_(t s) lt.eq t_0$, due to @refresh-timestamp-theorem, there's at least one successful `refreshTimestamp` call in this phase. Because the last `enqueue` has been matched, $m i n \- t s(r, t) =$ `MAX` for any $t in [t_(t s), t_1]$.
+
+  Similarly, for a leaf node $n_0$, suppose $d$ finishes its *node-$n_0$-refresh phase* at $t_(r\-0) gt.eq t_(t s)$, then $r a n k(n_0, t) =$ `DUMMY` for any $t in [t_(r\-0), t_1]$. $(1)$
+
+  For any non-leaf node $n_i in p a t h(d)$, when $d$ finishes its *node-$n_i$-refresh phase* at $t_(r\-i)$, there's at least one successful `refresh` call during this phase. Suppose this `refresh` call starts and ends at $t_(s t a r t \- i)$ and $t_(e n d\-i)$. Suppose $r a n k(n_(i-1), t) eq.not r$ for $t in [t_(r\-(i-1)), t_1]$. By the way `refresh` is defined, after this `refresh` call, $n_i$ will store some rank other than $r$. Because of $(1)$, after this up until $t_1$, $r$ never has a chance to be visible to a `refresh` on node $n_i$ during $[n_(i-1), t]$. In other words, $r a n k(n_i, t) eq.not r$ for $t in [t_(r\-i), t_1]$.
+
+  By induction, we obtain the theorem.
+]
+
 #theorem[If an `enqueue` $e$ precedes another `dequeue` $d$, then either:
   - $d$ isn't matched.
   - $d$ matches $e$.
   - $e$ matches $d'$ and $d'$ precedes $d$.
   - $d$ matches $e'$ and $e'$ precedes $e$.
   - $d$ matches $e'$ and $e'$ overlaps with $e$.
-]
+] <enqueue-dequeue-theorem>
 
 #proof[
   If $d$ doesn't match anything, the theorem holds.
@@ -755,7 +773,7 @@ We immediately obtain the following result.
 #theorem[If a `dequeue` $d$ precedes another `enqueue` $e$, then either:
   - $d$ isn't matched.
   - $d$ matches $e'$ such that $e'$ precedes or overlaps with $e$ and $e' eq.not e$.
-]
+] <dequeue-enqueue-theorem>
 
 #proof[
   If $d$ isn't matched, the theorem holds.
@@ -774,6 +792,35 @@ We immediately obtain the following result.
 ]
 
 #proof[
+  If both $e_0$ and $e_1$ aren't matched, the theorem holds.
+
+  Suppose $e_1$ matches $d_1$. By @matching-dequeue-enqueue-lemma, either $e_1$ precedes or overlaps with $d_1$.
+
+  If $e_0$ precedes $d_1$, applying @enqueue-dequeue-theorem for $d_1$ and $e_0$:
+  - $d_1$ isn't matched, contradictory.
+  - $d_1$ matches $e_0$, contradictory.
+  - $e_0$ matches $d_0$ and $d_0$ precedes $d_1$, the theorem holds.
+  - $d_1$ matches $e_1$ and $e_1$ precedes $e_0$, contradictory.
+  - $d_1$ matches $e_1$ and $e_1$ overlaps with $e_0$, contradictory.
+
+  If $d_1$ precedes $e_0$, applying @dequeue-enqueue-theorem for $d_1$ and $e_0$:
+  - $d_1$ isn't matched, contradictory.
+  - $d_1$ matches $e_1$ and $e_1$ precedes or overlaps with $e_0$, contradictory.
+
+  Consider that $d_1$ overlaps with $e_0$, then $d_1$ must also overlap with $e_1$. Call $r_1$ the rank of the enqueuer that performs $e_1$. Call $t$ to be the time $d_1$ atomically reads the root's rank on line 5 of `dequeue` (@lt-dequeue). Because $d_1$ matches $e_1$, $d_1$ must read out $r_1$ at $t_1$.
+
+  If $e_1$ is the first `enqueue` of rank $r_1$, then $$ must be after $e_1$ has started, because otherwise, due to @matched-enqueue-theorem, $r_1$ would not be in $r o o t$ before $e_1$.
+
+  If $e_1$ is not the first `enqueue` of rank $r_1$, then $t$ must also be after $e_1$ has started. Suppose the contrary, $t_e$ is before $e_1$ has started:
+  - If there's no uncompleted `enqueue` of rank $r_1$ at $t$ and they are all matched by the time $t$, due to @matched-enqueue-theorem, $r_1$ would not be in $r o o t$ at $t$. Therefore, $d_1$ cannot read out $r_1$, which is contradictory.
+  - If there's some unmatched `enqueue` of rank $r_1$ at $t$, $d_1$ will match one of these `enqueue`s instead because:
+    - There's only one `dequeue` at a time, so unmatched `enqueue`s remain unmatched until this `dequeue` performs an `spsc_dequeue`.
+    - Due to @one-dequeue-one-enqueue-corollary, all the `enqueue`s of rank $r_1$ must finish before another starts. Therefore, there's some unmatched `enqueue` of rank $r_1$ finishing before $e_1$.
+    - The local SPSC of the enqueuer node of rank $r_1$ is serializable, so this `dequeue` will favor one of these `enqueue`s over $e_1$. 
+
+  Therefore $t$ must happen after $e_1$ has started. Right at $t$, no `dequeue` is actually modifying the LTQueue state and $e_0$ has finished. If $e_0$ has been matched at $t$ then the theorem holds. If $e_0$ hasn't been matched at $t$, applying @unmatched-enqueue-theorem, $d_1$ will favor $e_0$ over $e_1$, which is a contradiction.
+
+  We have proved the theorem.
 ]
 
 #theorem[If a `dequeue` $d_0$ precedes another `dequeue` $d_1$, then either:
