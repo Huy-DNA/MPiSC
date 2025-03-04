@@ -729,7 +729,7 @@ We immediately obtain the following result.
 
   Suppose $d$ matches $e'$, $e' eq.not e$.
 
-  Suppose $e$ matches $d'$ such that $d$ preceds $d'$ or is unmatched.
+  Suppose $e$ matches $d'$ such that $d$ precedes $d'$ or is unmatched.
 
   Suppose $e$ obtains a timestamp of $c$ and $e'$ obtains a timestamp of $c'$.
 
@@ -742,21 +742,44 @@ We immediately obtain the following result.
   Therefore, $e'$ precedes $e$ or overlaps with $e$.
 ]
 
+#lemma[
+  If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
+] <matching-dequeue-enqueue-lemma>
+
+#proof[
+  If $d$ precedes $e$, none of the local SPSCs can contain an item with the timestamp of $e'$ and the timestamps are unique. Therefore, $d$ cannot return an item with a timestamp of $e$. Thus $d$ cannot match $e$.
+
+  Therefore, $e$ either precedes or overlaps with $d$.
+]
+
+#theorem[If a `dequeue` $d$ precedes another `enqueue` $e$, then either:
+  - $d$ isn't matched.
+  - $d$ matches $e'$ such that $e'$ precedes or overlaps with $e$ and $e' eq.not e$.
+]
+
+#proof[
+  If $d$ isn't matched, the theorem holds.
+
+  Suppose $d$ matches $e'$. Applying @matching-dequeue-enqueue-lemma, $e'$ must precede or overlap with $d$. In other words, $d$ cannot precede $e'$.
+
+  If $e$ precedes or is $e'$, then $d$ must precede $e'$, which is contradictory.
+
+  Therefore, $e'$ must precede $e$ or overlap with $e$.
+]
+
 #theorem[If an `enqueue` $e_0$ precedes another `enqueue` $e_1$, then either:
   - Both $e_0$ and $e_1$ aren't matched.
   - $e_0$ is matched but $e_1$ is not matched.
-  - Both $e_0$ and $e_1$ are matched.
+  - $e_0$ matches $d_0$ and $e_1$ matches $d_1$ such that $d_0$ precedes $d_1$.
+]
+
+#proof[
 ]
 
 #theorem[If a `dequeue` $d_0$ precedes another `dequeue` $d_1$, then either:
   - $d_0$ isn't matched.
   - $d_1$ isn't matched.
   - $d_0$ matches $e_0$ and $d_1$ matches $e_1$ such that $e_0$ precedes or overlaps with $e_1$.
-]
-
-#theorem[If a `dequeue` $d$ precedes another `enqueue` $e$, then either:
-  - $d$ isn't matched.
-  - $d$ matches $e'$ such that $e'$ precedes or overlaps with $e$.
 ]
 
 == Memory safety
