@@ -789,7 +789,7 @@ We immediately obtain the following result.
   - Both $e_0$ and $e_1$ aren't matched.
   - $e_0$ is matched but $e_1$ is not matched.
   - $e_0$ matches $d_0$ and $e_1$ matches $d_1$ such that $d_0$ precedes $d_1$.
-]
+] <enqueue-enqueue-theorem>
 
 #proof[
   If both $e_0$ and $e_1$ aren't matched, the theorem holds.
@@ -816,7 +816,7 @@ We immediately obtain the following result.
   - If there's some unmatched `enqueue` of rank $r_1$ at $t$, $d_1$ will match one of these `enqueue`s instead because:
     - There's only one `dequeue` at a time, so unmatched `enqueue`s remain unmatched until this `dequeue` performs an `spsc_dequeue`.
     - Due to @one-dequeue-one-enqueue-corollary, all the `enqueue`s of rank $r_1$ must finish before another starts. Therefore, there's some unmatched `enqueue` of rank $r_1$ finishing before $e_1$.
-    - The local SPSC of the enqueuer node of rank $r_1$ is serializable, so this `dequeue` will favor one of these `enqueue`s over $e_1$. 
+    - The local SPSC of the enqueuer node of rank $r_1$ is serializable, so this `dequeue` will favor one of these `enqueue`s over $e_1$.
 
   Therefore $t$ must happen after $e_1$ has started. Right at $t$, no `dequeue` is actually modifying the LTQueue state and $e_0$ has finished. If $e_0$ has been matched at $t$ then the theorem holds. If $e_0$ hasn't been matched at $t$, applying @unmatched-enqueue-theorem, $d_1$ will favor $e_0$ over $e_1$, which is a contradiction.
 
@@ -827,6 +827,19 @@ We immediately obtain the following result.
   - $d_0$ isn't matched.
   - $d_1$ isn't matched.
   - $d_0$ matches $e_0$ and $d_1$ matches $e_1$ such that $e_0$ precedes or overlaps with $e_1$.
+] <dequeue-dequeue-theorem>
+
+#proof[
+  If $d_0$ isn't matched or $d_1$ isn't matched, the theorem holds.
+
+  Suppose $d_0$ matches $e_0$ and $d_1$ matches $e_1$.
+
+  Suppose the contrary, $e_1$ precedes $e_0$. Applying @enqueue-dequeue-theorem:
+  - Both $e_0$ and $e_1$ aren't matched, which is contradictory.
+  - $e_1$ is matched but $e_0$ is not matched, which contradictory.
+  - $e_1$ matches $d_1$ and $e_0$ matches $d_0$ such that $d_1$ precedes $d_0$, which is contradictory.
+
+  Therefore, the theorem holds.
 ]
 
 == Memory safety
