@@ -655,7 +655,7 @@ We immediately obtain the following result.
   Combining $(*)$, $(**)$, $(***)$, we obtain the stronger version of the theorem.
 ]
 
-#theorem[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a `dequeue`, $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.]
+#theorem[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a `dequeue`, $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.] <unmatched-enqueue-theorem>
 
 #proof[
   We will prove a stronger version of this theorem: Suppose an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$. For every $n_i in p a t h(e)$, $n_0$ is the leaf node and $n_i$ is the parent of $n_(i-1)$, $i gt.eq 1$. If $e$ starts and finishes its *node-$n_i$-refresh phase* at $t_(s t a r t\-i)$ and $t_(e n d\-i)$ then for any subrange $T$ of $[t_(e n d\-i), t_1]$ that does not overlap with a `dequeue` $d$ where $n_i in p a t h(d)$ and $d$ hasn't finished its *node $n_i$ refresh phase*, $m i n \- t s(r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.
@@ -715,11 +715,31 @@ We immediately obtain the following result.
 #theorem[If an `enqueue` $e$ precedes another `dequeue` $d$, then either:
   - $d$ isn't matched.
   - $d$ matches $e$.
+  - $e$ matches $d'$ and $d'$ precedes $d$.
   - $d$ matches $e'$ and $e'$ precedes $e$.
   - $d$ matches $e'$ and $e'$ overlaps with $e$.
 ]
 
 #proof[
+  If $d$ doesn't match anything, the theorem holds.
+
+  If $d$ matches $e$, the theorem also holds.
+
+  If $e$ matches $d'$ and $d'$ precedes $d$, the theorem also holds.
+
+  Suppose $d$ matches $e'$, $e' eq.not e$.
+
+  Suppose $e$ matches $d'$ such that $d$ preceds $d'$ or is unmatched.
+
+  Suppose $e$ obtains a timestamp of $c$ and $e'$ obtains a timestamp of $c'$.
+
+  Because $e$ precedes $d$ and because an MPSC does not allow multiple `dequeue`s, from the start of $d$ at $t_0$ until after line 5 of `dequeue` (@lt-dequeue) at $t_1$, $e$ has finished and there's no `dequeue` running at $d$ that has actually performed `spsc-dequeue`. Also by $t_0$ and $t_1$, $e$ is still unmatched due to our assumption.
+
+  Applying @unmatched-enqueue-theorem, $m i n \- t s(r a n k(r o o t, t_x), t_y) lt.eq c$ for $t_x, t_y in [t_0, t_1]$. Therefore, $d$ reads out a rank $r$ such that $m i n \- t s(r, t) lt.eq c$ for $t in [t_0, t_1]$. Consequently, $d$ dequeues out a value with a timestamp not greater than $c$. Because $d$ matches $e'$, $c' lt.eq c$. However, $e' eq.not e$ so $c' lt c$.
+
+  This means that $e$ cannot precede $e'$, because if so, $c lt c'$.
+
+  Therefore, $e'$ precedes $e$ or overlaps with $e$.
 ]
 
 #theorem[If an `enqueue` $e_0$ precedes another `enqueue` $e_1$, then either:
