@@ -32,6 +32,8 @@
   #v(10pt)
 ]
 
+#set list(marker: ([•], [•]))
+
 #show figure.where(kind: "algorithm"): set align(start)
 
 #import "@preview/lovelace:0.3.0": *
@@ -454,7 +456,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 23,
+    line-numbering: i => i + 30,
     booktabs: true,
     numbered-title: [`refreshTimestamp(rank: uint32_t)`],
   )[
@@ -471,7 +473,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 29,
+    line-numbering: i => i + 36,
     booktabs: true,
     numbered-title: [`refreshLeaf(rank: uint32_t)`],
   )[
@@ -552,7 +554,7 @@ An MPSC places a special constraint on *the set of histories* it can produce: An
 
 === Proof of linearizability
 
-#definition[An `enqueue` operation $e$ is said to *match* a `dequeue` operation $d$ if $d$ returns a timestamp that $e$ enqueues. Similarly, $d$ is said to match $e$. In this case, both $e$ and $d$ are said to be *matched*.]
+#definition[An `enqueue` operation $e$ is said to *match* a `dequeue` operation $d$ if $d$ returns a timestamp that $e$ enqueues. Similarly, $d$ is said to *match* $e$. In this case, both $e$ and $d$ are said to be *matched*.]
 
 #definition[An `enqueue` operation $e$ is said to be *unmatched* if no `dequeue` operation *matches* it.]
 
@@ -586,21 +588,19 @@ We immediately obtain the following result.
 
 #definition[For an `enqueue` or a `dequeue`, *timestamp-refresh phase* refer to its execution of line 10-11 in `propagate` (@lt-propagate).]
 
-#definition[For an `enqueue` or a `dequeue` $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of line 12-13 (if $n$ is a leaf node) and line 17-18 (if $n$ is a non-leaf node) to refresh $n$'s rank in `propagate` (@lt-propagate).]
+#definition[For an `enqueue` or a `dequeue` $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of line 12-13 (if $n$ is a leaf node) or line 17-18 (if $n$ is a non-leaf node) to refresh $n$'s rank in `propagate` (@lt-propagate).]
 
-#definition[`refreshTimestamp` is said to start its *CAS-sequence* if it finishes line 24 in @lt-refresh-timestamp. `refreshTimestamp` is said to end its *CAS-sequence* if it finishes line 27 or line 28 in @lt-refresh-timestamp.]
+#definition[`refreshTimestamp` is said to start its *CAS-sequence* if it finishes line 31 in @lt-refresh-timestamp. `refreshTimestamp` is said to end its *CAS-sequence* if it finishes line 34 or line 36 in @lt-refresh-timestamp.]
 
 #definition[`refresh` is said to start its *CAS-sequence* if it finishes line 20 in @lt-refresh. `refresh` is said to end its *CAS-sequence* if it finishes line 30 in @lt-refresh.]
 
-#definition[`refreshLeaf` is said to start its *CAS-sequence* if it finishes line 31 in @lt-refresh-leaf. `refreshLeaf` is said to end its *CAS-sequence* if it finishes line 33 in @lt-refresh-leaf.]
+#definition[`refreshLeaf` is said to start its *CAS-sequence* if it finishes line 38 in @lt-refresh-leaf. `refreshLeaf` is said to end its *CAS-sequence* if it finishes line 40 in @lt-refresh-leaf.]
 
 #theorem[For an `enqueue` or a `dequeue` $op$, if $op$ modifies an enqueuer node and this enqueuer node is attached to a leaf node $l$, then $p a t h(op)$ is the set of nodes lying on the path from $l$ to the root node.]
 
 #proof[This is trivial considering how `propagate` (@lt-propagate) works.]
 
-#definition[Given a subtree rooted at $n$, $overparen(E)(n)$ is the set of enqueuers that have an enqueuer node attached to a leaf node in this subtree.]
-
-#theorem[For any time $t$ and a node $n$, $r a n k(n, t) in overparen(E)(n) union {$`DUMMY`$}$.] <possible-ranks-theorem>
+#theorem[For any time $t$ and a node $n$, $r a n k(n, t)$ can only `DUMMY` or the rank of one of the enqueuer nodes attached to a leaf node in the subtree rooted at $n$.] <possible-ranks-theorem>
 
 #proof[This is trivial considering how `refresh` and `refreshLeaf` works.]
 
@@ -846,7 +846,7 @@ We immediately obtain the following result.
     - Due to @one-dequeue-one-enqueue-corollary, all the `enqueue`s of rank $r_1$ must finish before another starts. Therefore, there's some unmatched `enqueue` of rank $r_1$ finishing before $e_1$.
     - The local SPSC of the enqueuer node of rank $r_1$ is serializable, so this `dequeue` will favor one of these `enqueue`s over $e_1$.
 
-  Therefore $t$ must happen after $e_1$ has started. Right at $t$, no `dequeue` is actually modifying the LTQueue state and $e_0$ has finished. If $e_0$ has been matched at $t$ then the theorem holds. If $e_0$ hasn't been matched at $t$, applying @unmatched-enqueue-theorem, $d_1$ will favor $e_0$ over $e_1$, which is a contradiction.
+  Therefore, $t$ must happen after $e_1$ has started. Right at $t$, no `dequeue` is actually modifying the LTQueue state and $e_0$ has finished. If $e_0$ has been matched at $t$ then the theorem holds. If $e_0$ hasn't been matched at $t$, applying @unmatched-enqueue-theorem, $d_1$ will favor $e_0$ over $e_1$, which is a contradiction.
 
   We have proved the theorem.
 ]
@@ -893,18 +893,21 @@ We immediately obtain the following result.
 
   It's obvious that $X arrow.double.not$#sub($H'$)$X$.
 
-  If $X$ and $Y$ are `dequeue`s, because there's a total order among the `dequeue`s, either exactly one of these is true: $X ->$#sub($H'$)$Y$ or $Y ->$#sub($H'$)$X$. Then due to $(1)$, either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$. Notice that we cannot obtain $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ from $(2)$, $(3)$, or $(4)$. Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true.
+  If $X$ and $Y$ are `dequeue`s, because there's a total order among the `dequeue`s, either exactly one of these is true: $X ->$#sub($H'$)$Y$ or $Y ->$#sub($H'$)$X$. Then due to $(1)$, either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$. Notice that we cannot obtain $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ from $(2)$, $(3)$, or $(4)$.
+  #linebreak()
+  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(*)$
 
   If $X$ is `dequeue` and $Y$ is `enqueue`, in this case $(3)$ cannot help us obtain either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$, so we can disregard it.
   - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$, so $(4)$ cannot apply. Applying @dequeue-enqueue-theorem, either
     - $X$ isn't matched, $(2)$ cannot apply. Therefore, $Y arrow.double.not$#sub($H'$)$X$.
     - $X$ matches $e'$ and $e' eq.not Y$. Therefore, $X$ does not match $Y$, or $(2)$ cannot apply. Therefore, $Y arrow.double.not$#sub($H'$)$X$.
     Therefore, in this case, $X arrow.double$#sub($H'$)$Y$ and $Y arrow.double.not$#sub($H'$)$X$.
-  - If $Y ->$#sub($H'$)$X$, then due to $(1)$, $Y =>$#sub($H'$)$X$. By definition, $Y$ precedes $X$, so $(4)$ cannot apply. Even if $(2)$ applies, it can only help us obtain $Y =>$#sub($H'$)$X$. Therefore, in this case, $Y arrow.double$#sub($H'$)$X$ and $X arrow.double.not$#sub($H'$)$Y$.
+  - If $Y ->$#sub($H'$)$X$, then due to $(1)$, $Y =>$#sub($H'$)$X$. By definition, $Y$ precedes $X$, so $(4)$ cannot apply. Even if $(2)$ applies, it can only help us obtain $Y =>$#sub($H'$)$X$.
+    #linebreak() Therefore, in this case, $Y arrow.double$#sub($H'$)$X$ and $X arrow.double.not$#sub($H'$)$Y$.
   - If $X$ overlaps with $Y$:
     - If $X$ matches $Y$, then due to $(2)$, $Y =>$#sub($H'$)$X$. Because $X$ matches $Y$, $(4)$ cannot apply. Therefore, in this case $Y =>$#sub($H'$)$X$ but $X arrow.double.not$#sub($H'$)$Y$.
     - If $X$ does not match $Y$, then due to $(4)$, $X =>$#sub($H'$)$Y$. Because $X$ doesn't match $Y$, $(2)$ cannot apply. Therefore, in this case $X =>$#sub($H'$)$Y$ but $Y arrow.double.not$#sub($H'$)$X$.
-  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true.
+  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(**)$
 
   If $X$ is `enqueue` and $Y$ is `enqueue`, in this case $(2)$ and $(4)$ are irrelevant:
   - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$. Applying @enqueue-enqueue-theorem,
@@ -914,9 +917,9 @@ We immediately obtain the following result.
     Therefore, in this case, $X arrow.double$#sub($H'$)$Y$ but $Y arrow.double.not$#sub($H'$)$X$.
   - If $Y ->$#sub($H'$)$X$, this case is symmetric to the first case. We obtain $Y arrow.double$#sub($H'$)$X$ but $X arrow.double.not$#sub($H'$)$Y$.
   - If $X$ overlaps with $Y$, because in $H'$, all `enqueue`s are matched, then, $X$ matches $d_x$ and $d_y$. Because $d_x$ either precedes or succeeds $d_y$, Applying $(3)$, we obtain either $X arrow.double$#sub($H'$)$Y$ or $Y arrow.double$#sub($H'$)$X$ and there's no way to obtain the other.
-  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true.
+  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(***)$
 
-  We have proved that $=>$#sub($H'$) is a strict total ordering that is consistent with $->$#sub($H'$). In other words, we can order method calls in $H'$ in a sequential manner. We will prove that this sequential is consistent with FIFO semantics:
+  From $(*)$, $(**)$, $(***)$, we have proved that $=>$#sub($H'$) is a strict total ordering that is consistent with $->$#sub($H'$). In other words, we can order method calls in $H'$ in a sequential manner. We will prove that this sequential is consistent with FIFO semantics:
   - An item can only be `dequeue`d once: This is trivial as a `dequeue` can only match one `enqueue`.
   - Items are `dequeue`d in the order they are `enqueue`d: Suppose there are two `enqueue`s $e_1$, $e_2$ such that $e_1 arrow.double e_2$ and suppose they match $d_1$ $d_2$. Then we have obtained $e_1 arrow.double e_2$ either because:
     - $(3)$ applies, in this case $d_1 arrow.double d_2$ is a condition for it toapply.
