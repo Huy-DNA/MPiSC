@@ -560,7 +560,7 @@ An MPSC places a special constraint on *the set of histories* it can produce: An
 
 #definition[A `dequeue` operation $d$ is said to be *unmatched* if no `enqueue` operation *matches* it, in other word, $d$ returns $bot$.]
 
-#theorem[Only the dequeuer and an enqueuer can operate on its enqueuer node.]
+#theorem[Only the dequeuer and one enqueuer can operate on an enqueuer node.]
 
 #proof[This is trivial.]
 
