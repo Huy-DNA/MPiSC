@@ -541,10 +541,10 @@ An MPSC supports 2 *methods*:
 - `dequeue` which doesn't accept anything and returns a value
 
 An MPSC has the same *sequential specification* as a FIFO:
-  - `dequeue` returns values in the same order as they was `enqueue`d.
-  - An `enqueue` can only by `dequeue`d once.
-  - An item can only be `dequeue`d after it's `enqueue`d.
-  - If the queue is empty, `dequeue` returns nothing.
+- `dequeue` returns values in the same order as they was `enqueue`d.
+- An `enqueue` can only by `dequeue`d once.
+- An item can only be `dequeue`d after it's `enqueue`d.
+- If the queue is empty, `dequeue` returns nothing.
 
 An MPSC places a special constraint on *the set of histories* it can produce: Any history $H$ must not have overlapping `dequeue` method calls.
 
@@ -716,6 +716,30 @@ We immediately obtain the following result.
   By induction, we have proved the stronger version of the theorem.
 ]
 
+#corollary[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a `dequeue`, $m i n \- s p s c \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.] <unmatched-enqueue-corollary>
+
+#proof[
+  Call $t_(s t a r t)$ and $t_(e n d)$ to be the start and end time of $T$.
+
+  Applying @unmatched-enqueue-theorem, we have that $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.
+
+  Fix $t_r$ so that $r a n k(r o o t, t_r) = r$. We have that $m i n \- t s(r, t) lt.eq c$ for any $t in T$.
+
+  $m i n \- t s(r, t)$ can only change due to a successful `refreshTimestamp` on the enqueuer node with rank $r$. Consider the last successful `refreshTimestamp` on the enqueuer node with rank $r$ not after $T$. Suppose that `refreshTimestamp` reads out the minimum timestamp of the local SPSC at $t' lt.eq t_(s t a r t)$.
+
+  Therefore, $m i n \- t s(r, t_(s t a r t)) = m i n \- s p s c \- t s(r, t') lt.eq c$.
+
+  We will prove that after $t'$ until $t_(e n d)$, there's no `spsc_dequeue` on $r$ running.
+
+  Suppose the contrary, then this `spsc_dequeue` must be part of `dequeue`. By definition, this `dequeue` must start and end before $t_(s t a r t)$, else it violates the assumption of $T$. If this `spsc_dequeue` starts after $t'$, then its `refreshTimestamp` must finish after $t'$ and before $t_(s t a r t)$. But this violates the assumption that the last `refreshTimestamp` not after $t_(s t a r t)$ reads out the minimum timestamp at $t'$.
+
+  Therefore, there's no `spsc_dequeue` on $r$ running during $[t', t_(e n d)]$. Therefore, $m i n \- s p s c \- t s(r, t)$ remains constant during $[t', t_(e n d)]$ because it's not `MAX`.
+
+  In conclusion, $m i n \- s p s c \- t s(r, t) lt.eq c$ for $t in[t', t_(e n d)]$.
+  
+  We have proved the theorem.
+]
+
 #theorem[Given a rank $r$. If within $[t_0, t_1]$, there's no uncompleted `enqueue`s on rank $r$ and all matching `dequeue`s for any completed `enqueue`s on rank $r$ has finished, then $r a n k(n, t) eq.not r$ for every node $n$ and $t in [t_0, t_1]$.] <matched-enqueue-theorem>
 
 #proof[
@@ -757,7 +781,7 @@ We immediately obtain the following result.
 
   Because $e$ precedes $d$ and because an MPSC does not allow multiple `dequeue`s, from the start of $d$ at $t_0$ until after line 5 of `dequeue` (@lt-dequeue) at $t_1$, $e$ has finished and there's no `dequeue` running at $d$ that has actually performed `spsc-dequeue`. Also by $t_0$ and $t_1$, $e$ is still unmatched due to our assumption.
 
-  Applying @unmatched-enqueue-theorem, $m i n \- t s(r a n k(r o o t, t_x), t_y) lt.eq c$ for $t_x, t_y in [t_0, t_1]$. Therefore, $d$ reads out a rank $r$ such that $m i n \- t s(r, t) lt.eq c$ for $t in [t_0, t_1]$. Consequently, $d$ dequeues out a value with a timestamp not greater than $c$. Because $d$ matches $e'$, $c' lt.eq c$. However, $e' eq.not e$ so $c' lt c$.
+  Applying @unmatched-enqueue-corollary, $m i n \- s p s c \- t s(r a n k(r o o t, t_x), t_y) lt.eq c$ for $t_x, t_y in [t_0, t_1]$. Therefore, $d$ reads out a rank $r$ such that $m i n \- s p s c \- t s(r, t) lt.eq c$ for $t in [t_0, t_1]$. Consequently, $d$ dequeues out a value with a timestamp not greater than $c$. Because $d$ matches $e'$, $c' lt.eq c$. However, $e' eq.not e$ so $c' lt c$.
 
   This means that $e$ cannot precede $e'$, because if so, $c lt c'$.
 
