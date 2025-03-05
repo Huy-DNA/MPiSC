@@ -935,6 +935,10 @@ We immediately obtain the following result.
 
 == Memory safety
 
+Memory allocation and deallocation are performed only in the SPSC data structure. Since @ltqueue has proved that it's memory-safe, the modified algorithm is also memory-safe.
+
 == Wait-freedom
+
+All the procedures `enqueue`, `dequeue`, `refresh`, `refreshTimestamp`, `refreshLeaf`, `propagate` are wait-free because there's no possibility of inifinite loops and a process waiting for another process.
 
 #bibliography("/bibliography.yml", title: [References])
