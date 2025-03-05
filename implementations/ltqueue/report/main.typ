@@ -881,7 +881,7 @@ We immediately obtain the following result.
 
   We already have a strict partial order $->$#sub($H'$) on $H'$.
 
-  Because the queue is MPSC, there's already a total ordering among the `dequeue`s.
+  Because the queue is MPSC, there's already a total order among the `dequeue`s.
 
   We will extend $->$#sub($H'$) to a strict total order $=>$#sub($H'$) on $H'$ as follows:
   - If $X ->$#sub($H'$)$Y$ then $X =>$#sub($H'$)$Y$. $(1)$
@@ -893,7 +893,7 @@ We immediately obtain the following result.
 
   It's obvious that $X arrow.double.not$#sub($H'$)$X$.
 
-  If $X$ and $Y$ are `dequeue`s, because there's a total ordering among the `dequeue`s, either exactly one of these is true: $X ->$#sub($H'$)$Y$ or $Y ->$#sub($H'$)$X$. Then due to $(1)$, either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$. Notice that we cannot obtain $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ from $(2)$, $(3)$, or $(4)$. Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true.
+  If $X$ and $Y$ are `dequeue`s, because there's a total order among the `dequeue`s, either exactly one of these is true: $X ->$#sub($H'$)$Y$ or $Y ->$#sub($H'$)$X$. Then due to $(1)$, either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$. Notice that we cannot obtain $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ from $(2)$, $(3)$, or $(4)$. Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true.
 
   If $X$ is `dequeue` and $Y$ is `enqueue`, in this case $(3)$ cannot help us obtain either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$, so we can disregard it.
   - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$, so $(4)$ cannot apply. Applying @dequeue-enqueue-theorem, either
