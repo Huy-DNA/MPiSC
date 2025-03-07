@@ -1,4 +1,4 @@
-#outline(indent: true)
+#outline(indent: 1em)
 #pagebreak()
 #outline(title: "List of Listings", target: figure.where(kind: raw))
 #pagebreak()
