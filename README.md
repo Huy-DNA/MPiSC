@@ -6,7 +6,7 @@
 - Use the an MPI-3 new RMA capabilities to port potential lock-free *shared-memory* queue algorithms to distributed context.
 - Potentially optimize MPI RMA ports using MPI-3 SHM + C++11 memory model. 
 
-- Minimum characteristics:
+- Minimum required characteristics:
 
 | Dimension           | Desired property        |
 | ------------------- | ----------------------- |
