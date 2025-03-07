@@ -118,14 +118,15 @@ jobs:
       - name: Generate Enhanced README
         run: |
           # Create header with site info
+          if [ -f "README.md" ]; then
+            echo "$(head -n 1 README.md)" >> build/README.md
+          fi
           cat > build/README.md << 'EOF'
-          # 📚 Typst Project Documentation
 
           <div align="center">
-            <img src="https://raw.githubusercontent.com/typst/typst/main/assets/images/isologo.svg" width="120" alt="Typst Logo">
             <h3>Automatically Generated PDF Documents</h3>
             <p>
-              <em>This site hosts the compiled PDF files from the Typst project source files.</em>
+              <em>This site hosts the compiled PDF files from the Typst project source files of <a href="https://github.com/Huy-DNA/MPiSC/tree/main">MPiSC</a>.</em>
             </p>
           </div>
 
@@ -166,16 +167,11 @@ jobs:
           echo "" >> build/README.md
           
           if [ -f "README.md" ]; then
-            echo "<details open>" >> build/README.md
-            echo "<summary><strong>Original README from main branch</strong></summary>" >> build/README.md
             echo "" >> build/README.md
-            echo "$(cat README.md)" >> build/README.md
+            echo "$(tail -n +2 README.md | sed -E 's/^(#+)/\1#/')" >> build/README.md
             echo "" >> build/README.md
-            echo "</details>" >> build/README.md
-          else
-            echo "*No README.md found in the main branch*" >> build/README.md
           fi
-          
+
           # Add footer with build info
           cat >> build/README.md << EOF
           
