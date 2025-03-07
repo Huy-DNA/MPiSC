@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for git log commands
 
       - name: Setup Typst
         uses: typst-community/setup-typst@v3
@@ -33,6 +35,9 @@ jobs:
       
       - name: Build PDFs from Typst projects
         run: |
+          # Create a file to store modification dates
+          touch modification_dates.txt
+          
           for dir in $TYPST_DIRS; do
             if [ -f "$dir/main.typst" ]; then
               main_file="$dir/main.typst"
@@ -48,25 +53,96 @@ jobs:
             
             # Try to compile, continue if there's an error
             typst compile "$main_file" "build/$rel_dir/main.pdf" || echo "Failed to build $main_file, continuing..."
+            
+            # If build was successful, get the last modified date based on content changes
+            if [ -f "build/$rel_dir/main.pdf" ]; then
+              # Get the last commit date that modified ANY file in this directory or subdirectories
+              # This captures changes to includes, images, data files, etc.
+              last_modified=$(git log -1 --format="%ad" --date=format:"%Y-%m-%d" -- "$dir")
+              
+              # If git log fails (e.g., directory not yet committed), use file system date
+              if [ -z "$last_modified" ]; then
+                last_modified=$(find "$dir" -type f -printf "%TY-%Tm-%Td\n" | sort -r | head -n1)
+              fi
+              
+              # Store the file path and its last modified date
+              echo "$rel_dir/main.pdf|$last_modified" >> modification_dates.txt
+            fi
           done
       
-      - name: Generate README with links
+      - name: Generate Enhanced README
         run: |
-          echo "# Typst Project PDFs" > build/README.md
-          echo "" >> build/README.md
-          echo "This branch contains automatically built PDFs from Typst source files." >> build/README.md
-          echo "" >> build/README.md
-          echo "## Available PDFs" >> build/README.md
+          # Create header with site info
+          cat > build/README.md << 'EOF'
+          # 📚 Typst Project Documentation
+
+          <div align="center">
+            <img src="https://raw.githubusercontent.com/typst/typst/main/assets/images/isologo.svg" width="120" alt="Typst Logo">
+            <h3>Automatically Generated PDF Documents</h3>
+            <p>
+              <em>This site hosts the compiled PDF files from the Typst project source files.</em>
+            </p>
+          </div>
+
+          ---
+
+          ## 📄 Available Documents
+          
+          <table>
+            <thead>
+              <tr>
+                <th align="left">Document</th>
+                <th align="left">Last Content Update</th>
+                <th align="center">View</th>
+                <th align="center">Download</th>
+              </tr>
+            </thead>
+            <tbody>
+          EOF
+          
+          # Add table rows for each PDF
+          while IFS="|" read -r file_path last_mod_date; do
+            pdf_name=$(basename "$(dirname "$file_path")")
+            echo "      <tr>" >> build/README.md
+            echo "        <td><strong>$pdf_name</strong></td>" >> build/README.md
+            echo "        <td>$last_mod_date</td>" >> build/README.md
+            echo "        <td align=\"center\"><a href=\"$file_path\">📕 View</a></td>" >> build/README.md
+            echo "        <td align=\"center\"><a href=\"$file_path\" download>⬇️ PDF</a></td>" >> build/README.md
+            echo "      </tr>" >> build/README.md
+          done < modification_dates.txt
+          
+          # Close the table
+          echo "    </tbody>" >> build/README.md
+          echo "  </table>" >> build/README.md
           echo "" >> build/README.md
           
-          find build -name "*.pdf" | sort | while read pdf; do
-            relative_path="${pdf#build/}"
-            echo "- [$relative_path]($relative_path)" >> build/README.md
-          done
-          
-          # Add timestamp to show when the build was last run
+          # Add original README content if it exists
+          echo "## 📝 Project Information" >> build/README.md
           echo "" >> build/README.md
-          echo "Last built: $(date)" >> build/README.md
+          
+          if [ -f "README.md" ]; then
+            echo "<details open>" >> build/README.md
+            echo "<summary><strong>Original README from main branch</strong></summary>" >> build/README.md
+            echo "" >> build/README.md
+            echo "$(cat README.md)" >> build/README.md
+            echo "" >> build/README.md
+            echo "</details>" >> build/README.md
+          else
+            echo "*No README.md found in the main branch*" >> build/README.md
+          fi
+          
+          # Add footer with build info
+          cat >> build/README.md << EOF
+          
+          ---
+          
+          <div align="center">
+            <p>
+              <small>Last build: $(date)</small><br>
+              <small>Generated by GitHub Actions • <a href="https://github.com/${GITHUB_REPOSITORY}/tree/main">View Source</a></small>
+            </p>
+          </div>
+          EOF
       
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
