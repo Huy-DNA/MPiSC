@@ -13,21 +13,17 @@ private:
     uint32_t tag;
   };
   constexpr static int32_t DUMMY_RANK = ~((uint32_t)0);
-  MPI_Datatype _tree_node_type;
 
   struct timestamp_t {
     uint32_t timestamp;
     uint32_t tag;
   };
   constexpr static uint32_t MAX_TIMESTAMP = ~((uint32_t)0);
-  MPI_Datatype _timestamp_type;
 
   struct data_t {
     T data;
     uint32_t timestamp;
   };
-
-  MPI_Datatype _t_type;
 
   MPI_Comm _comm;
   int _self_rank;
@@ -173,28 +169,6 @@ private:
     }
   } _spsc;
 
-  void _init_tree_node_type() {
-    int blocklengths[] = {1, 1};
-    MPI_Datatype types[] = {MPI_INT32_T, MPI_UINT32_T};
-    MPI_Aint offsets[2];
-    offsets[0] = offsetof(tree_node_t, rank);
-    offsets[1] = offsetof(tree_node_t, tag);
-    MPI_Type_create_struct(2, blocklengths, offsets, types,
-                           &this->_tree_node_type);
-    MPI_Type_commit(&this->_tree_node_type);
-  }
-
-  void _init_timestamp_type() {
-    int blocklengths[] = {1, 1};
-    MPI_Datatype types[] = {MPI_UINT32_T, MPI_UINT32_T};
-    MPI_Aint offsets[2];
-    offsets[0] = offsetof(timestamp_t, timestamp);
-    offsets[1] = offsetof(timestamp_t, tag);
-    MPI_Type_create_struct(2, blocklengths, offsets, types,
-                           &this->_timestamp_type);
-    MPI_Type_commit(&this->_timestamp_type);
-  }
-
   int _get_number_of_enqueuers() const {
     int number_processes;
     MPI_Comm_size(this->_comm, &number_processes);
@@ -249,32 +223,29 @@ private:
     tree_node_t self_node;
     timestamp_t min_timestamp;
     MPI_Win_lock_all(0, this->_min_timestamp_win);
-    MPI_Get_accumulate(NULL, 0, MPI_INT, &min_timestamp, 1,
-                       this->_timestamp_type, this->_self_rank, 0, 1,
-                       this->_timestamp_type, MPI_NO_OP,
+    MPI_Get_accumulate(NULL, 0, MPI_INT, &min_timestamp, 1, MPI_UINT64_T,
+                       this->_self_rank, 0, 1, MPI_UINT64_T, MPI_NO_OP,
                        this->_min_timestamp_win);
     MPI_Win_unlock_all(this->_min_timestamp_win);
 
     MPI_Win_lock_all(0, this->_tree_win);
-    MPI_Get_accumulate(NULL, 0, MPI_INT, &self_node, 1, this->_tree_node_type,
-                       this->_dequeuer_rank, self_index, 1,
-                       this->_tree_node_type, MPI_NO_OP, this->_tree_win);
+    MPI_Get_accumulate(NULL, 0, MPI_INT, &self_node, 1, MPI_UINT64_T,
+                       this->_dequeuer_rank, self_index, 1, MPI_UINT64_T,
+                       MPI_NO_OP, this->_tree_win);
     MPI_Win_flush_all(this->_tree_win);
     if (min_timestamp.timestamp == MAX_TIMESTAMP) {
       const tree_node_t new_node = {DUMMY_RANK, self_node.tag + 1};
       tree_node_t result_node;
-      MPI_Compare_and_swap(&new_node, &self_node, &result_node,
-                           this->_tree_node_type, this->_dequeuer_rank,
-                           self_index, this->_tree_win);
+      MPI_Compare_and_swap(&new_node, &self_node, &result_node, MPI_UINT64_T,
+                           this->_dequeuer_rank, self_index, this->_tree_win);
       MPI_Win_flush_all(this->_tree_win);
       res = result_node.rank == self_node.rank &&
             result_node.tag == self_node.tag;
     } else {
       const tree_node_t new_node = {this->_self_rank, self_node.tag + 1};
       tree_node_t result_node;
-      MPI_Compare_and_swap(&new_node, &self_node, &result_node,
-                           this->_tree_node_type, this->_dequeuer_rank,
-                           self_index, this->_tree_win);
+      MPI_Compare_and_swap(&new_node, &self_node, &result_node, MPI_UINT64_T,
+                           this->_dequeuer_rank, self_index, this->_tree_win);
       MPI_Win_flush_all(this->_tree_win);
       res = result_node.rank == self_node.rank &&
             result_node.tag == self_node.tag;
@@ -292,9 +263,8 @@ private:
 
     MPI_Win_lock_all(0, this->_min_timestamp_win);
     timestamp_t current_timestamp;
-    MPI_Get_accumulate(NULL, 0, MPI_INT, &current_timestamp, 1,
-                       this->_timestamp_type, this->_self_rank, 0, 1,
-                       this->_timestamp_type, MPI_NO_OP,
+    MPI_Get_accumulate(NULL, 0, MPI_INT, &current_timestamp, 1, MPI_UINT64_T,
+                       this->_self_rank, 0, 1, MPI_UINT64_T, MPI_NO_OP,
                        this->_min_timestamp_win);
     MPI_Win_flush(this->_self_rank, this->_min_timestamp_win);
     if (min_timestamp_ptr == NULL) {
@@ -302,8 +272,8 @@ private:
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
       MPI_Compare_and_swap(&new_timestamp, &current_timestamp,
-                           &result_timestamp, this->_timestamp_type,
-                           this->_self_rank, 0, this->_min_timestamp_win);
+                           &result_timestamp, MPI_UINT64_T, this->_self_rank, 0,
+                           this->_min_timestamp_win);
       MPI_Win_flush_all(this->_tree_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
@@ -313,8 +283,8 @@ private:
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
       MPI_Compare_and_swap(&new_timestamp, &current_timestamp,
-                           &result_timestamp, this->_timestamp_type,
-                           this->_self_rank, 0, this->_min_timestamp_win);
+                           &result_timestamp, MPI_UINT64_T, this->_self_rank, 0,
+                           this->_min_timestamp_win);
       MPI_Win_flush_all(this->_tree_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
@@ -328,26 +298,23 @@ private:
     uint32_t min_timestamp = MAX_TIMESTAMP;
     int32_t min_timestamp_rank = DUMMY_RANK;
     MPI_Win_lock_all(0, this->_tree_win);
-    MPI_Get_accumulate(NULL, 0, MPI_INT, &current_node, 1,
-                       this->_tree_node_type, this->_dequeuer_rank,
-                       current_index, 1, this->_tree_node_type, MPI_NO_OP,
-                       this->_tree_win);
+    MPI_Get_accumulate(NULL, 0, MPI_INT, &current_node, 1, MPI_UINT64_T,
+                       this->_dequeuer_rank, current_index, 1, MPI_UINT64_T,
+                       MPI_NO_OP, this->_tree_win);
     MPI_Win_flush_all(this->_tree_win);
     for (const int child_index : this->_get_children_indexes(current_index)) {
       tree_node_t child_node;
-      MPI_Get_accumulate(NULL, 0, MPI_INT, &child_node, 1,
-                         this->_tree_node_type, this->_dequeuer_rank,
-                         child_index, 1, this->_tree_node_type, MPI_NO_OP,
-                         this->_tree_win);
+      MPI_Get_accumulate(NULL, 0, MPI_INT, &child_node, 1, MPI_UINT64_T,
+                         this->_dequeuer_rank, child_index, 1, MPI_UINT64_T,
+                         MPI_NO_OP, this->_tree_win);
       MPI_Win_flush_all(this->_tree_win);
       if (child_node.rank == DUMMY_RANK) {
         continue;
       }
       MPI_Win_lock_all(0, this->_min_timestamp_win);
       timestamp_t child_timestamp;
-      MPI_Get_accumulate(NULL, 0, MPI_INT, &child_timestamp, 1,
-                         this->_timestamp_type, child_node.rank, 0, 1,
-                         this->_timestamp_type, MPI_NO_OP,
+      MPI_Get_accumulate(NULL, 0, MPI_INT, &child_timestamp, 1, MPI_UINT64_T,
+                         child_node.rank, 0, 1, MPI_UINT64_T, MPI_NO_OP,
                          this->_min_timestamp_win);
       MPI_Win_unlock_all(this->_min_timestamp_win);
       if (child_timestamp.timestamp < min_timestamp) {
@@ -359,9 +326,8 @@ private:
     MPI_Win_lock_all(0, this->_tree_win);
     const tree_node_t new_node = {min_timestamp_rank, current_node.tag + 1};
     tree_node_t result_node;
-    MPI_Compare_and_swap(&new_node, &current_node, &result_node,
-                         this->_tree_node_type, this->_dequeuer_rank,
-                         current_index, this->_tree_win);
+    MPI_Compare_and_swap(&new_node, &current_node, &result_node, MPI_UINT64_T,
+                         this->_dequeuer_rank, current_index, this->_tree_win);
     MPI_Win_unlock_all(this->_tree_win);
     return result_node.tag == current_node.tag &&
            result_node.rank == current_node.rank;
@@ -370,12 +336,9 @@ private:
 public:
   LTEnqueuer(MPI_Comm comm, MPI_Datatype type, MPI_Aint size, int self_rank,
              int dequeuer_rank)
-      : _comm{comm}, _t_type{type}, _self_rank{self_rank},
-        _dequeuer_rank{dequeuer_rank},
+      : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
         _spsc{comm, type, size, self_rank, dequeuer_rank} {
-    this->_init_tree_node_type();
-    this->_init_timestamp_type();
 
     MPI_Info info;
     MPI_Info_create(&info);
@@ -389,9 +352,8 @@ public:
 
     MPI_Win_lock_all(0, this->_min_timestamp_win);
     const timestamp_t start_timestamp = {MAX_TIMESTAMP, 0};
-    MPI_Accumulate(&start_timestamp, 1, this->_timestamp_type, this->_self_rank,
-                   0, 1, this->_timestamp_type, MPI_REPLACE,
-                   this->_min_timestamp_win);
+    MPI_Accumulate(&start_timestamp, 1, MPI_UINT64_T, this->_self_rank, 0, 1,
+                   MPI_UINT64_T, MPI_REPLACE, this->_min_timestamp_win);
     MPI_Win_unlock_all(this->_min_timestamp_win);
 
     MPI_Win_allocate(0, sizeof(tree_node_t), info, comm, &this->_tree_ptr,
@@ -402,8 +364,6 @@ public:
   LTEnqueuer(const LTEnqueuer &) = delete;
   LTEnqueuer &operator=(const LTEnqueuer &) = delete;
   ~LTEnqueuer() {
-    MPI_Type_free(&this->_tree_node_type);
-    MPI_Type_free(&this->_timestamp_type);
     MPI_Win_free(&this->_tree_win);
     MPI_Win_free(&this->_min_timestamp_win);
     MPI_Win_free(&this->_counter_win);
@@ -435,21 +395,17 @@ private:
   };
 
   constexpr static int32_t DUMMY_RANK = ~((uint32_t)0);
-  MPI_Datatype _tree_node_type;
 
   struct timestamp_t {
     uint32_t timestamp;
     uint32_t tag;
   };
   constexpr static uint32_t MAX_TIMESTAMP = ~((uint32_t)0);
-  MPI_Datatype _timestamp_type;
 
   struct data_t {
     T data;
     uint32_t timestamp;
   };
-
-  MPI_Datatype _t_type;
 
   int _self_rank;
   MPI_Comm _comm;
@@ -584,28 +540,6 @@ private:
     }
   } _spsc;
 
-  void _init_tree_node_type() {
-    int blocklengths[] = {1, 1};
-    MPI_Datatype types[] = {MPI_INT32_T, MPI_UINT32_T};
-    MPI_Aint offsets[2];
-    offsets[0] = offsetof(tree_node_t, rank);
-    offsets[1] = offsetof(tree_node_t, tag);
-    MPI_Type_create_struct(2, blocklengths, offsets, types,
-                           &this->_tree_node_type);
-    MPI_Type_commit(&this->_tree_node_type);
-  }
-
-  void _init_timestamp_type() {
-    int blocklengths[] = {1, 1};
-    MPI_Datatype types[] = {MPI_UINT32_T, MPI_UINT32_T};
-    MPI_Aint offsets[2];
-    offsets[0] = offsetof(timestamp_t, timestamp);
-    offsets[1] = offsetof(timestamp_t, tag);
-    MPI_Type_create_struct(2, blocklengths, offsets, types,
-                           &this->_timestamp_type);
-    MPI_Type_commit(&this->_timestamp_type);
-  }
-
   int _get_number_of_enqueuers() const {
     int number_processes;
     MPI_Comm_size(this->_comm, &number_processes);
@@ -651,9 +585,8 @@ private:
 
     MPI_Win_lock_all(0, this->_min_timestamp_win);
     timestamp_t current_timestamp;
-    MPI_Get_accumulate(NULL, 0, MPI_INT, &current_timestamp, 1,
-                       this->_timestamp_type, enqueuer_rank, 0, 1,
-                       this->_timestamp_type, MPI_NO_OP,
+    MPI_Get_accumulate(NULL, 0, MPI_INT, &current_timestamp, 1, MPI_UINT64_T,
+                       enqueuer_rank, 0, 1, MPI_UINT64_T, MPI_NO_OP,
                        this->_min_timestamp_win);
     MPI_Win_flush(enqueuer_rank, this->_min_timestamp_win);
     if (min_timestamp_ptr == NULL) {
@@ -661,8 +594,8 @@ private:
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
       MPI_Compare_and_swap(&new_timestamp, &current_timestamp,
-                           &result_timestamp, this->_timestamp_type,
-                           enqueuer_rank, 0, this->_min_timestamp_win);
+                           &result_timestamp, MPI_UINT64_T, enqueuer_rank, 0,
+                           this->_min_timestamp_win);
       MPI_Win_flush_all(this->_tree_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
@@ -671,8 +604,8 @@ private:
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
       MPI_Compare_and_swap(&new_timestamp, &current_timestamp,
-                           &result_timestamp, this->_timestamp_type,
-                           enqueuer_rank, 0, this->_min_timestamp_win);
+                           &result_timestamp, MPI_UINT64_T, enqueuer_rank, 0,
+                           this->_min_timestamp_win);
       MPI_Win_flush_all(this->_tree_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             current_timestamp.timestamp == result_timestamp.timestamp;
@@ -687,33 +620,30 @@ private:
     tree_node_t self_node;
     timestamp_t min_timestamp;
     MPI_Win_lock_all(0, this->_min_timestamp_win);
-    MPI_Get_accumulate(NULL, 0, MPI_INT, &min_timestamp, 1,
-                       this->_timestamp_type, this->_self_rank, 0, 1,
-                       this->_timestamp_type, MPI_NO_OP,
+    MPI_Get_accumulate(NULL, 0, MPI_INT, &min_timestamp, 1, MPI_UINT64_T,
+                       this->_self_rank, 0, 1, MPI_UINT64_T, MPI_NO_OP,
                        this->_min_timestamp_win);
     MPI_Win_unlock_all(this->_min_timestamp_win);
 
     MPI_Win_lock_all(0, this->_tree_win);
 
-    MPI_Get_accumulate(NULL, 0, MPI_INT, &self_node, 1, this->_tree_node_type,
-                       this->_self_rank, self_index, 1, this->_tree_node_type,
-                       MPI_NO_OP, this->_tree_win);
+    MPI_Get_accumulate(NULL, 0, MPI_INT, &self_node, 1, MPI_UINT64_T,
+                       this->_self_rank, self_index, 1, MPI_UINT64_T, MPI_NO_OP,
+                       this->_tree_win);
     MPI_Win_flush(this->_self_rank, this->_tree_win);
     if (min_timestamp.timestamp == MAX_TIMESTAMP) {
       const tree_node_t new_node = {DUMMY_RANK, self_node.tag + 1};
       tree_node_t result_node;
-      MPI_Compare_and_swap(&new_node, &self_node, &result_node,
-                           this->_tree_node_type, this->_self_rank, self_index,
-                           this->_tree_win);
+      MPI_Compare_and_swap(&new_node, &self_node, &result_node, MPI_UINT64_T,
+                           this->_self_rank, self_index, this->_tree_win);
       MPI_Win_flush_all(this->_tree_win);
       res = result_node.tag == self_node.tag &&
             result_node.rank == self_node.rank;
     } else {
       const tree_node_t new_node = {enqueuer_rank, self_node.tag + 1};
       tree_node_t result_node;
-      MPI_Compare_and_swap(&new_node, &self_node, &result_node,
-                           this->_tree_node_type, this->_self_rank, self_index,
-                           this->_tree_win);
+      MPI_Compare_and_swap(&new_node, &self_node, &result_node, MPI_UINT64_T,
+                           this->_self_rank, self_index, this->_tree_win);
       MPI_Win_flush_all(this->_tree_win);
       res = result_node.tag == self_node.tag &&
             result_node.rank == self_node.rank;
@@ -727,24 +657,23 @@ private:
     uint32_t min_timestamp = MAX_TIMESTAMP;
     int32_t min_timestamp_rank = DUMMY_RANK;
     MPI_Win_lock_all(0, this->_tree_win);
-    MPI_Get_accumulate(NULL, 0, MPI_INT, &current_node, 1,
-                       this->_tree_node_type, this->_self_rank, current_index,
-                       1, this->_tree_node_type, MPI_NO_OP, this->_tree_win);
+    MPI_Get_accumulate(NULL, 0, MPI_INT, &current_node, 1, MPI_UINT64_T,
+                       this->_self_rank, current_index, 1, MPI_UINT64_T,
+                       MPI_NO_OP, this->_tree_win);
     MPI_Win_flush_all(this->_tree_win);
     for (const int child_index : this->_get_children_indexes(current_index)) {
       tree_node_t child_node;
-      MPI_Get_accumulate(NULL, 0, MPI_INT, &child_node, 1,
-                         this->_tree_node_type, this->_self_rank, child_index,
-                         1, this->_tree_node_type, MPI_NO_OP, this->_tree_win);
+      MPI_Get_accumulate(NULL, 0, MPI_INT, &child_node, 1, MPI_UINT64_T,
+                         this->_self_rank, child_index, 1, MPI_UINT64_T,
+                         MPI_NO_OP, this->_tree_win);
       MPI_Win_flush_all(this->_tree_win);
       if (child_node.rank == DUMMY_RANK) {
         continue;
       }
       MPI_Win_lock_all(0, this->_min_timestamp_win);
       timestamp_t child_timestamp;
-      MPI_Get_accumulate(NULL, 0, MPI_INT, &child_timestamp, 1,
-                         this->_timestamp_type, child_node.rank, 0, 1,
-                         this->_timestamp_type, MPI_NO_OP,
+      MPI_Get_accumulate(NULL, 0, MPI_INT, &child_timestamp, 1, MPI_UINT64_T,
+                         child_node.rank, 0, 1, MPI_UINT64_T, MPI_NO_OP,
                          this->_min_timestamp_win);
       MPI_Win_unlock_all(this->_min_timestamp_win);
       if (child_timestamp.timestamp < min_timestamp) {
@@ -754,9 +683,8 @@ private:
     }
     const tree_node_t new_node = {min_timestamp_rank, current_node.tag + 1};
     tree_node_t result_node;
-    MPI_Compare_and_swap(&new_node, &current_node, &result_node,
-                         this->_tree_node_type, this->_self_rank, current_index,
-                         this->_tree_win);
+    MPI_Compare_and_swap(&new_node, &current_node, &result_node, MPI_UINT64_T,
+                         this->_self_rank, current_index, this->_tree_win);
     MPI_Win_unlock_all(this->_tree_win);
     return result_node.tag == current_node.tag &&
            result_node.rank == current_node.rank;
@@ -777,11 +705,7 @@ private:
 
 public:
   LTDequeuer(MPI_Comm comm, MPI_Datatype type, MPI_Aint size, int self_rank)
-      : _comm{comm}, _t_type{type}, _self_rank{self_rank},
-        _spsc{comm, type, size, self_rank} {
-    this->_init_tree_node_type();
-    this->_init_timestamp_type();
-
+      : _comm{comm}, _self_rank{self_rank}, _spsc{comm, type, size, self_rank} {
     MPI_Info info;
     MPI_Info_create(&info);
     MPI_Info_set(info, "same_disp_unit", "true");
@@ -810,8 +734,6 @@ public:
   LTDequeuer(const LTDequeuer &) = delete;
   LTDequeuer &operator=(const LTDequeuer &) = delete;
   ~LTDequeuer() {
-    MPI_Type_free(&this->_tree_node_type);
-    MPI_Type_free(&this->_timestamp_type);
     MPI_Win_free(&this->_tree_win);
     MPI_Win_free(&this->_min_timestamp_win);
     MPI_Win_free(&this->_counter_win);
@@ -820,8 +742,8 @@ public:
   void dequeue(T *&output) {
     MPI_Win_lock_all(0, this->_tree_win);
     tree_node_t root;
-    MPI_Get_accumulate(NULL, 0, MPI_INT, &root, 1, this->_tree_node_type,
-                       this->_self_rank, 0, 1, this->_tree_node_type, MPI_NO_OP,
+    MPI_Get_accumulate(NULL, 0, MPI_INT, &root, 1, MPI_UINT64_T,
+                       this->_self_rank, 0, 1, MPI_UINT64_T, MPI_NO_OP,
                        this->_tree_win);
     MPI_Win_unlock_all(this->_tree_win);
 
