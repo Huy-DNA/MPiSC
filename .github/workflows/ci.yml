@@ -8,7 +8,52 @@ on:
   workflow_dispatch:
 
 jobs:
+  check_changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check_changes.outputs.should_build }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for git log commands
+      
+      - name: Check for changes in Typst projects or README
+        id: check_changes
+        run: |
+          # Get the hash of the previous commit
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # For pull requests, compare against the base commit
+            PREVIOUS_COMMIT=${{ github.event.pull_request.base.sha }}
+          else
+            # For pushes, compare against the previous commit
+            PREVIOUS_COMMIT=$(git rev-parse HEAD^1 || echo "")
+          fi
+          
+          if [ -z "$PREVIOUS_COMMIT" ]; then
+            # If this is the first commit, we should build
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "First commit, building all projects"
+            exit 0
+          fi
+          
+          # Check if any .typ or .typst files or README.md has changed
+          CHANGED_FILES=$(git diff --name-only $PREVIOUS_COMMIT HEAD)
+          TYPST_CHANGES=$(echo "$CHANGED_FILES" | grep -E '\.typ(st)?$' || true)
+          README_CHANGES=$(echo "$CHANGED_FILES" | grep -E 'README\.md$' || true)
+          
+          if [ -n "$TYPST_CHANGES" ] || [ -n "$README_CHANGES" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "Changes detected in Typst files or README.md, proceeding with build"
+          else
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "No changes detected in Typst files or README.md, skipping build"
+          fi
+
   build:
+    needs: check_changes
+    if: needs.check_changes.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     
     steps:
