@@ -25,22 +25,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y fonts-liberation fonts-jetbrains-mono fonts-noto
           
-      - name: Find all Typst projects
+      - name: Find Typst projects with main.typst
         id: find_projects
         run: |
-          echo "TYPST_FILES=$(find . -name "*.typ" | grep -v "_" | grep -v "/auxiliaries/" | tr '\n' ' ')" >> $GITHUB_ENV
+          echo "TYPST_DIRS=$(find . -name "main.typst" -o -name "main.typ" | xargs dirname | tr '\n' ' ')" >> $GITHUB_ENV
           mkdir -p build
       
-      - name: Build PDFs from Typst files
+      - name: Build PDFs from Typst projects
         run: |
-          for file in $TYPST_FILES; do
-            filename=$(basename "$file" .typ)
-            dirname=$(dirname "$file")
-            echo "Building $file to build/${dirname#./}/$filename.pdf"
-            mkdir -p "build/${dirname#./}"
+          for dir in $TYPST_DIRS; do
+            if [ -f "$dir/main.typst" ]; then
+              main_file="$dir/main.typst"
+            else
+              main_file="$dir/main.typ"
+            fi
+            
+            # Get relative path from repository root
+            rel_dir="${dir#./}"
+            
+            echo "Building $main_file to build/$rel_dir/main.pdf"
+            mkdir -p "build/$rel_dir"
             
             # Try to compile, continue if there's an error
-            typst compile "$file" "build/${dirname#./}/$filename.pdf" || echo "Failed to build $file, continuing..."
+            typst compile "$main_file" "build/$rel_dir/main.pdf" || echo "Failed to build $main_file, continuing..."
           done
       
       - name: Generate README with links
@@ -67,3 +74,4 @@ jobs:
           folder: build
           branch: gh-pages
           clean: true
+          commit-message: "Deploy Typst PDFs to GitHub Pages [skip ci]"
