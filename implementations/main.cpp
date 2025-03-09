@@ -1,4 +1,3 @@
-#include <bcl/bcl.hpp>
 #include <comm.hpp>
 #include <ltqueue/ltqueue.hpp>
 #include <mpi.h>

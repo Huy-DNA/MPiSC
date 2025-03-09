@@ -7,9 +7,8 @@ project(MPiSC VERSION 1.0)
 
 find_package(MPI REQUIRED REQUIRED)
 
-include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/bcl/src
-  ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks ${MPI_INCLUDE_PATH})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks ${MPI_INCLUDE_PATH})
 
 add_executable(out ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 target_link_libraries(out ${MPI_CXX_LIBRARIES})
