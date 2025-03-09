@@ -1,3 +1,11 @@
 target/
 *.test.cpp
 *.out
+out
+
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+implementations/Makefile
+.cache
