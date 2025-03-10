@@ -140,7 +140,7 @@ We need to evaluate at least 3 levels:
 
 <details>
   <summary>Caution - Lock-freedom of dependencies</summary>
-  A lock-free algorithm often *assumes* that some synchronization primitive is lock-free. This depends on the target platform and during implementation, the library used. Care must be taken to avoid accidental non-lock-free operation usage.
+  A lock-free algorithm often <em>assumes</em> that some synchronization primitive is lock-free. This depends on the target platform and during implementation, the library used. Care must be taken to avoid accidental non-lock-free operation usage.
 </details>
 
 ### Scalability
