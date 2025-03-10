@@ -13,8 +13,13 @@
           cmake
           gnumake
           gcc
+          liberation_ttf
+          nerd-fonts.jetbrains-mono 
         ];
         CMAKE_EXPORT_COMPILE_COMMANDS = 1;
+        shellHook = ''
+          fc-cache -f -v >> /dev/null
+        '';
       };
     });
 }
