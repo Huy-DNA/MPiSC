@@ -96,17 +96,132 @@ The rule of what comprise a memory location is as follows @cpp-conc:
 
 An example: In the below struct, `a` is a memory location, `b` and `c` is another and `d` is the last.
 
-```cpp
-struct S {
-  int a;
-  int b: 8;
-  int c: 8;
-       : 0;
-  int d: 12;
-}
-```
+#figure(
+  kind: "raw",
+  supplement: "Listing",
+  caption: "Example memory locations for a user-defined struct",
+  [
+    ```cpp
+    struct S {
+      int a;
+      int b: 8;
+      int c: 8;
+           : 0;
+      int d: 12;
+    }
+    ```
+  ],
+)
+
+==== Concurrency aspects
+
+Generally speaking, concurrent accesses to different memory locations are fine while concurrent accesses to the same memory location cause race conditions. However, race conditions do not necessarily cause undefined behavior. To avoid undefined behavior with concurrent accesses to the same memory location, one must use atomic operations. The semantics of C++11 atomics will be discussed in the next section.
 
 === C++11 atomics
+
+An atomic operation is an indivisible operation, that is, it either hasn't started executing or has finished executing @cpp-conc.
+
+Atomic operations can only be performed on atomic types: C++11 introduces the `std::atomic<T>` template type, wrapping around a non-atomic type to allow atomic operations on objects of that type. Additionally, C++11 also introduces the `std::atomic_flag` type that acts like an atomic flag. One special property of `std::atomic_flag` is that any operations on it is guaranteed to be lock-free, while the others depend on the platform and size.
+
+By C++17, `std::atomic_flag` only supports two operations:
+
+#figure(
+  kind: "table",
+  supplement: "Table",
+  caption: [Supported atomic operations on `std::atomic_flag` (C++17)],
+  table(
+    columns: (1fr, auto),
+    table.header([*Operation*], [*Usage*]),
+    [`clear`], [Atomically sets the flag to `false`],
+    [`test_and_set`],
+    [Atomically sets the flag to `true` and returns its previous value],
+  ),
+)
+
+Because of its simplicity, `std::atomic_flag` operations are guaranteed to be lock-free.
+
+Some available operations on other atomic types are summarized in the following table @cpp-conc:
+
+#figure(
+  kind: "table",
+  supplement: "Table",
+  caption: [Available atomic operations on atomic types (C++17)],
+  table(
+    columns: (1fr, 1fr, 1fr, 1fr, 1fr),
+    table.header(
+      [*Operation*],
+      [*`atomic<bool>`*],
+      [*`atomic<T*>`*],
+      [*`atomic`` <integral-type>`*],
+      [*`atomic` `<other-type>`*],
+    ),
+
+    [`load`], [Y], [Y], [Y], [Y],
+    [`store`], [Y], [Y], [Y], [Y],
+    [`exchange`], [Y], [Y], [Y], [Y],
+    [`compare_` `exchange_` `weak`, `compare_` `exchange_` `strong`],
+    [Y],
+    [Y],
+    [Y],
+    [Y],
+
+    [`fetch_add`, `+=`], [], [Y], [Y], [],
+    [`fetch_sub`, `-=`], [], [Y], [Y], [],
+    [`fetch_or`, `|=`], [], [], [Y], [],
+    [`fetch_and`, `&=`], [], [], [Y], [],
+    [`fetch_xor`, `^=`], [], [], [Y], [],
+    [`++`, `--`], [], [Y], [Y], [],
+  ),
+)
+
+Each atomic operation can generally accept an argument of type `std::memory_order`, which is used to specify how memory accesses are to be ordered around an atomic operation.
+
+Any atomic operations beside `load` and `store` is called read-modified-write (RMW) operations.
+
+The following is the table of possible `std::memory_order` values:
+
+#figure(
+  kind: "table",
+  supplement: "Table",
+  caption: [Available `std::memory_order` values (C++17). On the `Load`, `Store` and `RMW` columns, `Y` means that this memory order can be specified on `load`, `store` and RMW operations, `-` means that we intentionally ignore this entry.],
+  table(
+    columns: (2fr, 4fr, 1fr, 1fr, 1fr),
+    table.header([*Name*], [*Usage*], [Load], [Store], [RMW]),
+    [`memory_order` `_relaxed`],
+    [No synchronization imposed on other reads or writes],
+    [Y],
+    [Y],
+    [Y],
+
+    [`memory_order` `_acquire`],
+    [No reads or writes after this operation in the current thread can be reordered before this operation],
+    [Y],
+    [],
+    [Y],
+
+    [`memory_order` `_release`],
+    [No reads or writes before this operation in the current thread can be reordered after this operation],
+    [],
+    [Y],
+    [Y],
+
+    [`memory_order` `_acq_rel`],
+    [No reads or writes before this operation in the current thread can be reordered after this operation. No reads or writes after this operation can be reordered before this operation],
+    [],
+    [],
+    [Y],
+
+    [`memory_order` `_seq_cst`],
+    [A global total order exists on all modifications of atomic variables],
+    [Y],
+    [Y],
+    [Y],
+
+    [`memory_order` `_consume`], [Not recommended], [-], [-], [-],
+  ),
+)
+
+In conclusion, atomic operations avoid undefined behavior on concurrent accesses to the same memory location while memory orders help us enforce ordering of operations accross threads, which can be used to reason about the program.
 
 == MPI-3
 
