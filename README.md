@@ -68,11 +68,13 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
 <details>
   <summary>Why MPI RMA?</summary>
   
-  MPSC belongs to the class of *irregular* applications, this means that:
-    - Memory access pattern is not known.
-    - Data locations cannot be known in advance, it can change during execution.
+  MPSC belongs to the class of <i>irregular</i> applications, this means that:
+  <ul>
+    <li>Memory access pattern is not known.</li>
+    <li>Data locations cannot be known in advance, it can change during execution.</li>
+  </ul>
   
-  In other words, we cannot statically analyze where the data may be stored - data can be stored anywhere and we can only determine its location at runtime. This means the tradition message passing interface using `MPI_Send` and `MPI_Recv` is insufficient: Suppose at runtime, process A wants and knows to access a piece of data at `B`, then `A` must issue `MPI_Recv(B)`, but this requires `B` to anticipate that it should issue `MPI_Send(A, data)` and know that which data `A` actually wants. The latter issue can be worked around by having `A` issue `MPI_Send(B, data_descripto)` first. Then, `B` must have waited for `MPI_Recv(A)`. However, because the memory access pattern is not known, `B` must anticipate that any other processes may want to access its data. It's possible but cumbersome.
+  In other words, we cannot statically analyze where the data may be stored - data can be stored anywhere and we can only determine its location at runtime. This means the tradition message passing interface using <code>MPI_Send</code> and <code>MPI_Recv</code> is insufficient: Suppose at runtime, process <code>A</code> wants and knows to access a piece of data at <code>B</code>, then <code>A</code> must issue <code>MPI_Recv(B)</code>, but this requires <code>B</code> to anticipate that it should issue <code>MPI_Send(A, data)</code> and know that which data <code>A</code> actually wants. The latter issue can be worked around by having <code>A</code> issue <code>MPI_Send(B, data_descriptor)</code> first. Then, <code>B</code> must have waited for <code>MPI_Recv(A)</code>. However, because the memory access pattern is not known, <code>B</code> must anticipate that any other processes may want to access its data. It's possible but cumbersome.
    
    MPI RMA is specifically designed to conveniently express irregular applications by having one side specify all it wants.
 
@@ -81,12 +83,12 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
 <details>
   <summary>Why MPI-3 RMA? (<a href="/references/MPI3-RMA/README.md">paper</a>)</summary>
 
-  MPI-3 improves the RMA API, providing the non-collective `MPI_Win_lock_all` for a process to open an access epoch on a group of processes. This allows for lock-free synchronization.
+  MPI-3 improves the RMA API, providing the non-collective <code>MPI_Win_lock_all</code> for a process to open an access epoch on a group of processes. This allows for lock-free synchronization.
 </details>
 
 <details>
   <summary>Hybrid MPI+MPI (<a href="/references/MPI%2BMPI/README.md">paper</a>)</summary>
-  The Pure MPI approach is oblivious to the fact that some MPI processes are on the same node, which causes some unnecessary overhead. MPI-3 introduces the MPI SHM API, allowing us to obtain a communicator containing processes on a single node. From this communicator, we can allocate a shared memory window using `MPI_Win_allocate_shared`. Hybrid MPI+MPI means that MPI is used for both intra-node and inter-node communication. This shared memory window follows the *unified memory model* and can be synchronized both using MPI facilities or any other alternatives. Hybrid MPI+MPI can take advantage of the many cores of current computer processors.
+  The Pure MPI approach is oblivious to the fact that some MPI processes are on the same node, which causes some unnecessary overhead. MPI-3 introduces the MPI SHM API, allowing us to obtain a communicator containing processes on a single node. From this communicator, we can allocate a shared memory window using <code>MPI_Win_allocate_shared</code>. Hybrid MPI+MPI means that MPI is used for both intra-node and inter-node communication. This shared memory window follows the <em>unified memory model</em> and can be synchronized both using MPI facilities or any other alternatives. Hybrid MPI+MPI can take advantage of the many cores of current computer processors.
 </details>
 
 <details>
@@ -98,8 +100,10 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
   <summary>How to perform an MPI port in a lock-free manner?</summary>
   
   With MPI-3 RMA capabilities:
-    - Use `MPI_Win_lock_all` and `MPI_Win_unlock_all` to open and end access epochs.
-    - Within an access epoch, MPI atomics are used.
+  <ul>
+    <li>Use <code>MPI_Win_lock_all</code> and <code>MPI_Win_unlock_all</code> to open and end access epochs.</li>
+    <li>Within an access epoch, MPI atomics are used.</li>
+  </ul>
   
   This is made clear in [MPI3-RMA](/references/MPI3-RMA/README.md).
 </details>
@@ -186,7 +190,7 @@ We need to evaluate at least 3 levels:
 
 <div align="center">
   <p>
-    <small>Last build: Mon Mar 10 07:45:27 UTC 2025</small><br>
+    <small>Last build: Mon Mar 10 08:08:09 UTC 2025</small><br>
     <small>Generated by GitHub Actions • <a href="https://github.com/Huy-DNA/MPiSC/tree/main">View Source</a></small>
   </p>
 </div>
