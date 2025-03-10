@@ -3,7 +3,7 @@
 ## Objective
 
 - Examination of the *shared-memory* literature to find potential *lock-free*, *concurrent*, *multiple-producer single-consumer* queue algorithms.
-- Use the an MPI-3 new RMA capabilities to port potential lock-free *shared-memory* queue algorithms to distributed context.
+- Use the new MPI-3 RMA capabilities to port potential lock-free *shared-memory* queue algorithms to distributed context.
 - Potentially optimize MPI RMA ports using MPI-3 SHM + C++11 memory model. 
 
 - Minimum required characteristics:
