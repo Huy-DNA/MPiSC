@@ -71,4 +71,16 @@ An example of our pure MPI approach with `MPI_Win_lock_all`/`MPI_Win_unlock_all`
 
 == MPI+MPI
 
+As discussed in @background and @mpi-cpp, @zhou, a trend is to use MPI both for intra-node and inter-node communication. MPI-3 has introduced many improvements to MPI RMA to make this scheme feasible. Compared to pure MPI, MPI+MPI can be more efficient because the fact that some processes locating on the same node is exploited to improve communication.
+
+The general approach is as follows:
+1. `MPI_Comm_split_type` is used with `MPI_COMM_TYPE_SHARED` to split the communicator to shared-memory communicator.
+2. `MPI_Win_allocate_shared` is called on each shared-memory communicator to obtain a shared-memory window.
+3. Inside these shared-memory window, we can use other communication and synchronization primitives that are optimized for shared-memory context.
+
 == MPI+MPI with C++11
+
+As discussed in the previous section, we can use C++11 atomics and synchronization facilities inside shared-memory windows. As discussed in @mpi-cpp, this has the potential to obtain significant speedups compared to pure MPI.
+
+
+In conclusion, our approach is to use pure MPI by default, MPI+MPI and C++11 are seen as optimization techniques.
