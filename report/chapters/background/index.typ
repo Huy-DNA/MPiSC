@@ -225,6 +225,29 @@ In conclusion, atomic operations avoid undefined behavior on concurrent accesses
 
 == MPI-3
 
+MPI stands for message passing interface, which is a *message-passing library interface specification*. Design goals of MPI includes high availability across platforms, efficient communication, thread-safety, reliable and convenient communication interface while still allowing hardware-specific accelerated mechanisms to be exploited @mpi-3.1.
+
 === MPI-3 RMA
+
+RMA in MPI RMA stands for remote memory access. As introduced in the first section of @background, RMA APIs is introduced in MPI-2 and its capabilities are further extended in MPI-3 to conveniently express irregular applications. In general, RMA is intended to support applications with dynamically changing data access patterns where the data distribution is fixed or slowly changing @mpi-3.1. In such applications, one process, based on the data it needs, knowing the data distribution, can compute the nodes where the data is stored. However, because data acess pattern is not known, each process cannot know whether any other processes will access its data.
+
+Using the traditional `Send`/`Receive` interface, both sides need to issue matching operations by distributing appropriate transfer parameters. This is not suitable, as previously explain, only the side that needs to access the data knows all the transfer parameters while the side that stores the data cannot anticipate this.
+
+==== MPI-RMA communication operations
+
+RMA only requires one side to specify all the transfer parameters and thus only that side to participate in data communication.
+
+To utilize MPI RMA, each process needs to open a memory window to expose a segment of its memory to RMA communication operations such as remote writes (`MPI_PUT`), remote reads (`MPI_GET`) or remote accumulates (`MPI_ACCUMULATE`, `MPI_GET_ACCUMULATE`, `MPI_FETCH_AND_OP`, `MPI_COMPARE_AND_SWAP`) @mpi-3.1. These remote communication operations only requires one side to specify.
+
+==== MPI-RMA synchronization
+
+Besides communication of data from the sender to the receiver, one also needs to synchronize the sender with the receiver. That is, there must be a mechanism to ensure the completion of RMA communication calls or that any remote operations have taken effect. For this purpose, MPI RMA provides *active target synchronization* and *passive target synchronization*. In this document, we're particularly interested in *passive target synchronization* as this mode of synchronization does not require the target process of an RMA operation to explicitly issue a matching synchronization call with the origin process, easing the expression of irregular applications.
+
+In *passive target synchronization*, any RMA communication calls must be within a pair of `MPI_Win_lock`/`MPI_Win_unlock` or `MPI_Win_lock_all`/`MPI_Win_unlock_all`. After the unlock call, those RMA communication calls are guaranteed to have taken effect. One can also force the completion of those RMA communication calls without the need for the call to unlock using flush calls such as `MPI_Win_flush` or `MPI_Win_flush_local`.
+
+#figure(
+  image("/static/images/passive_target_synchronization.png"),
+  caption: [An illustration of passive target communication. Dashed arrows represent synchronization (source: @mpi-3.1)],
+)
 
 === MPI-3 SHM
