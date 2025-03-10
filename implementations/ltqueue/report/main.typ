@@ -1,6 +1,11 @@
 #let title = [
   Modified LTQueue without Load-Link/Store-Conditional]
 
+#set document(
+  author: "Đỗ Nguyễn An Huy",
+  title: "Modified LTQueue without Load-Link/Store-Conditional",
+)
+
 #set text(
   font: "Libertinus Serif",
   size: 11pt,
@@ -741,7 +746,7 @@ We immediately obtain the following result.
   Therefore, there's no `spsc_dequeue` on $r$ running during $[t', t_(e n d)]$. Therefore, $m i n \- s p s c \- t s(r, t)$ remains constant during $[t', t_(e n d)]$ because it's not `MAX`.
 
   In conclusion, $m i n \- s p s c \- t s(r, t) lt.eq c$ for $t in[t', t_(e n d)]$.
-  
+
   We have proved the theorem.
 ]
 
