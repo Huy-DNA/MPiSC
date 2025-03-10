@@ -81,18 +81,18 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
 </details>
 
 <details>
-  <summary>Why MPI-3 RMA? (<a href="/references/MPI3-RMA/README.md">paper</a>)</summary>
+  <summary>Why MPI-3 RMA? (<a href="./references/MPI3-RMA/README.md">paper</a>)</summary>
 
   MPI-3 improves the RMA API, providing the non-collective <code>MPI_Win_lock_all</code> for a process to open an access epoch on a group of processes. This allows for lock-free synchronization.
 </details>
 
 <details>
-  <summary>Hybrid MPI+MPI (<a href="/references/MPI%2BMPI/README.md">paper</a>)</summary>
+  <summary>Hybrid MPI+MPI (<a href="./references/MPI%2BMPI/README.md">paper</a>)</summary>
   The Pure MPI approach is oblivious to the fact that some MPI processes are on the same node, which causes some unnecessary overhead. MPI-3 introduces the MPI SHM API, allowing us to obtain a communicator containing processes on a single node. From this communicator, we can allocate a shared memory window using <code>MPI_Win_allocate_shared</code>. Hybrid MPI+MPI means that MPI is used for both intra-node and inter-node communication. This shared memory window follows the <em>unified memory model</em> and can be synchronized both using MPI facilities or any other alternatives. Hybrid MPI+MPI can take advantage of the many cores of current computer processors.
 </details>
 
 <details>
-  <summary>Hybrid MPI+MPI+C++11 (<a href="/references/MPI%2BMPI%2BCpp11/README.md">paper</a>)</summary>
+  <summary>Hybrid MPI+MPI+C++11 (<a href="./references/MPI%2BMPI%2BCpp11/README.md">paper</a>)</summary>
   Within the shared memory window, C++11 synchronization facilities can be used and prove to be much more efficient than MPI. So incorporating C++11 can be thought of as an optimization step for intra-node communication.
 </details>
 
@@ -105,13 +105,13 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
     <li>Within an access epoch, MPI atomics are used.</li>
   </ul>
   
-  This is made clear in [MPI3-RMA](/references/MPI3-RMA/README.md).
+  This is made clear in [MPI3-RMA](./references/MPI3-RMA/README.md).
 </details>
 
 ### Literature review
 
 #### Links
-- [References](/references/README.md): Notes for various related papers.
+- [References](./references/README.md): Notes for various related papers.
 
 #### Known problems
 - ABA problem.
@@ -124,17 +124,17 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
 
 - Special case: empty queue - Concurrent `enqueue` and `dequeue` can conflict with each other.
 
-  Possible solutions: Dummy node to decouple head and tail ([LTQueue](/references/LT-Queue/README.md) and [Imp-Lfq](/references/Imp-Lfq/README.md)).
+  Possible solutions: Dummy node to decouple head and tail ([LTQueue](./references/LT-Queue/README.md) and [Imp-Lfq](./references/Imp-Lfq/README.md)).
 
 - A slow process performing `enqueue` and `dequeue` could leave the queue in an intermediate state.
 
   Possible solutions:
-  - Help mechanism (introduced in [MSQueue](/references/MSQueue/README.md)): To be lockfree, the other processes can help out patching up the queue (don't wait).
+  - Help mechanism (introduced in [MSQueue](./references/MSQueue/README.md)): To be lockfree, the other processes can help out patching up the queue (don't wait).
 
 - A dead process performing `enqueue` and `dequeue` could leave the queue broken.
   
   Possible solutions:
-  - Help mechanism (introduced in [MSQueue](/references/MSQueue/README.md)): The other processes can help out patching up the queue.
+  - Help mechanism (introduced in [MSQueue](./references/MSQueue/README.md)): The other processes can help out patching up the queue.
 
 - Motivation for the help mechanism?
 
@@ -145,13 +145,13 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
   Possible solutions:
   - Typically, updates are performed using CAS. If CAS fails, some state changes have occurred, we can detect if this is intermediary & try to perform another CAS to patch up the queue.
     Note that the patching CAS may fail in case the queue is just patched up, so looping until a successful CAS may not be necessary.
-    A good example can be found in [the `enqueue` operation in Imp-Lfq pp.3](/references/Imp-Lfq/README.md)
+    A good example can be found in [the `enqueue` operation in Imp-Lfq pp.3](./references/Imp-Lfq/README.md)
 
 #### Trends
 
 - Speed up happy paths.
   - The happy path can use lock-free algorithm and fall back to the wait-free algorithm. As lock-free algorithms are typically more efficient, this can lead to speedups.
-  - Replacing CAS with simpler operations like FAA, load/store in the fast path ([WFQueue](/references/WFQueue/README.md)).
+  - Replacing CAS with simpler operations like FAA, load/store in the fast path ([WFQueue](./references/WFQueue/README.md)).
 - Avoid contention: Enqueuers or dequeuers performing on a shared data structures can harm each other's progress.
   - Local buffers can be used at the enqueuers' side in MPSC so that enqueuers do not contend with each other.
   - Elimination + Backing off techniques in MPMC.
@@ -190,7 +190,7 @@ We need to evaluate at least 3 levels:
 
 <div align="center">
   <p>
-    <small>Last build: Mon Mar 10 17:00:51 UTC 2025</small><br>
+    <small>Last build: Mon Mar 10 17:13:28 UTC 2025</small><br>
     <small>Generated by GitHub Actions • <a href="https://github.com/Huy-DNA/MPiSC/tree/main">View Source</a></small>
   </p>
 </div>
