@@ -148,7 +148,7 @@ jobs:
           
           # Add table rows for each PDF
           while IFS="|" read -r file_path last_mod_date; do
-            pdf_name=$(pdfinfo $file_path | grep "Title")
+            pdf_name=$(pdfinfo "build/$file_path" | grep "Title")
             echo "      <tr>" >> build/README.md
             echo "        <td><strong>$pdf_name</strong></td>" >> build/README.md
             echo "        <td>$last_mod_date</td>" >> build/README.md
@@ -168,7 +168,7 @@ jobs:
           
           if [ -f "README.md" ]; then
             echo "" >> build/README.md
-            echo "$(tail -n +2 README.md | sed -E 's/^(#+)/\1#/' | sed -i -E 's|\[([^\]]+)\]\((?!http)([^)]+)\)|[\1](https://github.com/Huy-DNA/MPiSC/\2)|g; s|!\[([^\]]*)\]\((?!http)([^)]+)\)|![\1](https://github.com/Huy-DNA/MPiSC/\2)|g' README.md)" >> build/README.md
+            echo "$(tail -n +2 README.md | sed -E 's/^(#+)/\1#/' | sed -E 's|\[([^\]]+)\]\(([^:)]+)\)|[\1](https://github.com/Huy-DNA/MPiSC/\2)|g; s|!\[([^\]]*)\]\(([^:)]+)\)|![\1](https://github.com/Huy-DNA/MPiSC/\2)|g')" >> build/README.md
             echo "" >> build/README.md
           fi
 
