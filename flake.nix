@@ -15,6 +15,9 @@
           gcc
           liberation_ttf
           nerd-fonts.jetbrains-mono 
+          typst
+          tinymist
+          neovim
         ];
         CMAKE_EXPORT_COMPILE_COMMANDS = 1;
         shellHook = ''
