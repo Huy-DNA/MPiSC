@@ -1,4 +1,4 @@
-# Porting shared memory MPSCs to distributed computing using MPI-3 RMA
+# Porting shared memory MPSCs to distributed context using MPI-3 RMA
 
 ## Objective
 
