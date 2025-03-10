@@ -13,7 +13,7 @@
 #{ include "./porting/index.typ" }
 #pagebreak()
 
-#{ include "./evaluation/index.typ" }
+#{ include "./preliminary-results/index.typ" }
 #pagebreak()
 
 #{ include "./conclusion/index.typ" }

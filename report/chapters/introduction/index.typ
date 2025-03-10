@@ -26,6 +26,6 @@ The rest of this report is structured as follows:
 
 @porting[] selects some of the algorithms we have surveyed and introduce modification to fit the distributed context. We further introduce optimization based on our domain knowledge, which the shared-memory algorithms, in their inception, are oblivious to.
 
-@evaluation[] introduces our setup and benchmarking processes. We also analyze the result to assess the various factors that affect the performance of an algorithm and its implementation.
+@result[] introduces our setup and benchmarking processes to obtain some preliminary results. We also analyze the result to assess the various factors that affect the performance of an algorithm and its implementation.
 
 @conclusion[] and @future[] concludes what we have accomplished in this thesis and considers future possible improvements to our research.
