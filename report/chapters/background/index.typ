@@ -1,3 +1,5 @@
+#import "@preview/lovelace:0.3.0": *
+
 = Background <background>
 
 == Irregular applications
@@ -68,7 +70,41 @@ The problem of safe memory reclamation often arises in concurrent algorithms tha
 
 === Motivation
 
+C++11 came with a lot of improvements. One such improvement is the native support of multithreading inside the C++ standard library (STL). The main motivation was portability and ergonomics along with two design goals: high-level OOP facilities for working with multithreading in general while still exposing enough low-level details so that performance tuning is possible when one wants to drop down to this level. @cpp-conc
+
+Before C++11, to write concurrent code, programmers had to resort to compiler-specific extensions @cpp-conc. This worked but was not portable as the additional semantics of concurrency introduced by compiler extensions was not formalized in the C++ standard. Therefore, C++11 had come to define a multithreading-aware memory model, which is used to dictate correct concurrent C++11 programs.
+
 === C++11 memory model
+
+The C++11 memory model plays the foundational role in enabling native multithreading support. The C++11 memory model is not a syntatical feature or a library feature, rather it's a model to reason about the semantics of concurrent C++11 programs. In other words, the C++11 multithreading-aware memory model enables the static analysis of concurrent C++11 programs. This, in essence, is beneficial to two parties: the compiler and the programmer.
+
+From the compiler's point of view, it needs to translate the source code into correct machine code. Many modern CPUs are known to utilize out-of-order execution, or instruction reordering to gain better pipeline throughput. This reordering is transparent with respect to a single thread - it still observes the effect of the instructions in the program order. However, this reordering is not transparent in concurrent programs, in which case, synchronizing instructions are necessary, so the compiler has to keep this in mind. With the possibility of concurrency, it needs to conservatively apply optimizations as certain optimizations only work in sequential programs. However, optimization is important to achieve performance, if the compiler just disables the any optimizations altogether in the face of concurrency, the performance gained by using concurrency would be adversely affected. Here, the C++11 memory model comes into play. It allows the compiler to reason which optimization is valid and which is not in the presence of concurrency. Additionally, the compiler can reason about where to place synchronizing instructions to ensure the correctness of concurrent operations. Therefore, the C++11 memory allows the compiler to generate correct and performant machine code.
+
+Similarly, from the programmer's point of view, one can verify that their concurrent program's behavior is well-defined and reason whether their programs unnecessarily disable any optimizations. This, helps the programmer to write correct and performant C++11 concurrent programs.
+
+The C++11 memory consists of two aspects: the *structural* aspects and the *concurrency* aspects @cpp-conc.
+
+==== Structural aspects
+
+The structural aspects deal with how variables are laid out in memory.
+
+An *object* in C++ is defined as "a region of storage". Concurrent accesses can happen to any "region of storage". These regions of storage can vary in size. One can say that there are always concurrent accesses to RAM. However, do these concurrent accesses always cause race conditions? Intuitively, no. To properly define which concurrent accesses can actually cause race conditions, the C++11 memory model defines the concept of *memory location*. That is, the C++11 memory model views an object as one or more *memory locations*. Only concurrent accesses to the same memory location can possibly cause race conditions. Conflicting concurrent accesses to the same memory location (read/write or write-write) always cause race conditions.
+
+The rule of what comprise a memory location is as follows @cpp-conc:
+- Any object or sub-object (class instance's field) of a scalar type is a memory location.
+- Any sequence of adjacent bit fields is also a memory location.
+
+An example: In the below struct, `a` is a memory location, `b` and `c` is another and `d` is the last.
+
+```cpp
+struct S {
+  int a;
+  int b: 8;
+  int c: 8;
+       : 0;
+  int d: 12;
+}
+```
 
 === C++11 atomics
 

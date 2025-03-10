@@ -23,5 +23,5 @@ name = "Đỗ Nguyễn An Huy"
 id = 2110193
 
 [fonts]
-serif = "Times New Roman"
-monospace = "JetBrains Mono"
+serif = "Liberation Serif"
+monospace = "JetBrainsMono NF"
