@@ -85,7 +85,7 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
 
 - Special case: empty queue - Concurrent `enqueue` and `dequeue` can conflict with each other.
 
-  Possible solutions: Dummy node to decouple head and tail ([LTQueue](./references/LT-Queue/README.md) and [Imp-Lfq](./references/Imp-Lfq/README.md)).
+  Possible solutions: Dummy node to decouple head and tail ([LTQueue](./references/LTQueue/README.md) and [Imp-Lfq](./references/Imp-Lfq/README.md)).
 
 - A slow process performing `enqueue` and `dequeue` could leave the queue in an intermediate state.
 
