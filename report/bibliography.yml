@@ -108,6 +108,18 @@ dinan:
   page-range: 4385–4404
   page-total: 20
 
+zhou:
+  type: article
+  author: ["Zhou, Huan" , "Gracia, José", "Schneider, Ralf"]
+  title: "MPI Collectives for Multi-core Clusters: Optimized Performance of the Hybrid MPI+MPI Parallel Codes"
+  date: 2019
+  serial-number:
+    isbn: 9781450371964
+    doi: 10.1145/3339186.3339199
+  publisher: "Association for Computing Machinery"
+  address: "New York, NY, USA"
+  page-total: 10
+
 mpi-3.1:
   type: book
   author: "Message Passing Interface Forum"
