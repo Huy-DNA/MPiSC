@@ -1,6 +1,6 @@
 #pragma once
 
-#include "comm.hpp"
+#include "../comm.hpp"
 #include <cstring>
 #include <mpi.h>
 
@@ -80,7 +80,7 @@ public:
 
     if (new_tail - this->_head_buf > this->_capacity) {
       aread_sync(&this->_head_buf, 0, this->_host, this->_head_win);
-      if (new_tail - _head_buf > this->_capacity) {
+      if (new_tail - this->_head_buf > this->_capacity) {
         fetch_and_add_sync(&old_tail, -1, 0, this->_host, this->_tail_win);
         MPI_Win_unlock_all(this->_head_win);
         MPI_Win_unlock_all(this->_tail_win);
@@ -177,9 +177,9 @@ public:
     fetch_and_add_sync(&old_head, 1, 0, this->_host, this->_head_win);
     MPI_Aint new_head = old_head + 1;
 
-    if (new_head - this->_tail_buf > this->_capacity) {
+    if (new_head > this->_tail_buf) {
       aread_sync(&this->_tail_buf, 0, this->_host, this->_tail_win);
-      if (new_head - _tail_buf > this->_capacity) {
+      if (new_head > this->_tail_buf) {
         fetch_and_add_sync(&old_head, -1, 0, this->_host, this->_head_win);
         MPI_Win_unlock_all(this->_head_win);
         MPI_Win_unlock_all(this->_tail_win);
