@@ -261,9 +261,6 @@ public:
 
     aread_async(output, old_head % this->_capacity, this->_host,
                 this->_data_win);
-    flag = false;
-    awrite_async(&flag, old_head % this->_capacity, this->_host,
-                 this->_flag_win);
 
     MPI_Win_unlock_all(this->_head_win);
     MPI_Win_unlock_all(this->_tail_win);
