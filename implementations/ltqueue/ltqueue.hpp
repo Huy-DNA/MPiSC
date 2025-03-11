@@ -27,9 +27,9 @@ private:
   };
 
   MPI_Comm _comm;
-  int _self_rank;
-  int _enqueuer_order;
-  int _dequeuer_rank;
+  const MPI_Aint _self_rank;
+  const MPI_Aint _enqueuer_order;
+  const MPI_Aint _dequeuer_rank;
 
   MPI_Win _counter_win;
   MPI_Aint *_counter_ptr;
@@ -41,10 +41,10 @@ private:
   tree_node_t *_tree_ptr;
 
   class Spsc {
-    int _self_rank;
-    int _dequeuer_rank;
+    const MPI_Aint _self_rank;
+    const MPI_Aint _dequeuer_rank;
 
-    MPI_Aint _capacity;
+    const MPI_Aint _capacity;
 
     MPI_Win _data_win;
     data_t *_data_ptr;
@@ -58,7 +58,8 @@ private:
     MPI_Aint _last_buf;
 
   public:
-    Spsc(MPI_Comm comm, MPI_Aint capacity, int self_rank, int dequeuer_rank)
+    Spsc(MPI_Aint capacity, MPI_Aint self_rank, MPI_Aint dequeuer_rank,
+         MPI_Comm comm)
         : _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
           _capacity{capacity}, _first_buf{0} {
       MPI_Info info;
@@ -88,6 +89,35 @@ private:
     }
 
     bool enqueue(const data_t &data) {
+      MPI_Win_lock_all(0, this->_first_win);
+      MPI_Win_lock_all(0, this->_last_win);
+      MPI_Win_lock_all(0, this->_data_win);
+
+      aread_sync(&this->_last_buf, 0, this->_self_rank, this->_last_win);
+      MPI_Aint new_last = this->_last_buf + 1;
+
+      if (new_last - this->_first_buf > this->_capacity) {
+        aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
+        if (new_last - this->_first_buf > this->_capacity) {
+          MPI_Win_unlock_all(this->_first_win);
+          MPI_Win_unlock_all(this->_last_win);
+          MPI_Win_unlock_all(this->_data_win);
+          return false;
+        }
+      }
+
+      write_sync(&data, this->_last_buf % this->_capacity, this->_self_rank,
+                 this->_data_win);
+      awrite_async(&new_last, 0, this->_self_rank, this->_last_win);
+
+      MPI_Win_unlock_all(this->_first_win);
+      MPI_Win_unlock_all(this->_last_win);
+      MPI_Win_unlock_all(this->_data_win);
+
+      return true;
+    }
+
+    bool enqueue(const std::vector<data_t> &data) {
       MPI_Win_lock_all(0, this->_first_win);
       MPI_Win_lock_all(0, this->_last_win);
       MPI_Win_lock_all(0, this->_data_win);
@@ -209,7 +239,8 @@ private:
       res = result_node.rank == self_node.rank &&
             result_node.tag == self_node.tag;
     } else {
-      const tree_node_t new_node = {this->_self_rank, self_node.tag + 1};
+      const tree_node_t new_node = {(int32_t)this->_self_rank,
+                                    self_node.tag + 1};
       tree_node_t result_node;
       compare_and_swap_sync(&self_node, &new_node, &result_node, self_index,
                             this->_dequeuer_rank, this->_tree_win);
@@ -288,10 +319,11 @@ private:
   }
 
 public:
-  LTEnqueuer(MPI_Aint capacity, int dequeuer_rank, int self_rank, MPI_Comm comm)
+  LTEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+             MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
-        _spsc{comm, capacity, self_rank, dequeuer_rank} {
+        _spsc{capacity, self_rank, dequeuer_rank, comm} {
     MPI_Info info;
     MPI_Info_create(&info);
     MPI_Info_set(info, "same_disp_unit", "true");
@@ -360,7 +392,7 @@ private:
     uint32_t timestamp;
   };
 
-  int _self_rank;
+  const MPI_Aint _self_rank;
   MPI_Comm _comm;
 
   MPI_Win _counter_win;
@@ -373,9 +405,9 @@ private:
   tree_node_t *_tree_ptr;
 
   class Spsc {
-    MPI_Aint _self_rank;
+    const MPI_Aint _self_rank;
 
-    MPI_Aint _capacity;
+    const MPI_Aint _capacity;
 
     MPI_Win _data_win;
     data_t *_data_ptr;
@@ -389,7 +421,7 @@ private:
     MPI_Aint _last_buf;
 
   public:
-    Spsc(MPI_Comm comm, MPI_Aint capacity, int self_rank)
+    Spsc(MPI_Aint capacity, MPI_Aint self_rank, MPI_Comm comm)
         : _self_rank{self_rank}, _capacity{capacity}, _last_buf{0} {
       MPI_Info info;
       MPI_Info_create(&info);
@@ -611,8 +643,9 @@ private:
   }
 
 public:
-  LTDequeuer(MPI_Aint capacity, int dequeuer_rank, int self_rank, MPI_Comm comm)
-      : _comm{comm}, _self_rank{self_rank}, _spsc{comm, capacity, self_rank} {
+  LTDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+             MPI_Comm comm)
+      : _comm{comm}, _self_rank{self_rank}, _spsc{capacity, self_rank, comm} {
     MPI_Info info;
     MPI_Info_create(&info);
     MPI_Info_set(info, "same_disp_unit", "true");
