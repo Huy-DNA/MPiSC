@@ -175,3 +175,15 @@ hazard-pointer:
     value: "IEEE Trans. Parallel Distrib. Syst."
   page-range: 491–504
   page-total: 14
+
+bcl:
+  type: article
+  author: ["Brock, Benjamin", "Buluç, Aydın", "Yelick, Katherine"]
+  title: "BCL: A Cross-Platform Distributed Data Structures Library"
+  date: 2019
+  serial-number:
+    isbn: 9781450362955
+    doi: 10.1145/3337821.3337912
+  publisher: "Association for Computing Machinery"
+  address: "New York, NY, USA"
+  page-total: 10
