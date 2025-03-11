@@ -116,7 +116,7 @@ private:
       return true;
     }
 
-    void read_front(uint32_t *&output_timestamp) {
+    bool read_front(uint32_t *output_timestamp) {
       MPI_Win_lock_all(0, this->_first_win);
       MPI_Win_lock_all(0, this->_last_win);
       MPI_Win_lock_all(0, this->_data_win);
@@ -131,8 +131,7 @@ private:
           MPI_Win_unlock_all(this->_first_win);
           MPI_Win_unlock_all(this->_last_win);
           MPI_Win_unlock_all(this->_data_win);
-          output_timestamp = NULL;
-          return;
+          return false;
         }
       }
       data_t data;
@@ -143,6 +142,7 @@ private:
       MPI_Win_unlock_all(this->_last_win);
       MPI_Win_unlock_all(this->_data_win);
       *output_timestamp = data.timestamp;
+      return true;
     }
   } _spsc;
 
@@ -228,14 +228,13 @@ private:
     bool res;
 
     uint32_t min_timestamp;
-    uint32_t *min_timestamp_ptr = &min_timestamp;
-    this->_spsc.read_front(min_timestamp_ptr);
+    bool min_timestamp_succeeded = this->_spsc.read_front(&min_timestamp);
 
     MPI_Win_lock_all(0, this->_min_timestamp_win);
     timestamp_t current_timestamp;
     aread_sync(&current_timestamp, 0, this->_self_rank,
                this->_min_timestamp_win);
-    if (min_timestamp_ptr == NULL) {
+    if (!min_timestamp_succeeded) {
       const timestamp_t new_timestamp = {MAX_TIMESTAMP,
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
@@ -444,7 +443,7 @@ private:
       return true;
     }
 
-    void read_front(uint32_t *&output_timestamp, int enqueuer_rank) {
+    bool read_front(uint32_t *output_timestamp, int enqueuer_rank) {
       MPI_Win_lock_all(0, this->_first_win);
       MPI_Win_lock_all(0, this->_last_win);
       MPI_Win_lock_all(0, this->_data_win);
@@ -459,8 +458,7 @@ private:
           MPI_Win_unlock_all(this->_first_win);
           MPI_Win_unlock_all(this->_last_win);
           MPI_Win_unlock_all(this->_data_win);
-          output_timestamp = NULL;
-          return;
+          return false;
         }
       }
 
@@ -472,6 +470,7 @@ private:
       MPI_Win_unlock_all(this->_last_win);
       MPI_Win_unlock_all(this->_data_win);
       *output_timestamp = data.timestamp;
+      return true;
     }
   } _spsc;
 
@@ -515,14 +514,14 @@ private:
     bool res;
 
     uint32_t min_timestamp;
-    uint32_t *min_timestamp_ptr = &min_timestamp;
-    this->_spsc.read_front(min_timestamp_ptr, enqueuer_rank);
+    bool min_timestamp_succeeded =
+        this->_spsc.read_front(&min_timestamp, enqueuer_rank);
 
     MPI_Win_lock_all(0, this->_min_timestamp_win);
     timestamp_t current_timestamp;
     aread_sync(&current_timestamp, 0, enqueuer_rank, this->_min_timestamp_win);
 
-    if (min_timestamp_ptr == NULL) {
+    if (!min_timestamp_succeeded) {
       const timestamp_t new_timestamp = {MAX_TIMESTAMP,
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
