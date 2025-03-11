@@ -258,3 +258,7 @@ Refer to the [accompanying report](./report).
 See [source code](./ltqueue.hpp).
 
 For the time being, SPSC is implemented using a circular array instead of a linked list due to the complexity of managing dynamic memory in the shared memory window with MPI.
+
+## Optimization
+
+- Caching of first and last indices (`_first_buf` and `_last_buf`) instead of rereading it using RMA every time. Inspired by BCL's FastQueue and MCRingBuffer.

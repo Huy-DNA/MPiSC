@@ -2,4 +2,4 @@
 
 Link: [paper](/references/Lamport/README.md)
 
-## Naive port 
+## Naive port
