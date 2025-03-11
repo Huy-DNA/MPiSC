@@ -9,7 +9,7 @@ inline void write_sync(const T *src, int disp, unsigned int target_rank,
                        const MPI_Win &win) {
   MPI_Put(src, sizeof(T), MPI_CHAR, target_rank, disp, sizeof(T), MPI_CHAR,
           win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -17,7 +17,7 @@ inline void batch_write_sync(const T *src, int size, int disp,
                              unsigned int target_rank, const MPI_Win &win) {
   MPI_Put(src, sizeof(T) * size, MPI_CHAR, target_rank, disp, size * sizeof(T),
           MPI_CHAR, win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -32,7 +32,7 @@ inline void batch_write_async(const T *src, int size, int disp,
                               unsigned int target_rank, const MPI_Win &win) {
   MPI_Put(src, sizeof(T) * size, MPI_CHAR, target_rank, disp, size * sizeof(T),
           MPI_CHAR, win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -57,7 +57,7 @@ inline void read_sync(T *dst, int disp, unsigned int target_rank,
                       const MPI_Win &win) {
   MPI_Get(dst, sizeof(T), MPI_CHAR, target_rank, disp, sizeof(T), MPI_CHAR,
           win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -65,7 +65,7 @@ inline void batch_read_sync(T *dst, int size, int disp,
                             unsigned int target_rank, const MPI_Win &win) {
   MPI_Get(dst, sizeof(T) * size, MPI_CHAR, target_rank, disp, size * sizeof(T),
           MPI_CHAR, win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -105,7 +105,7 @@ inline void awrite_sync(const T *src, int disp, unsigned int target_rank,
                         const MPI_Win &win) {
   MPI_Accumulate(src, sizeof(T), MPI_CHAR, target_rank, disp, sizeof(T),
                  MPI_CHAR, MPI_REPLACE, win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -113,7 +113,7 @@ inline void batch_awrite_sync(const T *src, int size, int disp,
                               unsigned int target_rank, const MPI_Win &win) {
   MPI_Accumulate(src, sizeof(T) * size, MPI_CHAR, target_rank, disp,
                  sizeof(T) * size, MPI_CHAR, MPI_REPLACE, win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -128,7 +128,7 @@ inline void batch_awrite_async(const T *src, int size, int disp,
                                unsigned int target_rank, const MPI_Win &win) {
   MPI_Accumulate(src, sizeof(T) * size, MPI_CHAR, target_rank, disp,
                  sizeof(T) * size, MPI_CHAR, MPI_REPLACE, win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -153,7 +153,7 @@ inline void aread_sync(T *dst, int disp, unsigned int target_rank,
                        const MPI_Win &win) {
   MPI_Get_accumulate(NULL, 0, MPI_INT, dst, sizeof(T), MPI_CHAR, target_rank,
                      disp, sizeof(T), MPI_CHAR, MPI_NO_OP, win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -162,7 +162,7 @@ inline void batch_aread_sync(T *dst, int size, int disp,
   MPI_Get_accumulate(NULL, 0, MPI_INT, dst, sizeof(T) * size, MPI_CHAR,
                      target_rank, disp, size * sizeof(T), MPI_CHAR, MPI_NO_OP,
                      win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -218,7 +218,7 @@ inline void fetch_and_add_sync(T *dst, uint64_t increment, int disp,
   } else {
     static_assert(false, "Invalid template type");
   }
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
 
 // compare-and-swap
@@ -240,5 +240,5 @@ inline void compare_and_swap_sync(const T *old_val, const T *new_val, T *result,
   }
 
   MPI_Compare_and_swap(new_val, old_val, result, type, target_rank, disp, win);
-  MPI_Win_flush_all(win);
+  MPI_Win_flush(target_rank, win);
 }
