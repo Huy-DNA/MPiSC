@@ -414,7 +414,7 @@ private:
       MPI_Win_free(&this->_last_win);
     }
 
-    void dequeue(data_t *&output, int enqueuer_rank) {
+    bool dequeue(data_t *output, int enqueuer_rank) {
       MPI_Win_lock_all(0, this->_first_win);
       MPI_Win_lock_all(0, this->_last_win);
       MPI_Win_lock_all(0, this->_data_win);
@@ -432,7 +432,7 @@ private:
         MPI_Win_unlock_all(this->_first_win);
         MPI_Win_unlock_all(this->_last_win);
         MPI_Win_unlock_all(this->_data_win);
-        return;
+        return false;
       }
 
       aread_sync(output, first, enqueuer_rank, this->_data_win);
@@ -443,6 +443,7 @@ private:
       MPI_Win_unlock_all(this->_first_win);
       MPI_Win_unlock_all(this->_last_win);
       MPI_Win_unlock_all(this->_data_win);
+      return true;
     }
 
     void read_front(uint32_t *&output_timestamp, int enqueuer_rank) {
@@ -657,7 +658,7 @@ public:
     MPI_Win_free(&this->_counter_win);
   }
 
-  void dequeue(T *&output) {
+  bool dequeue(T *output) {
     MPI_Win_lock_all(0, this->_tree_win);
     tree_node_t root;
     aread_async(&root, 0, this->_self_rank, this->_tree_win);
@@ -665,17 +666,17 @@ public:
 
     if (root.rank == DUMMY_RANK) {
       output = NULL;
-      return;
+      return false;
     }
     data_t spsc_output;
-    data_t *spsc_output_ptr = &spsc_output;
-    this->_spsc.dequeue(spsc_output_ptr, root.rank);
+    if (!this->_spsc.dequeue(&spsc_output, root.rank)) {
+      return false;
+    }
     if (!this->_refresh_timestamp(root.rank)) {
       this->_refresh_timestamp(root.rank);
     }
     this->_propagate(root.rank);
-    if (spsc_output_ptr) {
-      *output = spsc_output.data;
-    }
+    *output = spsc_output.data;
+    return true;
   }
 };
