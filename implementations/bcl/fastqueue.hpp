@@ -155,7 +155,7 @@ public:
       batch_awrite_async(
           set.data() + this->_capacity - old_tail % this->_capacity,
           set.size() - this->_capacity + old_tail % this->_capacity, 0,
-          this->_host, this->_data_win);
+          this->_host, this->_flag_win);
     }
 
     MPI_Win_unlock_all(this->_head_win);
