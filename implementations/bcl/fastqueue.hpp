@@ -25,7 +25,8 @@ private:
   const unsigned int _capacity;
 
 public:
-  FqEnqueuer(unsigned int host, unsigned int capacity, MPI_Comm comm)
+  FqEnqueuer(unsigned int capacity, unsigned int host, unsigned int self_rank,
+             MPI_Comm comm)
       : _host{host}, _head_buf{0}, _capacity{capacity} {
     int rank;
     MPI_Comm_rank(comm, &rank);
@@ -164,7 +165,8 @@ private:
   const unsigned int _capacity;
 
 public:
-  FqDequeuer(unsigned int host, unsigned int capacity, MPI_Comm comm)
+  FqDequeuer(unsigned int capacity, unsigned int host, unsigned int self_rank,
+             MPI_Comm comm)
       : _host{host}, _tail_buf{0}, _capacity{capacity} {
     int rank;
     MPI_Comm_rank(comm, &rank);
