@@ -1,6 +1,6 @@
 # References
 
-## Algorithm proposals
+## Auxiliaries
 
 In chronological order,
 
@@ -8,29 +8,37 @@ In chronological order,
 
   Cite: Valois, J. D. (1994, October). Implementing lock-free queues. In Proceedings of the seventh international conference on Parallel and Distributed Computing Systems (pp. 64-69).
 
-- [MSQueue](./MSQueue/README.md): Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue Algorithms
+- [MSQueue](./MSQueue/README.md) (MPMC): Simple, Fast, and Practical Non-Blocking and Blocking Concurrent Queue Algorithms
 
   Cite: Maged M. Michael and Michael L. Scott. 1996. Simple, fast, and practical non-blocking and blocking concurrent queue algorithms. In Proceedings of the fifteenth annual ACM symposium on Principles of distributed computing (PODC '96). Association for Computing Machinery, New York, NY, USA, 267–275. https://doi.org/10.1145/248052.248106
 
-- [WFQueue](./WFQueue/README.md): A wait-free queue as fast as fetch-and-add
+- [WFQueue](./WFQueue/README.md) (MPMC): A wait-free queue as fast as fetch-and-add
 
   Cite: Chaoran Yang and John Mellor-Crummey. 2016. A wait-free queue as fast as fetch-and-add. In Proceedings of the 21st ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming (PPoPP '16). Association for Computing Machinery, New York, NY, USA, Article 16, 1–13. https://doi.org/10.1145/2851141.2851168
 
-- [LTQueue](./LTQueue/README.md): Logarithmic-Time Single Deleter, Multiple Inserter Wait-Free Queues and Stacks.
-
-  Cite: Jayanti, P., Petrovic, S. (2005). Logarithmic-Time Single Deleter, Multiple Inserter Wait-Free Queues and Stacks. In: Sarukkai, S., Sen, S. (eds) FSTTCS 2005: Foundations of Software Technology and Theoretical Computer Science. FSTTCS 2005. Lecture Notes in Computer Science, vol 3821. Springer, Berlin, Heidelberg. https://doi.org/10.1007/11590156_33.
-
-- [FFQ](./FFQ/README.md): A fast single-producer/multiple-consumer concurrent FIFO queue.
-
-  Cite: S. Arnautov, P. Felber, C. Fetzer and B. Trach, "FFQ: A Fast Single-Producer/Multiple-Consumer Concurrent FIFO Queue," 2017 IEEE International Parallel and Distributed Processing Symposium (IPDPS), Orlando, FL, USA, 2017, pp. 907-916, doi: 10.1109/IPDPS.2017.41. 
-
-- [DQueue](./DQueue/README.md): Accelerating Wait-Free Algorithms: Pragmatic Solutions on Cache-Coherent Multicore Architectures
+- [DQueue](./DQueue/README.md) (MPSC): Accelerating Wait-Free Algorithms: Pragmatic Solutions on Cache-Coherent Multicore Architectures
 
   Cite: Wang, Junchang et al. “Accelerating Wait-Free Algorithms: Pragmatic Solutions on Cache-Coherent Multicore Architectures.” IEEE Access 7 (2019): 74653-74669.
 
-- [Jiffy](./Jiffy/README.md): Jiffy: A Fast, Memory Efficient, Wait-Free Multi-Producers Single-Consumer Queue
+- [Jiffy](./Jiffy/README.md) (MPSC): Jiffy: A Fast, Memory Efficient, Wait-Free Multi-Producers Single-Consumer Queue
 
   Cite: Dolev Adas and Roy Friedman. 2022. A Fast Wait-Free Multi-Producers Single-Consumer Queue. In Proceedings of the 23rd International Conference on Distributed Computing and Networking (ICDCN '22). Association for Computing Machinery, New York, NY, USA, 77–86. https://doi.org/10.1145/3491003.3491004
+
+- [FFQ](./FFQ/README.md) (SPMC): A fast single-producer/multiple-consumer concurrent FIFO queue.
+
+  Cite: S. Arnautov, P. Felber, C. Fetzer and B. Trach, "FFQ: A Fast Single-Producer/Multiple-Consumer Concurrent FIFO Queue," 2017 IEEE International Parallel and Distributed Processing Symposium (IPDPS), Orlando, FL, USA, 2017, pp. 907-916, doi: 10.1109/IPDPS.2017.41. 
+
+## Relevant algorithms
+
+In chronological order,
+
+- [Lamport queue](./Lamport/README.md) (SPSC): Specifying Concurrent Program Modules 
+
+  Cite: Leslie Lamport. 1983. Specifying Concurrent Program Modules. ACM Trans. Program. Lang. Syst. 5, 2 (April 1983), 190–222. https://doi.org/10.1145/69624.357207
+
+- [LTQueue](./LTQueue/README.md) (MPSC): Logarithmic-Time Single Deleter, Multiple Inserter Wait-Free Queues and Stacks.
+
+  Cite: Jayanti, P., Petrovic, S. (2005). Logarithmic-Time Single Deleter, Multiple Inserter Wait-Free Queues and Stacks. In: Sarukkai, S., Sen, S. (eds) FSTTCS 2005: Foundations of Software Technology and Theoretical Computer Science. FSTTCS 2005. Lecture Notes in Computer Science, vol 3821. Springer, Berlin, Heidelberg. https://doi.org/10.1007/11590156_33.
 
 ## Programming models
 
