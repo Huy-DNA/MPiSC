@@ -98,15 +98,15 @@ private:
       MPI_Win_flush(this->_self_rank, this->_first_win);
       MPI_Win_flush(this->_self_rank, this->_last_win);
 
-      MPI_Aint new_last = (last + 1) % this->_size;
-      if (new_last == first) {
+      MPI_Aint new_last = last + 1;
+      if (new_last - first > this->_size) {
         MPI_Win_unlock_all(this->_first_win);
         MPI_Win_unlock_all(this->_last_win);
         MPI_Win_unlock_all(this->_data_win);
         return false;
       }
 
-      write_sync(&data, last, this->_self_rank, this->_data_win);
+      write_sync(&data, last % this->_size, this->_self_rank, this->_data_win);
       awrite_async(&new_last, 0, this->_self_rank, this->_last_win);
 
       MPI_Win_unlock_all(this->_first_win);
@@ -138,7 +138,8 @@ private:
         return;
       }
       data_t data;
-      aread_async(&data, first, this->_self_rank, this->_data_win);
+      aread_async(&data, first % this->_size, this->_self_rank,
+                  this->_data_win);
 
       MPI_Win_unlock_all(this->_first_win);
       MPI_Win_unlock_all(this->_last_win);
@@ -427,7 +428,9 @@ private:
 
       MPI_Win_flush(enqueuer_rank, this->_first_win);
       MPI_Win_flush(enqueuer_rank, this->_last_win);
-      if (first == last) {
+
+      MPI_Aint new_first = first + 1;
+      if (new_first > last) {
         output = NULL;
         MPI_Win_unlock_all(this->_first_win);
         MPI_Win_unlock_all(this->_last_win);
@@ -435,9 +438,7 @@ private:
         return false;
       }
 
-      aread_sync(output, first, enqueuer_rank, this->_data_win);
-
-      MPI_Aint new_first = (first + 1) % this->_size;
+      aread_sync(output, first % this->_size, enqueuer_rank, this->_data_win);
       awrite_async(&new_first, 0, enqueuer_rank, this->_first_win);
 
       MPI_Win_unlock_all(this->_first_win);
@@ -469,7 +470,8 @@ private:
       }
 
       data_t data;
-      aread_async(&data, first, this->_self_rank, this->_data_win);
+      aread_async(&data, first % this->_size, this->_self_rank,
+                  this->_data_win);
 
       MPI_Win_unlock_all(this->_first_win);
       MPI_Win_unlock_all(this->_last_win);
