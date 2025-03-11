@@ -51,13 +51,15 @@ private:
 
     MPI_Win _first_win;
     MPI_Aint *_first_ptr;
+    MPI_Aint _first_buf;
 
     MPI_Win _last_win;
     MPI_Aint *_last_ptr;
 
   public:
     Spsc(MPI_Comm comm, MPI_Aint size, int self_rank, int dequeuer_rank)
-        : _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank}, _size{size} {
+        : _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank}, _size{size},
+          _first_buf{0} {
       MPI_Info info;
       MPI_Info_create(&info);
       MPI_Info_set(info, "same_disp_unit", "true");
@@ -89,21 +91,19 @@ private:
       MPI_Win_lock_all(0, this->_last_win);
       MPI_Win_lock_all(0, this->_data_win);
 
-      MPI_Aint first;
       MPI_Aint last;
 
-      aread_async(&first, 0, this->_self_rank, this->_first_win);
-      aread_async(&last, 0, this->_self_rank, this->_last_win);
-
-      MPI_Win_flush(this->_self_rank, this->_first_win);
-      MPI_Win_flush(this->_self_rank, this->_last_win);
-
+      aread_sync(&last, 0, this->_self_rank, this->_last_win);
       MPI_Aint new_last = last + 1;
-      if (new_last - first > this->_size) {
-        MPI_Win_unlock_all(this->_first_win);
-        MPI_Win_unlock_all(this->_last_win);
-        MPI_Win_unlock_all(this->_data_win);
-        return false;
+
+      if (new_last - this->_first_buf > this->_size) {
+        aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
+        if (new_last - this->_first_buf > this->_size) {
+          MPI_Win_unlock_all(this->_first_win);
+          MPI_Win_unlock_all(this->_last_win);
+          MPI_Win_unlock_all(this->_data_win);
+          return false;
+        }
       }
 
       write_sync(&data, last % this->_size, this->_self_rank, this->_data_win);
@@ -121,24 +121,22 @@ private:
       MPI_Win_lock_all(0, this->_last_win);
       MPI_Win_lock_all(0, this->_data_win);
 
-      MPI_Aint first;
       MPI_Aint last;
 
-      aread_async(&first, 0, this->_self_rank, this->_first_win);
-      aread_async(&last, 0, this->_self_rank, this->_last_win);
+      aread_sync(&last, 0, this->_self_rank, this->_last_win);
 
-      MPI_Win_flush(this->_self_rank, this->_first_win);
-      MPI_Win_flush(this->_self_rank, this->_last_win);
-
-      if (last == first) {
-        MPI_Win_unlock_all(this->_first_win);
-        MPI_Win_unlock_all(this->_last_win);
-        MPI_Win_unlock_all(this->_data_win);
-        output_timestamp = NULL;
-        return;
+      if (this->_first_buf >= last) {
+        aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
+        if (this->_first_buf >= last) {
+          MPI_Win_unlock_all(this->_first_win);
+          MPI_Win_unlock_all(this->_last_win);
+          MPI_Win_unlock_all(this->_data_win);
+          output_timestamp = NULL;
+          return;
+        }
       }
       data_t data;
-      aread_async(&data, first % this->_size, this->_self_rank,
+      aread_async(&data, this->_first_buf % this->_size, this->_self_rank,
                   this->_data_win);
 
       MPI_Win_unlock_all(this->_first_win);
@@ -392,10 +390,11 @@ private:
 
     MPI_Win _last_win;
     MPI_Aint *_last_ptr;
+    MPI_Aint _last_buf;
 
   public:
     Spsc(MPI_Comm comm, MPI_Aint size, int self_rank)
-        : _self_rank{self_rank}, _size{size} {
+        : _self_rank{self_rank}, _size{size}, _last_buf{0} {
       MPI_Info info;
       MPI_Info_create(&info);
       MPI_Info_set(info, "same_disp_unit", "true");
@@ -421,21 +420,19 @@ private:
       MPI_Win_lock_all(0, this->_data_win);
 
       MPI_Aint first;
-      MPI_Aint last;
 
-      aread_async(&first, 0, enqueuer_rank, this->_first_win);
-      aread_async(&last, 0, enqueuer_rank, this->_last_win);
-
-      MPI_Win_flush(enqueuer_rank, this->_first_win);
-      MPI_Win_flush(enqueuer_rank, this->_last_win);
+      aread_sync(&first, 0, enqueuer_rank, this->_first_win);
 
       MPI_Aint new_first = first + 1;
-      if (new_first > last) {
-        output = NULL;
-        MPI_Win_unlock_all(this->_first_win);
-        MPI_Win_unlock_all(this->_last_win);
-        MPI_Win_unlock_all(this->_data_win);
-        return false;
+      if (new_first > this->_last_buf) {
+        aread_sync(&this->_last_buf, 0, enqueuer_rank, this->_last_win);
+        if (new_first > this->_last_buf) {
+          output = NULL;
+          MPI_Win_unlock_all(this->_first_win);
+          MPI_Win_unlock_all(this->_last_win);
+          MPI_Win_unlock_all(this->_data_win);
+          return false;
+        }
       }
 
       aread_sync(output, first % this->_size, enqueuer_rank, this->_data_win);
@@ -453,20 +450,18 @@ private:
       MPI_Win_lock_all(0, this->_data_win);
 
       MPI_Aint first;
-      MPI_Aint last;
 
-      aread_async(&first, 0, enqueuer_rank, this->_first_win);
-      aread_async(&last, 0, enqueuer_rank, this->_last_win);
+      aread_sync(&first, 0, enqueuer_rank, this->_first_win);
 
-      MPI_Win_flush(enqueuer_rank, this->_first_win);
-      MPI_Win_flush(enqueuer_rank, this->_last_win);
-
-      if (last == first) {
-        MPI_Win_unlock_all(this->_first_win);
-        MPI_Win_unlock_all(this->_last_win);
-        MPI_Win_unlock_all(this->_data_win);
-        output_timestamp = NULL;
-        return;
+      if (first >= this->_last_buf) {
+        aread_sync(&this->_last_buf, 0, enqueuer_rank, this->_last_win);
+        if (first >= this->_last_buf) {
+          MPI_Win_unlock_all(this->_first_win);
+          MPI_Win_unlock_all(this->_last_win);
+          MPI_Win_unlock_all(this->_data_win);
+          output_timestamp = NULL;
+          return;
+        }
       }
 
       data_t data;
