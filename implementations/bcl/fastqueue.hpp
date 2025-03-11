@@ -3,6 +3,7 @@
 #include "../comm.hpp"
 #include <cstring>
 #include <mpi.h>
+#include <vector>
 
 template <typename T> class FqEnqueuer {
 private:
@@ -94,6 +95,46 @@ public:
                 this->_data_win);
     bool set = true;
     awrite_sync(&set, old_tail % this->_capacity, this->_host, this->_flag_win);
+
+    MPI_Win_unlock_all(this->_head_win);
+    MPI_Win_unlock_all(this->_tail_win);
+    MPI_Win_unlock_all(this->_data_win);
+    MPI_Win_unlock_all(this->_flag_win);
+    return true;
+  }
+
+  bool enqueue(const std::vector<T> &data) {
+    if (data.size() == 0) {
+      return true;
+    }
+
+    MPI_Win_lock_all(0, this->_head_win);
+    MPI_Win_lock_all(0, this->_tail_win);
+    MPI_Win_lock_all(0, this->_data_win);
+    MPI_Win_lock_all(0, this->_flag_win);
+
+    MPI_Aint old_tail;
+    fetch_and_add_sync(&old_tail, data.size(), 0, this->_host, this->_tail_win);
+    MPI_Aint new_tail = old_tail + data.size();
+
+    if (new_tail - this->_head_buf > this->_capacity) {
+      aread_sync(&this->_head_buf, 0, this->_host, this->_head_win);
+      if (new_tail - this->_head_buf > this->_capacity) {
+        fetch_and_add_sync(&old_tail, -data.size(), 0, this->_host,
+                           this->_tail_win);
+        MPI_Win_unlock_all(this->_head_win);
+        MPI_Win_unlock_all(this->_tail_win);
+        MPI_Win_unlock_all(this->_data_win);
+        MPI_Win_unlock_all(this->_flag_win);
+        return false;
+      }
+    }
+
+    batch_awrite_sync(data.data(), data.size(), old_tail % this->_capacity,
+                      this->_host, this->_data_win);
+    std::vector<char> set(data.size(), true);
+    batch_awrite_sync(set.data(), data.size(), old_tail % this->_capacity,
+                      this->_host, this->_flag_win);
 
     MPI_Win_unlock_all(this->_head_win);
     MPI_Win_unlock_all(this->_tail_win);
