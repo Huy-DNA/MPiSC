@@ -1,6 +1,6 @@
 # LTQueue (Prasad Jayanti, Srdjan Petrovic, 2005) - MPI port
 
-Link: [paper](/refs/LTQueue/README.md)
+Link: [paper](/references/LTQueue/README.md)
 
 ## Naive port 
 
