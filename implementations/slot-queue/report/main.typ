@@ -62,7 +62,7 @@ Therefore, to be more suitable for distributed context, we propose a new algorit
 
 = Structure
 
-Each enqueue will have a local SPSC as in LTQueue @ltqueue that supports `dequeue`, `enqueue` and `readFront`. There's a global queue whose entries stores the minimum timestamp of the corresponding enqueuer's local SPSC.
+Each enqueue will have a local SPSC as in LTQueue @ltqueue that supports `dequeue`, `enqueue` and `readFront`. There's a global queue whose entries store the minimum timestamp of the corresponding enqueuer's local SPSC.
 
 #figure(
   image("/assets/structure.png"),
