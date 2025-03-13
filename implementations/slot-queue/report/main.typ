@@ -165,8 +165,8 @@ The slot-queue types and structures are given as follows:
 
 #pseudocode-list(line-numbering: none)[
   + *Initialization*
-    + Init all local SPSCs.
-    + Init `slots` entries to `MAX`.
+    + Initialize all local SPSCs.
+    + Initialize `slots` entries to `MAX`.
 ]
 
 The `enqueue` operations are given as follows:
@@ -182,7 +182,8 @@ The `enqueue` operations are given as follows:
     + `value = (v, timestamp)`
     + `res = spsc_enqueue(spscs[rank], value)`
     + *if* `(!res)` *return* `false`
-    + `propagateEnqueue(rank, timestamp)`
+    + *if* `(!refreshEnqueue(rank, timestamp))`
+      + `refreshEnqueue(rank, timestamp)`
     + *return* `res`
   ],
 ) <enqueue>
@@ -191,18 +192,18 @@ The `enqueue` operations are given as follows:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 6,
+    line-numbering: i => i + 7,
     booktabs: true,
-    numbered-title: [`propagateEnqueue(rank: int, ts: timestamp_t)`],
+    numbered-title: [`refreshEnqueue(rank: int, ts: timestamp_t)` *returns* `bool`],
   )[
     + `old-timestamp = slots[rank]               `
     + `front = spsc_readFront(spscs[rank])`
     + `new-timestamp = front == `$bot$` ? MAX : front.timestamp`
-    + *if* `new-timestamp != ts`
-      + *return*
-    + `CAS(&slots[rank], old-timestamp, new-timestamp)`
+    + *if* `(new-timestamp != ts)`
+      + *return* `true`
+    + *return* `CAS(&slots[rank], old-timestamp, new-timestamp)`
   ],
-) <propagate-enqueue>
+) <refresh-enqueue>
 
 The `dequeue` operations are given as follows:
 
@@ -210,7 +211,7 @@ The `dequeue` operations are given as follows:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 12,
+    line-numbering: i => i + 13,
     booktabs: true,
     numbered-title: [`dequeue()` *returns* `data_t`],
   )[
@@ -218,8 +219,9 @@ The `dequeue` operations are given as follows:
     + *if* `(rank == DUMMY || slots[rank] == MAX)`
       + *return* $bot$
     + `res = spsc_dequeue(spscs[rank])`
-    + *if* `res ==` $bot$ *return* $bot$
-    + `propagateDequeue(rank)`
+    + *if* `(res ==` $bot$`)` *return* $bot$
+    + *if* `(!refreshDequeue(rank))`
+      + `refreshDequeue(rank)`
     + *return* `res`
   ],
 ) <dequeue>
@@ -228,7 +230,7 @@ The `dequeue` operations are given as follows:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 19,
+    line-numbering: i => i + 21,
     booktabs: true,
     numbered-title: [`readMinimumRank()` *returns* `int`],
   )[
@@ -236,13 +238,13 @@ The `dequeue` operations are given as follows:
     + `min-timestamp = MAX`
     + *for* `index` *in* `0..length(slots)`
       + `timestamp = slots[index]`
-      + *if* `min-timestamp < timestamp`
+      + *if* `(min-timestamp < timestamp)`
         + `rank = index`
         + `min-timestamp = timestamp`
     + `old-rank = rank`
     + *for* `index` *in* `0..old-rank`
       + `timestamp = slots[index]`
-      + *if* `min-timestamp < timestamp`
+      + *if* `(min-timestamp < timestamp)`
         + `rank = index`
         + `min-timestamp = timestamp`
     + *return* `rank == length(slots) ? DUMMY : rank`
@@ -253,19 +255,19 @@ The `dequeue` operations are given as follows:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 33,
+    line-numbering: i => i + 35,
     booktabs: true,
-    numbered-title: [`propagateDequeue(rank: int)`],
+    numbered-title: [`refreshDequeue(rank: int)` *returns* `bool`],
   )[
     + `old-timestamp = slots[rank]`
     + `front = spsc_readFront(spscs[rank])`
     + `new-timestamp = front == `$bot$` ? MAX : front.timestamp`
     + *if* `(front !=` $bot$`)`
       + `slots[rank] = new-timestamp`
-      + *return*
-    + `CAS(&slots[rank], old-timestamp, new-timestamp)`
+      + *return* `true`
+    + *return* `CAS(&slots[rank], old-timestamp, new-timestamp)`
   ],
-) <read-minimum-rank>
+) <refresh-dequeue>
 
 = Linearizability
 
