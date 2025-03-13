@@ -181,8 +181,8 @@ The `enqueue` operations are given as follows:
     + `timestamp = FFA(counter)                       `
     + `value = (v, timestamp)`
     + `res = spsc_enqueue(spscs[rank], value)`
-    + *if* `(res && spsc_readFront(spscs[rank]) == value)`
-      + `propagateEnqueue(rank, timestamp)`
+    + *if* `(!res)` *return* `false`
+    + `propagateEnqueue(rank, timestamp)`
     + *return* `res`
   ],
 ) <enqueue>
@@ -195,7 +195,12 @@ The `enqueue` operations are given as follows:
     booktabs: true,
     numbered-title: [`propagateEnqueue(rank: int, ts: timestamp_t)`],
   )[
-    + `slots[rank] = ts                              `
+    + `old-timestamp = slots[rank]               `
+    + `front = spsc_readFront(spscs[rank])`
+    + `new-timestamp = front == `$bot$` ? MAX : front.timestamp`
+    + *if* `new-timestamp != ts`
+      + *return*
+    + `CAS(&slots[rank], old-timestamp, new-timestamp)`
   ],
 ) <propagate-enqueue>
 
@@ -205,7 +210,7 @@ The `dequeue` operations are given as follows:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 7,
+    line-numbering: i => i + 12,
     booktabs: true,
     numbered-title: [`dequeue()` *returns* `data_t`],
   )[
@@ -223,7 +228,7 @@ The `dequeue` operations are given as follows:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 15,
+    line-numbering: i => i + 19,
     booktabs: true,
     numbered-title: [`readMinimumRank()` *returns* `int`],
   )[
@@ -248,7 +253,7 @@ The `dequeue` operations are given as follows:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 29,
+    line-numbering: i => i + 33,
     booktabs: true,
     numbered-title: [`propagateDequeue(rank: int)`],
   )[
