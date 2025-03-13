@@ -253,11 +253,12 @@ The `dequeue` operations are given as follows:
     numbered-title: [`propagateDequeue(rank: int)`],
   )[
     + `old-timestamp = slots[rank]`
-    + `timestamp = spsc_readFront(spscs[rank]).timestamp`
-    + *if* `(timestamp !=` $bot$`)`
-      + `slots[rank] = timestamp`
+    + `front = spsc_readFront(spscs[rank])`
+    + `new-timestamp = front == `$bot$` ? MAX : front.timestamp`
+    + *if* `(front !=` $bot$`)`
+      + `slots[rank] = new-timestamp`
       + *return*
-    + `CAS(&slots[rank], old-timestamp, timestamp)`
+    + `CAS(&slots[rank], old-timestamp, new-timestamp)`
   ],
 ) <read-minimum-rank>
 
