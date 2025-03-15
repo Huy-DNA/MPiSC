@@ -4,20 +4,17 @@
 #{ include "./background/index.typ" }
 #pagebreak()
 
-#{ include "./approach/index.typ" }
+#{ include "./related-works/index.typ" }
 #pagebreak()
 
-#{ include "./literature-review/index.typ" }
+#{ include "./distributed-queues/index.typ" }
 #pagebreak()
 
-#{ include "./porting/index.typ" }
+#{ include "./theoretical-aspects/index.typ" }
 #pagebreak()
 
 #{ include "./preliminary-results/index.typ" }
 #pagebreak()
 
 #{ include "./conclusion/index.typ" }
-#pagebreak()
-
-#{ include "./future/index.typ" }
 #pagebreak()
