@@ -41,16 +41,18 @@
 #import "@preview/lemmify:0.1.7": *
 #let (
   definition,
+  rules: definition-rules,
+) = default-theorems("definition", lang: "en")
+#let (
   theorem,
   lemma,
   corollary,
-  remark,
-  proposition,
-  example,
   proof,
-  rules: thm-rules,
-) = default-theorems("thm-group", lang: "en")
-#show: thm-rules
+  rules: theorem-rules,
+) = default-theorems("theorem", lang: "en")
+
+#show: theorem-rules
+#show: definition-rules
 
 = Motivation
 
