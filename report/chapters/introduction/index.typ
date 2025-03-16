@@ -30,10 +30,10 @@ The rest of this report is structured as follows:
 
 @related-works[] surveys the shared-memory literature for state-of-the-art queue algorithms, specifically MPSC and SPSC algorithms (as SPSC can be modified to implement MPSC). We specifically focus on algorithms that have the potential to be ported efficiently to distributed context, such as NUMA-aware or can be made to be NUMA-aware. We then conclude with a comparison of the most potential shared-memory queue algorithms.
 
-@distributed-queues[].
+@distributed-queues[] documents distributed-versions of potential shared-memory MPSC algorithms surveys in @related-works[]. It specifically presents our adaptation efforts of existing algorithms in the shared-memory literature to make their distributed implementations feasible.
 
-@theoretical-aspects[].
+@theoretical-aspects[] discusses various interesting theoretical aspects of our distributed MPSC algorithms in @distributed-queues[], specifically correctness (linearizability), progress guarantee (lock-freedom and wait-freedom), performance model. Our analysis of performance model helps back our empirical findings in @result[], together, they work hand-in-hand to help us discover optimization opportunities.
 
-@result[] introduces our setup and benchmarking processes to obtain some preliminary empirical results. We also analyze the result to assess the various factors that affect the performance of an algorithm and its implementation.
+@result[] introduces our benchmarking setup, including metrics, environments, benchmark/microbenchmark suites and conducting methods. We aim to demonstrate some preliminary results on how well ported shared-memory MPSCs can compare to existing distributed MPSCs. Finally, we discuss important factors that affect the runtime properties distributed MPSC algorithm, which have partly been explained by our theoretical analysis in @theoretical-aspects[].
 
 @conclusion[] concludes what we have accomplished in this thesis and considers future possible improvements to our research.
