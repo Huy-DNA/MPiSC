@@ -38,6 +38,8 @@
   underline(it)
 }
 
+#show figure.where(kind: "algorithm"): set align(start)
+
 #include "/auxiliaries/cover.typ"
 #pagebreak()
 
