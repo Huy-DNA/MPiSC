@@ -940,6 +940,10 @@ We immediately obtain the following result.
   We have proved the theorem.
 ]
 
+== ABA problem
+
+ABA problem is unlikely to occur, because any CAS usage increases the value of a monotonic tag.
+
 == Memory safety
 
 Memory allocation and deallocation are performed only in the SPSC data structure. Since @ltqueue has proved that it's memory-safe, the modified algorithm is also memory-safe.
