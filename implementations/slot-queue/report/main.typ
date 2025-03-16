@@ -271,6 +271,8 @@ The `dequeue` operations are given as follows:
 
 = ABA problem
 
+Noticeably, we use no scheme to avoid ABA problem in Slot-queue. In actuality, ABA problem cannot happen in our algorithm, except in the extreme case that the 64-bit global counter overflows, which is unlikely.
+
 = Linearizability
 
 = Wait-freedom
