@@ -16,6 +16,12 @@ This thesis aims to:
 - Benchmark the ported MPSC algorithms and compare them with current distributed MPSCs in the literature.
 - Discover distributed-environment-specific optimization opportunities for ported MPSC algorithms.
 
+== Scope <scope>
+
+- For related works on shared-memory MPSCs, we only focus on linearizable MPSCs that support at least lock-free `enqueue` and `dequeue` operations.
+- Any implementation details, benchmarking and optimizations assume MPI-3 settings.
+- For optimizations, we focus on performance-related metrics, e.g. time-complexity (theoretically), throughput (empirically).
+
 == Structure <structure>
 
 The rest of this report is structured as follows:
