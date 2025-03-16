@@ -269,6 +269,8 @@ The `dequeue` operations are given as follows:
   ],
 ) <refresh-dequeue>
 
+= ABA problem
+
 = Linearizability
 
 = Wait-freedom
