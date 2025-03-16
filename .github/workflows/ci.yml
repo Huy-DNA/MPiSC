@@ -150,6 +150,7 @@ jobs:
           # Add table rows for each PDF
           while IFS="|" read -r file_path last_mod_date; do
             pdf_name=$(pdfinfo "build/$file_path" | grep "Title")
+            pdf_name=${pdf_name:6}
             echo "      <tr>" >> build/README.md
             echo "        <td><strong>$pdf_name</strong></td>" >> build/README.md
             echo "        <td>$last_mod_date</td>" >> build/README.md
