@@ -583,7 +583,7 @@ We immediately obtain the following result.
 #theorem[The SPSC at an enqueuer node contains items with increasing timestamps.] <increasing-timestamp-theorem>
 
 #proof[
-  Each `enqueue` would `FAA` the shared counter (line 1 in @lt-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @one-dequeue-one-enqueue-corollary, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FFA`-ing the shared counter. The theorem holds.
+  Each `enqueue` would `FAA` the shared counter (line 1 in @lt-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @one-dequeue-one-enqueue-corollary, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
 ]
 
 #definition[For a tree node $n$, the enqueuer rank stored in $n$ at time $t$ is denoted as $r a n k(n, t)$.]
