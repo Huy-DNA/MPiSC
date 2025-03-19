@@ -326,7 +326,7 @@ We can define a strict partial order $<$ on the set of *CAS-sequences* and *modi
   - *ABA problem* does not occur with `v` in the history.
   - We can reorder the *successful CAS-sequences* and *modification instructions* in the history such that:
     - No two successful CAS-sequences overlap with each other.
-    - No modification instruction lies within another successful CAS-sequence.
+    - No successful modification instruction lies within another successful CAS-sequence.
     - The resulting history after reordering produces the same output as the original history.
 ]
 
@@ -454,8 +454,8 @@ We can now turn to our interested problem in this section.
   We have proven that if we move $e$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*, we still retain the program's output.
 
   The theorem directly follows.
-
 ]
+
 #theorem(
   name: "ABA safety",
 )[Assume that the 64-bit global counter never overflows, Slot-queue is ABA-safe.] <aba-safe-slotqueue-theorem>
@@ -465,6 +465,22 @@ We can now turn to our interested problem in this section.
 ]
 
 = Linearizability of Slot-queue
+
+We will prove the linearizability of Slot-queue by pointing out the linearization points of `enqueue` (@slotqueue-enqueue) and `dequeue` (@slotqueue-dequeue).
+
+#lemma(
+  name: [Linearizability of `enqueue`],
+)[The linearization point of `enqueue` is right after .] <slotqueue-enqueue-linearization-point-lemma>
+
+#lemma(
+  name: [Linearizability of `dequeue`],
+)[The linearization point of `dequeue` is right after .] <slotqueue-dequeue-linearization-point-lemma>
+
+#theorem(
+  name: "Linearizability of Slot-queue",
+)[The local SPSC is linearizable.] <slotqueue-spsc-linearizability-lemma>
+
+
 
 = Wait-freedom
 
