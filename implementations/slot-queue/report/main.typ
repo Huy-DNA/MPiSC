@@ -386,7 +386,7 @@ We can now turn to our interested problem in this section.
   Due to @slotqueue-one-enqueuer-one-dequeuer-lemma, there can only be at most one `enqueue` at one point in time within $d$.
 
   If there's no *successful slot-modification instruction* on slot `s` by an `enqueue` $e$ within $d$'s *successful CAS-sequence*, then this `dequeue` is ABA-safe.
-  
+
   Suppose the `enqueue` $e$ executes the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*. Denote $t_e$ to be the value that $e$ sets `s`.
 
   If $t_e != t_d$, this CAS-sequence of $d$ cannot be successful, which is a contradiction.
@@ -400,7 +400,7 @@ We can now turn to our interested problem in this section.
   During the start of $d$'s successful CAS-sequence till the end of $e$, `spsc_readFront` on the local SPSC must return the same element, because:
   - There's no other `dequeue`s running during this time.
   - There's no `enqueue` other than $e$ running.
-  - The `spsc_enqueue` of $e$ must have completed before the start of $d$'s successful CAS sequence, because a previous dequeuer $d'$ can see its effect. 
+  - The `spsc_enqueue` of $e$ must have completed before the start of $d$'s successful CAS sequence, because a previous dequeuer $d'$ can see its effect.
   Therefore, if we were to move the starting time of $d$'s successful CAS-sequence right after $e$ has ended, we still retain the output of the program because:
   - The CAS sequence only reads two shared values: `slots[rank]` and `spsc_readFront()`, but we have proven that these two values remain the same if we were to move the starting time of $d$'s successful CAS-sequence this way.
   - The CAS sequence does not modify any values except for the last CAS instruction, and the ending time of the CAS sequence is still the same.
@@ -415,8 +415,47 @@ We can now turn to our interested problem in this section.
   name: [ABA safety of `enqueue`],
 )[Assume that the 64-bit global counter never overflows, `enqueue` (@slotqueue-enqueue) is ABA-safe.] <slotqueue-aba-safe-enqueue-theorem>
 
-#proof[ ]
+#proof[
+  Consider a *successful CAS-sequence* on slot `s` by an `enqueue` $e$.
 
+  Denote $t_e$ as the value this CAS-sequence observes.
+
+  Due to @slotqueue-one-enqueuer-one-dequeuer-lemma, there can only be at most one `enqueue` at one point in time within $e$.
+
+  If there's no *successful slot-modification instruction* on slot `s` by an `dequeue` $d$ within $e$'s *successful CAS-sequence*, then this `enqueue` is ABA-safe.
+
+  Suppose the `dequeue` $d$ executes the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*. Denote $t_d$ to be the value that $d$ sets `s`.
+
+  If $t_d != t_e$, this CAS-sequence of $e$ cannot be successful, which is a contradiction.
+
+  Therefore, $t_d = t_e$.
+
+  If $t_d = t_e = $ `MAX`, this means $e$ observes a value of `MAX` before $d$ even sets `s` to `MAX`. If this `MAX` value is the initialized value of `s`, it's a contradiction, as `s` must be non-`MAX` at some point for a `dequeue` such as $d$ to run. If this `MAX` value is set by an `enqueue`, it's also a contradiction, as `refreshEnqueue` cannot set a slot to `MAX`. Therefore, this `MAX` value is set by a dequeue $d'$. If $d' equiv.not d$ then it's a contradiction, because between $d'$ and $d$, `s` must be set to be a non-`MAX` value before $d$ can be run. Therefore, $d' equiv d$. But, this means $e$ observes a value set by $d$, which violates our assumption.
+
+  Therefore $t_d = t_e = t' != $ `MAX`. $e$ cannot observe the value $t'$ set by $d$ due to our assumption. Suppose $e$ observes the value $t'$ from `s` set by another enqueue/dequeue call other than $d$.
+
+  If this "another call" is a `dequeue` $d'$ other than $d$, $d'$ precedes $d$. By @slotqueue-spsc-timestamp-monotonicity-theorem, after each `dequeue`, the front element's timestamp will be increasing, therefore, $d'$ must have set `s` to a timestamp smaller than $t_d$. However, $e$ observes $t_e = t_d$. This is a contradiction.
+
+  Therefore, this "another call" is an `enqueue` $e'$ other than $e$, $e'$ precedes $e$. We know that an `enqueue` only sets `s` to the timestamp it obtains. If $e'$ does not overlap with $d$, then after $e'$ has ended, the local SPSC is either empty or has the item $e'$ enqueues as the front element. Therefore, when $d$ runs, it dequeues out the item $e'$ enqueues and set `s` to $t_d$ which is greater than the timestamp of the item $e'$ enqueues. Therefore, $e'$ overlaps with $d$.
+
+  For $e'$ to set `s` to the same value as $d$, $e'$'s `spsc_readFront` must serialize after $d$'s `spsc_dequeue`.
+
+  Because $e'$ and $e$ cannot overlap, while $d$ overlaps with both $e'$ and $e$, $d$ must be the _first_ `dequeue` on `s` that overlaps with $e$. Combining with @slotqueue-one-enqueuer-one-dequeuer-lemma and the fact that $d$ executes the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*, $d$ must be the only `dequeue` that executes a *successful slot-modification instruction* within $e$'s *successful CAS-sequence*.
+
+  During the start of $e$'s successful CAS-sequence till the end of $d$, `spsc_readFront` on the local SPSC must return the same element, because:
+  - There's no other `enqueue`s running during this time.
+  - There's no `dequeue` other than $d$ running.
+  - The `spsc_dequeue` of $d$ must have completed before the start of $e$'s successful CAS sequence, because a previous enqueuer $e'$ can see its effect.
+  Therefore, if we were to move the starting time of $e$'s successful CAS-sequence right after $d$ has ended, we still retain the output of the program because:
+  - The CAS sequence only reads two shared values: `slots[rank]` and `spsc_readFront()`, but we have proven that these two values remain the same if we were to move the starting time of $e$'s successful CAS-sequence this way.
+  - The CAS sequence does not modify any values except for the last CAS/store instruction, and the ending time of the CAS sequence is still the same.
+  - The CAS sequence modifies `slots[rank]` at the CAS but the target value is the same because inputs and shared values are the same in both cases.
+
+  We have proven that if we move $e$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*, we still retain the program's output.
+
+  The theorem directly follows.
+
+]
 #theorem(
   name: "ABA safety",
 )[Assume that the 64-bit global counter never overflows, Slot-queue is ABA-safe.] <aba-safe-slotqueue-theorem>
