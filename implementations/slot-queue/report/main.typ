@@ -375,20 +375,20 @@ We can now turn to our interested problem in this section.
 ]
 
 #theorem(
-  name: [No ABA problem in `dequeue`],
-)[ ] <slotqueue-aba-safe-dequeue-theorem>
+  name: [ABA safety of `dequeue`],
+)[Assume that the 64-bit global counter never overflows, `dequeue` (@slotqueue-dequeue) is ABA-safe.] <slotqueue-aba-safe-dequeue-theorem>
 
 #proof[ ]
 
 #theorem(
-  name: [No ABA problem in `enqueue`],
-)[ ] <slotqueue-aba-safe-enqueue-theorem>
+  name: [ABA safety of `enqueue`],
+)[Assume that the 64-bit global counter never overflows, `enqueue` (@slotqueue-enqueue) is ABA-safe.] <slotqueue-aba-safe-enqueue-theorem>
 
 #proof[ ]
 
 #theorem(
-  name: "No ABA problem",
-)[Assume that the 64-bit global counter never overflows, there's no ABA problem in Slot-queue.] <aba-safe-slotqueue-theorem>
+  name: "ABA safety",
+)[Assume that the 64-bit global counter never overflows, Slot-queue is ABA-safe.] <aba-safe-slotqueue-theorem>
 
 #proof[
   This follows from @slotqueue-aba-safe-enqueue-theorem and @slotqueue-aba-safe-dequeue-theorem.
