@@ -277,21 +277,21 @@ In this section, we prove that the local SPSC is linearizable.
 
 #lemma(
   name: [Linearizability of `spsc_enqueue`],
-)[The linearization point of `spsc_enqueue` is right after line 2 or right after line 4.] <slotqueue-spsc-enqueue-linearization-point>
+)[The linearization point of `spsc_enqueue` is right after line 2 or right after line 4.] <slotqueue-spsc-enqueue-linearization-point-lemma>
 
 #lemma(
   name: [Linearizability of `spsc_dequeue`],
-)[The linearization point of `spsc_dequeue` is right after line 6 or right after line 8.] <slotqueue-spsc-dequeue-linearization-point>
+)[The linearization point of `spsc_dequeue` is right after line 6 or right after line 8.] <slotqueue-spsc-dequeue-linearization-point-lemma>
 
 #lemma(
   name: [Linearizability of `spsc_readFront`],
-)[The linearization point `spsc_readFront` is right after line 11 or right after line 12.] <slotqueue-spsc-readFront-linearization-point>
+)[The linearization point `spsc_readFront` is right after line 11 or right after line 12.] <slotqueue-spsc-readFront-linearization-point-lemma>
 
 #theorem(
   name: "Linearizability of local SPSC",
-)[The local SPSC is linearizable.] <slotqueue-spsc-linearizability>
+)[The local SPSC is linearizable.] <slotqueue-spsc-linearizability-lemma>
 
-#proof[This directly follows from @slotqueue-spsc-enqueue-linearization-point, @slotqueue-spsc-dequeue-linearization-point, @slotqueue-spsc-readFront-linearization-point.]
+#proof[This directly follows from @slotqueue-spsc-enqueue-linearization-point-lemma, @slotqueue-spsc-dequeue-linearization-point-lemma, @slotqueue-spsc-readFront-linearization-point-lemma.]
 
 = ABA problem
 
@@ -332,7 +332,7 @@ We can now turn to our interested problem in this section.
 
 #lemma(name: "Concurrent accesses on a local SPSC and a slot")[
   Only one dequeuer and one enqueuer can concurrently modify a local SPSC and a slot in the `slots` array.
-] <slotqueue-one-enqueuer-one-dequeuer>
+] <slotqueue-one-enqueuer-one-dequeuer-lemma>
 
 #proof[
   This is trivial to prove based on the algorithm's definition.
@@ -340,32 +340,32 @@ We can now turn to our interested problem in this section.
 
 #lemma(name: "Monotonicity of local SPSC timestamps")[
   Each local SPSC in Slot-queue contains elements with increasing timestamps.
-] <slotqueue-spsc-timestamp-monotonicity>
+] <slotqueue-spsc-timestamp-monotonicity-theorem>
 
 #proof[
-  Each `enqueue` would `FAA` the global counter (line 1 in @slotqueue-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @slotqueue-one-enqueuer-one-dequeuer, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
+  Each `enqueue` would `FAA` the global counter (line 1 in @slotqueue-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @slotqueue-one-enqueuer-one-dequeuer-lemma, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
 ]
 
-#lemma[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only changes a slot to a value other than `MAX`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX>
+#lemma[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only changes a slot to a value other than `MAX`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX-lemma>
 
 #proof[
   For `refreshEnqueue` to change the slot's value, the condition on line 11 must be false. Then `new-timestamp` must equal to `ts`, which is not `MAX`. It's obvious that the `CAS` on line 13 changes the slot to a value other than `MAX`.
 ]
 
-#theorem(name: [No ABA problem in `dequeue`])[ ] <aba-safe-dequeue-slotqueue>
+#theorem(name: [No ABA problem in `dequeue`])[ ] <slotqueue-aba-safe-dequeue-theorem>
 
 #proof[ ]
 
-#theorem(name: [No ABA problem in `enqueue`])[ ] <aba-safe-enqueue-slotqueue>
+#theorem(name: [No ABA problem in `enqueue`])[ ] <slotqueue-aba-safe-enqueue-theorem>
 
 #proof[ ]
 
 #theorem(
   name: "No ABA problem",
-)[Assume that the 64-bit global counter never overflows, there's no ABA problem in Slot-queue.] <aba-safe-slotqueue>
+)[Assume that the 64-bit global counter never overflows, there's no ABA problem in Slot-queue.] <aba-safe-slotqueue-theorem>
 
 #proof[
-  This follows from @aba-safe-enqueue-slotqueue and @aba-safe-dequeue-slotqueue.
+  This follows from @slotqueue-aba-safe-enqueue-theorem and @slotqueue-aba-safe-dequeue-theorem.
 ]
 
 = Linearizability of Slot-queue
