@@ -301,11 +301,33 @@ Noticeably, we use no scheme to avoid ABA problem in Slot-queue. In actuality, A
 
 Not every ABA problem is unsafe. We formalize in this section which ABA problem is safe and which is not.
 
-#definition[Consider a history of successful *CAS-sequences* and *slot-modification operations* targeted at the same slot. *ABA problem* is the phenomenon that there exists a *successful CAS-sequence*, during which there's some *slot-modification operation* that changes that slot's value.]
+#definition[A *CAS-sequence* on a variable `v` is a sequence of instructions that:
+  - Starts with a load $v_0 = $`load(`$v$`)`.
+  - Ends with a `CAS(&`$v$`,`$v_0$`,`$v_1$`)`.
+]
 
-#definition[Consider a history of successful *CAS-sequences* and *slot-modification operations* targeted at the same slot. A history is said to be ABA-safe if and only if:
-  - There's no *ABA problem* in the history.
-  - We can reorder the *CAS-sequences* and *slot-modification operations* in the current history
+#definition[A *successful CAS-sequence* on a variable `v` is a *CAS-sequence* on `v` that ends with a successful CAS.]
+
+#definition[A *modification instruction* on a variable `v` is an atomic instruction that may change the value of `v` e.g. a store or a CAS.]
+
+#definition[A *successful modification instruction* on a variable `v` is an atomic instruction that changes the value of `v` e.g. a store or a successful CAS.]
+
+#definition[A *history* of successful *CAS-sequences* and *modification instructions* is a timeline of when any *CAS-sequences* start/end and when any modification instructions end.]
+
+We can define a strict partial order $<$ on the set of *CAS-sequences* and *modification instructions* such that:
+- $A < B$ if $A$ and $B$ are both *CAS-sequences* and $A$ ends before $B$ starts.
+- $A < B$ if $A$ and $B$ are *modifcation instructions* and $A$ ends before $B$ ends.
+- $A < B$ if $A$ is a *modification instruction*, $B$ is a *CAS-sequence* and $A$ ends before $B$ starts.
+- $B < A$ if $A$ is a *modification instruction*, $B$ is a *CAS-sequence* and $A$ ends after $B$ ends.
+
+#definition[Consider a history of successful *CAS-sequences* and *modification instructions* on the same variable `v`. *ABA problem* is said to have occurred with `v` if there exists a *successful CAS-sequence* on `v`, during which there's some *successful modification instruction* on `v`.]
+
+#definition[Consider a history of successful *CAS-sequences* and *modification instructions* on the same variable `v`. A history is said to be *ABA-safe* with `v` if and only if:
+  - *ABA problem* does not occur with `v` in the history.
+  - We can reorder the *successful CAS-sequences* and *modification instructions* in the history such that:
+    - No two successful CAS-sequences overlap with each other.
+    - No modification instruction lies within another successful CAS-sequence.
+    - The resulting history after reordering produces the same output as the original history.
 ]
 
 == Proof of ABA-safety
@@ -320,13 +342,13 @@ We apply some domain knowledge of our algorithm to the above formalism.
 
 #definition[A *CAS-sequence* of an `enqueue` is the sequence of instructions from line 8 to line 13 of its `refreshEnqueue`.]
 
-#definition[A *slot-modification operation* of an `enqueue` is line 13 of `refreshEnqueue`.]
+#definition[A *slot-modification instruction* of an `enqueue` is line 13 of `refreshEnqueue`.]
 
 #definition[A *CAS-sequence* of a `dequeue` is the sequence of instructions from line 36 to line 42 of its `refreshDequeue`.]
 
 #definition[A *CAS-sequence* is said to *observes a slot value `s`* if it loads `s` at line 8 of `refreshEnqueue` or line 36 of `refreshDequeue`.]
 
-#definition[A *slot-modification operation* of a `dequeue` is line 40 or line 42 of `refreshDequeue`.]
+#definition[A *slot-modification instruction* of a `dequeue` is line 40 or line 42 of `refreshDequeue`.]
 
 We can now turn to our interested problem in this section.
 
