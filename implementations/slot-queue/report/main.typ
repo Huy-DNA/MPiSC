@@ -116,7 +116,7 @@ The procedures are given as follows.
     + `Last = (Last + 1) % Capacity`
     + *return* `true`
   ],
-) <spsc-enqueue>
+) <slotqueue-spsc-enqueue>
 
 #figure(
   kind: "algorithm",
@@ -131,7 +131,7 @@ The procedures are given as follows.
     + `First = (First + 1) % Capacity`
     + *return* `res`
   ],
-) <spsc-dequeue>
+) <slotqueue-spsc-dequeue>
 
 #figure(
   kind: "algorithm",
@@ -145,7 +145,7 @@ The procedures are given as follows.
       + *return* $bot$
     + *return* `Data[First]`
   ],
-) <spsc-readFront>
+) <slotqueue-spsc-readFront>
 
 == Slot-queue
 
@@ -180,7 +180,7 @@ The `enqueue` operations are given as follows:
     booktabs: true,
     numbered-title: [`enqueue(rank: int, v: data_t)` *returns* `bool`],
   )[
-    + `timestamp = FFA(counter)                       `
+    + `timestamp = FAA(counter)                       `
     + `value = (v, timestamp)`
     + `res = spsc_enqueue(spscs[rank], value)`
     + *if* `(!res)` *return* `false`
@@ -188,7 +188,7 @@ The `enqueue` operations are given as follows:
       + `refreshEnqueue(rank, timestamp)`
     + *return* `res`
   ],
-) <enqueue>
+) <slotqueue-enqueue>
 
 #figure(
   kind: "algorithm",
@@ -205,7 +205,7 @@ The `enqueue` operations are given as follows:
       + *return* `true`
     + *return* `CAS(&slots[rank], old-timestamp, new-timestamp)`
   ],
-) <refresh-enqueue>
+) <slotqueue-refresh-enqueue>
 
 The `dequeue` operations are given as follows:
 
@@ -226,7 +226,7 @@ The `dequeue` operations are given as follows:
       + `refreshDequeue(rank)`
     + *return* `res`
   ],
-) <dequeue>
+) <slotqueue-dequeue>
 
 #figure(
   kind: "algorithm",
@@ -251,7 +251,7 @@ The `dequeue` operations are given as follows:
         + `min-timestamp = timestamp`
     + *return* `rank == length(slots) ? DUMMY : rank`
   ],
-) <read-minimum-rank>
+) <slotqueue-read-minimum-rank>
 
 #figure(
   kind: "algorithm",
@@ -269,13 +269,106 @@ The `dequeue` operations are given as follows:
       + *return* `true`
     + *return* `CAS(&slots[rank], old-timestamp, new-timestamp)`
   ],
-) <refresh-dequeue>
+) <slotqueue-refresh-dequeue>
+
+= Linearizability of the local SPSC
+
+In this section, we prove that the local SPSC is linearizable.
+
+#lemma(
+  name: [Linearizability of `spsc_enqueue`],
+)[The linearization point of `spsc_enqueue` is right after line 2 or right after line 4.] <slotqueue-spsc-enqueue-linearization-point>
+
+#lemma(
+  name: [Linearizability of `spsc_dequeue`],
+)[The linearization point of `spsc_dequeue` is right after line 6 or right after line 8.] <slotqueue-spsc-dequeue-linearization-point>
+
+#lemma(
+  name: [Linearizability of `spsc_readFront`],
+)[The linearization point `spsc_readFront` is right after line 11 or right after line 12.] <slotqueue-spsc-readFront-linearization-point>
+
+#theorem(
+  name: "Linearizability of local SPSC",
+)[The local SPSC is linearizable.] <slotqueue-spsc-linearizability>
+
+#proof[This directly follows from @slotqueue-spsc-enqueue-linearization-point, @slotqueue-spsc-dequeue-linearization-point, @slotqueue-spsc-readFront-linearization-point.]
 
 = ABA problem
 
-Noticeably, we use no scheme to avoid ABA problem in Slot-queue. In actuality, ABA problem cannot happen in our algorithm, except in the extreme case that the 64-bit global counter overflows, which is unlikely.
+Noticeably, we use no scheme to avoid ABA problem in Slot-queue. In actuality, ABA problem does not adversely affect our algorithm's correctness, except in the extreme case that the 64-bit global counter overflows, which is unlikely.
 
-= Linearizability
+Notice that we only use `CAS` on:
+- Line 13 of `refreshEnqueue` (@slotqueue-refresh-enqueue), or an `enqueue` in general (@slotqueue-enqueue).
+- Line 42 of `refreshDequeue` (@slotqueue-refresh-dequeue) or a `dequeue` in general (@slotqueue-dequeue).
+
+Both `CAS` all target a slot in the `slots` array.
+
+== ABA-safe
+
+Not every ABA problem is unsafe. We formalize in this section which ABA problem is safe and which is not.
+
+#definition[Consider a history of successful *CAS-sequences* and *slot-modification operations* targeted at the same slot. *ABA problem* is the phenomenon that there exists a *successful CAS-sequence*, during which there's some *slot-modification operation* that changes that slot's value.]
+
+#definition[Consider a history of successful *CAS-sequences* and *slot-modification operations* targeted at the same slot. A history is said to be ABA-safe if and only if:
+  - There's no *ABA problem* in the history.
+  - We can reorder the *CAS-sequences* and *slot-modification operations* in the current history
+]
+
+== Proof of ABA-safety
+
+We apply some domain knowledge of our algorithm to the above formalism.
+
+#definition[A *CAS-sequence* of an `enqueue` is the sequence of instructions from line 8 to line 13 of its `refreshEnqueue`.]
+
+#definition[A *slot-modification operation* of an `enqueue` is line 13 of `refreshEnqueue`.]
+
+#definition[A *CAS-sequence* of a `dequeue` is the sequence of instructions from line 36 to line 42 of its `refreshDequeue`.]
+
+#definition[A *CAS-sequence* is said to *observes a slot value `s`* if it loads `s` at line 8 of `refreshEnqueue` or line 36 of `refreshDequeue`.]
+
+#definition[A *slot-modification operation* of a `dequeue` is line 40 or line 42 of `refreshDequeue`.]
+
+We can now turn to our interested problem in this section.
+
+#lemma(name: "Concurrent accesses on a local SPSC and a slot")[
+  Only one dequeuer and one enqueuer can concurrently modify a local SPSC and a slot in the `slots` array.
+] <slotqueue-one-enqueuer-one-dequeuer>
+
+#proof[
+  This is trivial to prove based on the algorithm's definition.
+]
+
+#lemma(name: "Monotonicity of local SPSC timestamps")[
+  Each local SPSC in Slot-queue contains elements with increasing timestamps.
+] <slotqueue-spsc-timestamp-monotonicity>
+
+#proof[
+  Each `enqueue` would `FAA` the global counter (line 1 in @slotqueue-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @slotqueue-one-enqueuer-one-dequeuer, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
+]
+
+#lemma[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only changes a slot to a value other than `MAX`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX>
+
+#proof[
+  For `refreshEnqueue` to change the slot's value, the condition on line 11 must be false. Then `new-timestamp` must equal to `ts`, which is not `MAX`. It's obvious that the `CAS` on line 13 changes the slot to a value other than `MAX`.
+]
+
+#theorem(name: [No ABA problem in `dequeue`])[ ] <aba-safe-dequeue-slotqueue>
+
+#proof[ ]
+
+#theorem(name: [No ABA problem in `enqueue`])[ ] <aba-safe-enqueue-slotqueue>
+
+#proof[ ]
+
+#theorem(
+  name: "No ABA problem",
+)[Assume that the 64-bit global counter never overflows, there's no ABA problem in Slot-queue.] <aba-safe-slotqueue>
+
+#proof[
+  This follows from @aba-safe-enqueue-slotqueue and @aba-safe-dequeue-slotqueue.
+]
+
+= Linearizability of Slot-queue
 
 = Wait-freedom
 
