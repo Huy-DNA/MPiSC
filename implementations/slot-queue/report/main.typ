@@ -378,7 +378,38 @@ We can now turn to our interested problem in this section.
   name: [ABA safety of `dequeue`],
 )[Assume that the 64-bit global counter never overflows, `dequeue` (@slotqueue-dequeue) is ABA-safe.] <slotqueue-aba-safe-dequeue-theorem>
 
-#proof[ ]
+#proof[
+  Consider a *successful CAS-sequence* on slot `s` by a `dequeue` $d$.
+
+  Denote $t_d$ as the value this CAS-sequence observes.
+
+  Due to @slotqueue-one-enqueuer-one-dequeuer-lemma, there can only be at most one `enqueue` at one point in time within $d$.
+
+  If there's no *successful slot-modification instruction* on slot `s` by an `enqueue` $e$ within $d$'s *successful CAS-sequence*, then this `dequeue` is ABA-safe.
+  
+  Suppose the `enqueue` $e$ executes the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*. Denote $t_e$ to be the value that $e$ sets `s`.
+
+  If $t_e != t_d$, this CAS-sequence of $d$ cannot be successful, which is a contradiction.
+
+  Therefore, $t_e = t_d$.
+
+  Note that $e$ can only set `s` to the timestamp of the item it enqueues. That means, $e$ must have enqueued a value with timestamp $t_d$. However, by definition, $t_d$ is read before $e$ executes the CAS. This means another process (dequeuer/enqueuer) has seen the value $e$ enqueued and CAS `s` for $e$ before $t_d$. By @slotqueue-one-enqueuer-one-dequeuer-lemma, this "another process" must be another dequeuer $d'$ that precedes $d$.
+
+  Because $d'$ and $d$ cannot overlap, while $e$ overlaps with both $d'$ and $d$, $e$ must be the _first_ `enqueue` on `s` that overlaps with $d$. Combining with @slotqueue-one-enqueuer-one-dequeuer-lemma and the fact that $e$ executes the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, $e$ must be the only `enqueue` that executes a *successful slot-modification instruction* within $d$'s *successful CAS-sequence*.
+
+  During the start of $d$'s successful CAS-sequence till the end of $e$, `spsc_readFront` on the local SPSC must return the same element, because:
+  - There's no other `dequeue`s running during this time.
+  - There's no `enqueue` other than $e$ running.
+  - The `spsc_enqueue` of $e$ must have completed before the start of $d$'s successful CAS sequence, because a previous dequeuer $d'$ can see its effect. 
+  Therefore, if we were to move the starting time of $d$'s successful CAS-sequence right after $e$ has ended, we still retain the output of the program because:
+  - The CAS sequence only reads two shared values: `slots[rank]` and `spsc_readFront()`, but we have proven that these two values remain the same if we were to move the starting time of $d$'s successful CAS-sequence this way.
+  - The CAS sequence does not modify any values except for the last CAS instruction, and the ending time of the CAS sequence is still the same.
+  - The CAS sequence modifies `slots[rank]` at the CAS but the target value is the same because inputs and shared values are the same in both cases.
+
+  We have proven that if we move $d$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, we still retain the program's output.
+
+  The theorem directly follows.
+]
 
 #theorem(
   name: [ABA safety of `enqueue`],
