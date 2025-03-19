@@ -112,7 +112,7 @@ The enqueuer's procedures are given as follows.
     + `tmp.next = newNode`
     + `Last = newNode`
   ],
-) <spsc-enqueue>
+) <ltqueue-spsc-enqueue>
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
@@ -129,7 +129,7 @@ The enqueuer's procedures are given as follows.
     + *else* `retval = tmp.val`
     + *return* `retval`
   ],
-) <spsc-enqueuer-readFront>
+) <ltqueue-spsc-enqueuer-readFront>
 
 The dequeuer's procedures are given as follows.
 
@@ -153,7 +153,7 @@ The dequeuer's procedures are given as follows.
     + *else* `free(tmp)`
     + *return* `retval`
   ],
-) <spsc-dequeue>
+) <ltqueue-spsc-dequeue>
 
 #figure(
   kind: "algorithm",
@@ -168,7 +168,7 @@ The dequeuer's procedures are given as follows.
       + *return* $bot$
     + *return* `tmp.val`
   ],
-) <spsc-dequeuer-readFront>
+) <ltqueue-spsc-dequeuer-readFront>
 
 The treatment of linearizability, wait-freedom and memory safety is given in the original paper @ltqueue. However, we can establish some intuition by looking at the procedures.
 
@@ -323,7 +323,7 @@ The `refresh` procedure is by itself simple: we access all child nodes to determ
 
 = Adaption of LTQueue without load-link/store-conditional
 
-The SPSC data structure in the original LTQueue is kept in tact so one may refer to @spsc-enqueue, @spsc-enqueuer-readFront, @spsc-dequeue, @spsc-dequeuer-readFront for the supported SPSC procedures.
+The SPSC data structure in the original LTQueue is kept in tact so one may refer to @ltqueue-spsc-enqueue, @ltqueue-spsc-enqueuer-readFront, @ltqueue-spsc-dequeue, @ltqueue-spsc-dequeuer-readFront for the supported SPSC procedures.
 
 The followings are the rewritten LTQueue's algorithm without LL/SC.
 
@@ -399,7 +399,7 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
     + `spsc_enqueue(enqueuers[rank].spsc, (value, timestamp))`
     + `propagate(rank)`
   ],
-) <lt-enqueue>
+) <ltqueue-enqueue>
 
 #figure(
   kind: "algorithm",
@@ -415,7 +415,7 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
     + `propagate(rank)`
     + *return* `ret.val`
   ],
-) <lt-dequeue>
+) <ltqueue-dequeue>
 
 We omit the description of procedures `parent`, `leafNode`, `children`, leaving how the tree is constructed and children-parent relationship is determined to the implementor. The tree structure used by LTQueue is read-only so a wait-free implementation of these procedures is trivial.
 
@@ -438,7 +438,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
         + `refresh(currentNode)`
     + *until* `currentNode == root`
   ],
-) <lt-propagate>
+) <ltqueue-propagate>
 
 #figure(
   kind: "algorithm",
@@ -460,7 +460,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
         + `min-rank = child-rank`
     + `CAS(&currentNode->rank, [old-rank, old-version], [min-rank, old-version + 1])`
   ],
-) <lt-refresh>
+) <ltqueue-refresh>
 
 #figure(
   kind: "algorithm",
@@ -477,7 +477,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
     + *else*
       + `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [front.timestamp, old-version + 1])`
   ],
-) <lt-refresh-timestamp>
+) <ltqueue-refresh-timestamp>
 
 #figure(
   kind: "algorithm",
@@ -492,7 +492,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
     + `[timestamp, ...] = enqueuers[rank].timestamp`
     + `CAS(&leafNode->rank, [old-rank, old-version], [timestamp == MAX ? DUMMY : rank, old-version + 1])`
   ],
-) <lt-refresh-leaf>
+) <ltqueue-refresh-leaf>
 
 Notice that we omit which version of `spsc_readFront` we're calling on line 32, simply assuming that the producer and each enqueuer are calling their respective version.
 
@@ -576,14 +576,14 @@ An MPSC places a special constraint on *the set of histories* it can produce: An
 
 We immediately obtain the following result.
 
-#corollary[Only one `dequeue` operation and one `enqueue` operation can operate concurrently on an enqueuer node.] <one-dequeue-one-enqueue-corollary>
+#corollary[Only one `dequeue` operation and one `enqueue` operation can operate concurrently on an enqueuer node.] <ltqueue-one-dequeue-one-enqueue-corollary>
 
 #proof[This is trivial.]
 
-#theorem[The SPSC at an enqueuer node contains items with increasing timestamps.] <increasing-timestamp-theorem>
+#theorem[The SPSC at an enqueuer node contains items with increasing timestamps.] <ltqueue-increasing-timestamp-theorem>
 
 #proof[
-  Each `enqueue` would `FAA` the shared counter (line 1 in @lt-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @one-dequeue-one-enqueue-corollary, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
+  Each `enqueue` would `FAA` the shared counter (line 1 in @ltqueue-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @ltqueue-one-dequeue-one-enqueue-corollary, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
 ]
 
 #definition[For a tree node $n$, the enqueuer rank stored in $n$ at time $t$ is denoted as $r a n k(n, t)$.]
@@ -596,25 +596,25 @@ We immediately obtain the following result.
 
 #definition[For an `enqueue` or a `dequeue` $op$, the set of nodes that it calls `refresh` or `refreshLeaf` on is denoted as $p a t h(op)$.]
 
-#definition[For an `enqueue` or a `dequeue`, *timestamp-refresh phase* refer to its execution of line 10-11 in `propagate` (@lt-propagate).]
+#definition[For an `enqueue` or a `dequeue`, *timestamp-refresh phase* refer to its execution of line 10-11 in `propagate` (@ltqueue-propagate).]
 
-#definition[For an `enqueue` or a `dequeue` $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of line 12-13 (if $n$ is a leaf node) or line 17-18 (if $n$ is a non-leaf node) to refresh $n$'s rank in `propagate` (@lt-propagate).]
+#definition[For an `enqueue` or a `dequeue` $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of line 12-13 (if $n$ is a leaf node) or line 17-18 (if $n$ is a non-leaf node) to refresh $n$'s rank in `propagate` (@ltqueue-propagate).]
 
-#definition[`refreshTimestamp` is said to start its *CAS-sequence* if it finishes line 31 in @lt-refresh-timestamp. `refreshTimestamp` is said to end its *CAS-sequence* if it finishes line 34 or line 36 in @lt-refresh-timestamp.]
+#definition[`refreshTimestamp` is said to start its *CAS-sequence* if it finishes line 31 in @ltqueue-refresh-timestamp. `refreshTimestamp` is said to end its *CAS-sequence* if it finishes line 34 or line 36 in @ltqueue-refresh-timestamp.]
 
-#definition[`refresh` is said to start its *CAS-sequence* if it finishes line 20 in @lt-refresh. `refresh` is said to end its *CAS-sequence* if it finishes line 30 in @lt-refresh.]
+#definition[`refresh` is said to start its *CAS-sequence* if it finishes line 20 in @ltqueue-refresh. `refresh` is said to end its *CAS-sequence* if it finishes line 30 in @ltqueue-refresh.]
 
-#definition[`refreshLeaf` is said to start its *CAS-sequence* if it finishes line 38 in @lt-refresh-leaf. `refreshLeaf` is said to end its *CAS-sequence* if it finishes line 40 in @lt-refresh-leaf.]
+#definition[`refreshLeaf` is said to start its *CAS-sequence* if it finishes line 38 in @ltqueue-refresh-leaf. `refreshLeaf` is said to end its *CAS-sequence* if it finishes line 40 in @ltqueue-refresh-leaf.]
 
 #theorem[For an `enqueue` or a `dequeue` $op$, if $op$ modifies an enqueuer node and this enqueuer node is attached to a leaf node $l$, then $p a t h(op)$ is the set of nodes lying on the path from $l$ to the root node.]
 
-#proof[This is trivial considering how `propagate` (@lt-propagate) works.]
+#proof[This is trivial considering how `propagate` (@ltqueue-propagate) works.]
 
-#theorem[For any time $t$ and a node $n$, $r a n k(n, t)$ can only be `DUMMY` or the rank of one of the enqueuer nodes in the subtree rooted at $n$.] <possible-ranks-theorem>
+#theorem[For any time $t$ and a node $n$, $r a n k(n, t)$ can only be `DUMMY` or the rank of one of the enqueuer nodes in the subtree rooted at $n$.] <ltqueue-possible-ranks-theorem>
 
 #proof[This is trivial considering how `refresh` and `refreshLeaf` works.]
 
-#theorem[If an `enqueue` or a `dequeue` $op$ begins its *timestamp-refresh phase* at $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshTimestamp` on $r a n k(op)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <refresh-timestamp-theorem>
+#theorem[If an `enqueue` or a `dequeue` $op$ begins its *timestamp-refresh phase* at $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshTimestamp` on $r a n k(op)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <ltqueue-refresh-timestamp-theorem>
 
 #proof[
   If one of the two `refreshTimestamp`s succeeds, then we have obtain the theorem.
@@ -628,11 +628,11 @@ We immediately obtain the following result.
   We have proved the theorem.
 ]
 
-#theorem[If an `enqueue` or a `dequeue` begins its *node-$n$-refresh phase* at $t_0$ and finishes at $t_1$, there's always at least one successful `refresh` or `refreshLeaf` on $n$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <refresh-node-theorem>
+#theorem[If an `enqueue` or a `dequeue` begins its *node-$n$-refresh phase* at $t_0$ and finishes at $t_1$, there's always at least one successful `refresh` or `refreshLeaf` on $n$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <ltqueue-refresh-node-theorem>
 
 #proof[This is similar to the above proof.]
 
-#theorem[For any node $n$, $m i n \- t s(r a n k(n, t_x), t_y)$ is monotonically decreasing for $t_x, t_y in [t_0, t_1]$ if within $t_0$ and $t_1$, any `dequeue` $d$ where $n in p a t h(d)$ has finished its *node-$n$-refresh phase*.] <monotonic-theorem>
+#theorem[For any node $n$, $m i n \- t s(r a n k(n, t_x), t_y)$ is monotonically decreasing for $t_x, t_y in [t_0, t_1]$ if within $t_0$ and $t_1$, any `dequeue` $d$ where $n in p a t h(d)$ has finished its *node-$n$-refresh phase*.] <ltqueue-monotonic-theorem>
 
 #proof[
   We have the assumption that within $t_0$ and $t_1$, all `dequeue` where $n in p a t h(d)$ has finished its *node-$n$-refresh phase*. Notice that if $n$ satisfies this assumption, any child of $n$ also satisfies this assumption.
@@ -666,12 +666,12 @@ We immediately obtain the following result.
 
   $r a n k(n', t_x)$ can only change after each successful `refresh`, therefore, the sequence of its value is $r a n k(n', t_(e n d \- 0))$, $r a n k(n', t_(e n d \- 1))$, ..., $r a n k(n', t_(e n d \- k))$. $(**)$
 
-  Note that if `refresh` observes that an enqueuer has a `min-timestamp` of `MAX`, it would never try to CAS $n'$'s rank to the rank of that enqueuer (line 22 and line 27 of @lt-refresh). So, if `refresh` actually set the rank of $n'$ to some non-`DUMMY` value, the corresponding enqueuer must actually has a non-`MAX` `min-timestamp` _at some point_. Due to $(2)$, this is constant up until $t_1$. Therefore, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 1$. $m i n \- t s(r a n k(n', t_(e n d \- 0)), t))$ is constant for any $t gt.eq t_(e n d \- 0)$ if there's a `refresh` before $t_0$. If there's no `refresh` before $t_0$, it is constant `MAX`. So, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 0$. $(***)$
+  Note that if `refresh` observes that an enqueuer has a `min-timestamp` of `MAX`, it would never try to CAS $n'$'s rank to the rank of that enqueuer (line 22 and line 27 of @ltqueue-refresh). So, if `refresh` actually set the rank of $n'$ to some non-`DUMMY` value, the corresponding enqueuer must actually has a non-`MAX` `min-timestamp` _at some point_. Due to $(2)$, this is constant up until $t_1$. Therefore, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 1$. $m i n \- t s(r a n k(n', t_(e n d \- 0)), t))$ is constant for any $t gt.eq t_(e n d \- 0)$ if there's a `refresh` before $t_0$. If there's no `refresh` before $t_0$, it is constant `MAX`. So, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 0$. $(***)$
 
   Combining $(*)$, $(**)$, $(***)$, we obtain the stronger version of the theorem.
 ]
 
-#theorem[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a `dequeue`, $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.] <unmatched-enqueue-theorem>
+#theorem[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a `dequeue`, $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.] <ltqueue-unmatched-enqueue-theorem>
 
 #proof[
   We will prove a stronger version of this theorem: Suppose an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$. For every $n_i in p a t h(e)$, $n_0$ is the leaf node and $n_i$ is the parent of $n_(i-1)$, $i gt.eq 1$. If $e$ starts and finishes its *node-$n_i$-refresh phase* at $t_(s t a r t\-i)$ and $t_(e n d\-i)$ then for any subrange $T$ of $[t_(e n d\-i), t_1]$ that does not overlap with a `dequeue` $d$ where $n_i in p a t h(d)$ and $d$ hasn't finished its *node $n_i$ refresh phase*, $m i n \- t s(r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.
@@ -691,7 +691,7 @@ We immediately obtain the following result.
   - Reach $t_(e n d \- i)$.
   Consider one such subrange $T_i$.
 
-  Notice that $T_i$ always starts right after a *node-$n_i$-refresh phase*. Due to @refresh-node-theorem, there's always at least one successful `refresh` in this *node-$n_i$-refresh phase*.
+  Notice that $T_i$ always starts right after a *node-$n_i$-refresh phase*. Due to @ltqueue-refresh-node-theorem, there's always at least one successful `refresh` in this *node-$n_i$-refresh phase*.
 
   Suppose the stronger version of the theorem already holds for $n_(i-1)$. That is, if $e$ starts and finishes its *node-$n_(i-1)$-refresh phase* at $t_(s t a r t\-(i-1))$ and $t_(e n d\-(i-1))$ then for any subrange $T$ of $[t_(e n d\-(i-1)), t_1]$ that does not overlap with a `dequeue` $d$ where $n_i in p a t h(d)$ and $d$ hasn't finished its *node $n_(i-1)$ refresh phase*, $m i n \- t s(r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.
 
@@ -721,19 +721,19 @@ We immediately obtain the following result.
   - If there's an `spsc_dequeue` starting after $t_s'$ but before $T_i$, its `dequeue` must finish its *node-$n_i$-refresh phase* after $t_s'$ and before $T_i$. However, then $t_e'$ is no longer the end of the last successful `refresh` on $n_i$ not after $T_i$.
   Because there's no `spsc_dequeue` starting in this timespan, $m i n \- t s(r a n k(n_i, t_e'), t_e') lt.eq m i n \- t s(r a n k(n_i, t_e'), t') lt.eq c$.
 
-  If there's no `dequeue` between $t_e'$ and the end of $T_i$ whose *node-$n_i$-refresh phase* hasn't finished, then by @monotonic-theorem, $m i n \- t s(r a n k(n_i, t_r), t_s)$ is monotonically decreasing for any $t_r$, $t_s$ starting from $t_e'$ till the end of $T_i$. Therefore, $m i n \- t s (r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T_i$.
+  If there's no `dequeue` between $t_e'$ and the end of $T_i$ whose *node-$n_i$-refresh phase* hasn't finished, then by @ltqueue-monotonic-theorem, $m i n \- t s(r a n k(n_i, t_r), t_s)$ is monotonically decreasing for any $t_r$, $t_s$ starting from $t_e'$ till the end of $T_i$. Therefore, $m i n \- t s (r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T_i$.
 
-  Suppose there's a `dequeue` whose *node-$n_i$-refresh phase* is in progress some time between $t_e'$ and the end of $T_i$. By definition, this `dequeue` must finish it before $T_i$. Because $t_e'$ is the time of the last successful `refresh` on $n_i$ before $T_i$, $t_e'$ must be within the *node-$n_i$-refresh phase* of this `dequeue` and there should be no `dequeue` after that. By the way $t_e'$ is defined, technically, this `dequeue` has finished its *node-$n_i$-refresh phase* right at $t_e'$. Therefore, similarly, we can apply @monotonic-theorem, $m i n \- t s (r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T_i$.
+  Suppose there's a `dequeue` whose *node-$n_i$-refresh phase* is in progress some time between $t_e'$ and the end of $T_i$. By definition, this `dequeue` must finish it before $T_i$. Because $t_e'$ is the time of the last successful `refresh` on $n_i$ before $T_i$, $t_e'$ must be within the *node-$n_i$-refresh phase* of this `dequeue` and there should be no `dequeue` after that. By the way $t_e'$ is defined, technically, this `dequeue` has finished its *node-$n_i$-refresh phase* right at $t_e'$. Therefore, similarly, we can apply @ltqueue-monotonic-theorem, $m i n \- t s (r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T_i$.
 
   By induction, we have proved the stronger version of the theorem.
 ]
 
-#corollary[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a `dequeue`, $m i n \- s p s c \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.] <unmatched-enqueue-corollary>
+#corollary[If an `enqueue` $e$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a `dequeue`, $m i n \- s p s c \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.] <ltqueue-unmatched-enqueue-corollary>
 
 #proof[
   Call $t_(s t a r t)$ and $t_(e n d)$ to be the start and end time of $T$.
 
-  Applying @unmatched-enqueue-theorem, we have that $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.
+  Applying @ltqueue-unmatched-enqueue-theorem, we have that $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.
 
   Fix $t_r$ so that $r a n k(r o o t, t_r) = r$. We have that $m i n \- t s(r, t) lt.eq c$ for any $t in T$.
 
@@ -752,16 +752,16 @@ We immediately obtain the following result.
   We have proved the theorem.
 ]
 
-#theorem[Given a rank $r$. If within $[t_0, t_1]$, there's no uncompleted `enqueue`s on rank $r$ and all matching `dequeue`s for any completed `enqueue`s on rank $r$ has finished, then $r a n k(n, t) eq.not r$ for every node $n$ and $t in [t_0, t_1]$.] <matched-enqueue-theorem>
+#theorem[Given a rank $r$. If within $[t_0, t_1]$, there's no uncompleted `enqueue`s on rank $r$ and all matching `dequeue`s for any completed `enqueue`s on rank $r$ has finished, then $r a n k(n, t) eq.not r$ for every node $n$ and $t in [t_0, t_1]$.] <ltqueue-matched-enqueue-theorem>
 
 #proof[
   If $n$ doesn't lie on the path from root to the leaf node that's attached to the enqueuer node with rank $r$, the theorem obviously holds.
 
-  Due to @one-dequeue-one-enqueue-corollary, there can only one `enqueue` and one `dequeue` at a time at an enqueuer node with rank $r$. Therefore, there is a sequential ordering within the `enqueue`s and a sequential ordering within the `dequeue`s. Therefore, it's sensible to talk about the last `enqueue` before $t_0$ and the last matching `dequeue` $d$ before $t_0$.
+  Due to @ltqueue-one-dequeue-one-enqueue-corollary, there can only one `enqueue` and one `dequeue` at a time at an enqueuer node with rank $r$. Therefore, there is a sequential ordering within the `enqueue`s and a sequential ordering within the `dequeue`s. Therefore, it's sensible to talk about the last `enqueue` before $t_0$ and the last matching `dequeue` $d$ before $t_0$.
 
   Since all of these `dequeue`s and `enqueue`s work on the same local SPSC and the SPSC is linearizable, $d$ must match the last `enqueue`. After this `dequeue` $d$, the local SPSC is empty.
 
-  When $d$ finishes its *timestamp-refresh phase* at $t_(t s) lt.eq t_0$, due to @refresh-timestamp-theorem, there's at least one successful `refreshTimestamp` call in this phase. Because the last `enqueue` has been matched, $m i n \- t s(r, t) =$ `MAX` for any $t in [t_(t s), t_1]$.
+  When $d$ finishes its *timestamp-refresh phase* at $t_(t s) lt.eq t_0$, due to @ltqueue-refresh-timestamp-theorem, there's at least one successful `refreshTimestamp` call in this phase. Because the last `enqueue` has been matched, $m i n \- t s(r, t) =$ `MAX` for any $t in [t_(t s), t_1]$.
 
   Similarly, for a leaf node $n_0$, suppose $d$ finishes its *node-$n_0$-refresh phase* at $t_(r\-0) gt.eq t_(t s)$, then $r a n k(n_0, t) =$ `DUMMY` for any $t in [t_(r\-0), t_1]$. $(1)$
 
@@ -776,7 +776,7 @@ We immediately obtain the following result.
   - $e$ matches $d'$ and $d'$ precedes $d$.
   - $d$ matches $e'$ and $e'$ precedes $e$.
   - $d$ matches $e'$ and $e'$ overlaps with $e$.
-] <enqueue-dequeue-theorem>
+] <ltqueue-enqueue-dequeue-theorem>
 
 #proof[
   If $d$ doesn't match anything, the theorem holds.If $d$ matches $e$, the theorem also holds. Suppose $d$ matches $e'$, $e' eq.not e$.
@@ -785,9 +785,9 @@ We immediately obtain the following result.
 
   Suppose $e$ obtains a timestamp of $c$ and $e'$ obtains a timestamp of $c'$.
 
-  Because $e$ precedes $d$ and because an MPSC does not allow multiple `dequeue`s, from the start of $d$ at $t_0$ until after line 5 of `dequeue` (@lt-dequeue) at $t_1$, $e$ has finished and there's no `dequeue` running that has _actually performed `spsc_dequeue`_. Also by $t_0$ and $t_1$, $e$ is still unmatched due to $(1)$.
+  Because $e$ precedes $d$ and because an MPSC does not allow multiple `dequeue`s, from the start of $d$ at $t_0$ until after line 5 of `dequeue` (@ltqueue-dequeue) at $t_1$, $e$ has finished and there's no `dequeue` running that has _actually performed `spsc_dequeue`_. Also by $t_0$ and $t_1$, $e$ is still unmatched due to $(1)$.
 
-  Applying @unmatched-enqueue-corollary, $m i n \- s p s c \- t s(r a n k(r o o t, t_x), t_y) lt.eq c$ for $t_x, t_y in [t_0, t_1]$. Therefore, $d$ reads out a rank $r$ such that $m i n \- s p s c \- t s(r, t) lt.eq c$ for $t in [t_0, t_1]$. Consequently, $d$ dequeues out a value with a timestamp not greater than $c$. Because $d$ matches $e'$, $c' lt.eq c$. However, $e' eq.not e$ so $c' lt c$.
+  Applying @ltqueue-unmatched-enqueue-corollary, $m i n \- s p s c \- t s(r a n k(r o o t, t_x), t_y) lt.eq c$ for $t_x, t_y in [t_0, t_1]$. Therefore, $d$ reads out a rank $r$ such that $m i n \- s p s c \- t s(r, t) lt.eq c$ for $t in [t_0, t_1]$. Consequently, $d$ dequeues out a value with a timestamp not greater than $c$. Because $d$ matches $e'$, $c' lt.eq c$. However, $e' eq.not e$ so $c' lt c$.
 
   This means that $e$ cannot precede $e'$, because if so, $c lt c'$.
 
@@ -796,7 +796,7 @@ We immediately obtain the following result.
 
 #lemma[
   If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
-] <matching-dequeue-enqueue-lemma>
+] <ltqueue-matching-dequeue-enqueue-lemma>
 
 #proof[
   If $d$ precedes $e$, none of the local SPSCs can contain an item with the timestamp of $e$. Therefore, $d$ cannot return an item with a timestamp of $e$. Thus $d$ cannot match $e$.
@@ -807,12 +807,12 @@ We immediately obtain the following result.
 #theorem[If a `dequeue` $d$ precedes another `enqueue` $e$, then either:
   - $d$ isn't matched.
   - $d$ matches $e'$ such that $e'$ precedes or overlaps with $e$ and $e' eq.not e$.
-] <dequeue-enqueue-theorem>
+] <ltqueue-dequeue-enqueue-theorem>
 
 #proof[
   If $d$ isn't matched, the theorem holds.
 
-  Suppose $d$ matches $e'$. Applying @matching-dequeue-enqueue-lemma, $e'$ must precede or overlap with $d$. In other words, $d$ cannot precede $e'$.
+  Suppose $d$ matches $e'$. Applying @ltqueue-matching-dequeue-enqueue-lemma, $e'$ must precede or overlap with $d$. In other words, $d$ cannot precede $e'$.
 
   If $e$ precedes or is $e'$, then $d$ must precede $e'$, which is contradictory.
 
@@ -823,36 +823,36 @@ We immediately obtain the following result.
   - Both $e_0$ and $e_1$ aren't matched.
   - $e_0$ is matched but $e_1$ is not matched.
   - $e_0$ matches $d_0$ and $e_1$ matches $d_1$ such that $d_0$ precedes $d_1$.
-] <enqueue-enqueue-theorem>
+] <ltqueue-enqueue-enqueue-theorem>
 
 #proof[
   If both $e_0$ and $e_1$ aren't matched, the theorem holds.
 
-  Suppose $e_1$ matches $d_1$. By @matching-dequeue-enqueue-lemma, either $e_1$ precedes or overlaps with $d_1$.
+  Suppose $e_1$ matches $d_1$. By @ltqueue-matching-dequeue-enqueue-lemma, either $e_1$ precedes or overlaps with $d_1$.
 
-  If $e_0$ precedes $d_1$, applying @enqueue-dequeue-theorem for $d_1$ and $e_0$:
+  If $e_0$ precedes $d_1$, applying @ltqueue-enqueue-dequeue-theorem for $d_1$ and $e_0$:
   - $d_1$ isn't matched, contradictory.
   - $d_1$ matches $e_0$, contradictory.
   - $e_0$ matches $d_0$ and $d_0$ precedes $d_1$, the theorem holds.
   - $d_1$ matches $e_1$ and $e_1$ precedes $e_0$, contradictory.
   - $d_1$ matches $e_1$ and $e_1$ overlaps with $e_0$, contradictory.
 
-  If $d_1$ precedes $e_0$, applying @dequeue-enqueue-theorem for $d_1$ and $e_0$:
+  If $d_1$ precedes $e_0$, applying @ltqueue-dequeue-enqueue-theorem for $d_1$ and $e_0$:
   - $d_1$ isn't matched, contradictory.
   - $d_1$ matches $e_1$ and $e_1$ precedes or overlaps with $e_0$, contradictory.
 
-  Consider that $d_1$ overlaps with $e_0$, then $d_1$ must also overlap with $e_1$. Call $r_1$ the rank of the enqueuer that performs $e_1$. Call $t$ to be the time $d_1$ atomically reads the root's rank on line 5 of `dequeue` (@lt-dequeue). Because $d_1$ matches $e_1$, $d_1$ must read out $r_1$ at $t_1$.
+  Consider that $d_1$ overlaps with $e_0$, then $d_1$ must also overlap with $e_1$. Call $r_1$ the rank of the enqueuer that performs $e_1$. Call $t$ to be the time $d_1$ atomically reads the root's rank on line 5 of `dequeue` (@ltqueue-dequeue). Because $d_1$ matches $e_1$, $d_1$ must read out $r_1$ at $t_1$.
 
-  If $e_1$ is the first `enqueue` of rank $r_1$, then $t$ must be after $e_1$ has started, because otherwise, due to @matched-enqueue-theorem, $r_1$ would not be in $r o o t$ before $e_1$.
+  If $e_1$ is the first `enqueue` of rank $r_1$, then $t$ must be after $e_1$ has started, because otherwise, due to @ltqueue-matched-enqueue-theorem, $r_1$ would not be in $r o o t$ before $e_1$.
 
   If $e_1$ is not the first `enqueue` of rank $r_1$, then $t$ must also be after $e_1$ has started. Suppose the contrary, $t$ is before $e_1$ has started:
-  - If there's no uncompleted `enqueue` of rank $r_1$ at $t$ and they are all matched by the time $t$, due to @matched-enqueue-theorem, $r_1$ would not be in $r o o t$ at $t$. Therefore, $d_1$ cannot read out $r_1$, which is contradictory.
+  - If there's no uncompleted `enqueue` of rank $r_1$ at $t$ and they are all matched by the time $t$, due to @ltqueue-matched-enqueue-theorem, $r_1$ would not be in $r o o t$ at $t$. Therefore, $d_1$ cannot read out $r_1$, which is contradictory.
   - If there's some unmatched `enqueue` of rank $r_1$ at $t$, $d_1$ will match one of these `enqueue`s instead because:
     - There's only one `dequeue` at a time, so unmatched `enqueue`s at $t$ remain unmatched until $d_1$ performs an `spsc_dequeue`.
-    - Due to @one-dequeue-one-enqueue-corollary, all the `enqueue`s of rank $r_1$ must finish before another starts. Therefore, there's some unmatched `enqueue` of rank $r_1$ finishing before $e_1$.
+    - Due to @ltqueue-one-dequeue-one-enqueue-corollary, all the `enqueue`s of rank $r_1$ must finish before another starts. Therefore, there's some unmatched `enqueue` of rank $r_1$ finishing before $e_1$.
     - The local SPSC of the enqueuer node of rank $r_1$ is serializable, so $d_1$will favor one of these `enqueue`s over $e_1$.
 
-  Therefore, $t$ must happen after $e_1$ has started. Right at $t$, no `dequeue` is actually modifying the LTQueue state and $e_0$ has finished. If $e_0$ has been matched at $t$ then the theorem holds. If $e_0$ hasn't been matched at $t$, applying @unmatched-enqueue-theorem, $d_1$ will favor $e_0$ over $e_1$, which is a contradiction.
+  Therefore, $t$ must happen after $e_1$ has started. Right at $t$, no `dequeue` is actually modifying the LTQueue state and $e_0$ has finished. If $e_0$ has been matched at $t$ then the theorem holds. If $e_0$ hasn't been matched at $t$, applying @ltqueue-unmatched-enqueue-theorem, $d_1$ will favor $e_0$ over $e_1$, which is a contradiction.
 
   We have proved the theorem.
 ]
@@ -861,14 +861,14 @@ We immediately obtain the following result.
   - $d_0$ isn't matched.
   - $d_1$ isn't matched.
   - $d_0$ matches $e_0$ and $d_1$ matches $e_1$ such that $e_0$ precedes or overlaps with $e_1$.
-] <dequeue-dequeue-theorem>
+] <ltqueue-dequeue-dequeue-theorem>
 
 #proof[
   If $d_0$ isn't matched or $d_1$ isn't matched, the theorem holds.
 
   Suppose $d_0$ matches $e_0$ and $d_1$ matches $e_1$.
 
-  Suppose the contrary, $e_1$ precedes $e_0$. Applying @enqueue-dequeue-theorem:
+  Suppose the contrary, $e_1$ precedes $e_0$. Applying @ltqueue-enqueue-dequeue-theorem:
   - Both $e_0$ and $e_1$ aren't matched, which is contradictory.
   - $e_1$ is matched but $e_0$ is not matched, which contradictory.
   - $e_1$ matches $d_1$ and $e_0$ matches $d_0$ such that $d_1$ precedes $d_0$, which is contradictory.
@@ -904,7 +904,7 @@ We immediately obtain the following result.
   Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(*)$
 
   If $X$ is `dequeue` and $Y$ is `enqueue`, in this case $(3)$ cannot help us obtain either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$, so we can disregard it.
-  - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$, so $(4)$ cannot apply. Applying @dequeue-enqueue-theorem, either
+  - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$, so $(4)$ cannot apply. Applying @ltqueue-dequeue-enqueue-theorem, either
     - $X$ isn't matched, $(2)$ cannot apply. Therefore, $Y arrow.double.not$#sub($H'$)$X$.
     - $X$ matches $e'$ and $e' eq.not Y$. Therefore, $X$ does not match $Y$, or $(2)$ cannot apply. Therefore, $Y arrow.double.not$#sub($H'$)$X$.
     Therefore, in this case, $X arrow.double$#sub($H'$)$Y$ and $Y arrow.double.not$#sub($H'$)$X$.
@@ -916,7 +916,7 @@ We immediately obtain the following result.
   Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(**)$
 
   If $X$ is `enqueue` and $Y$ is `enqueue`, in this case $(2)$ and $(4)$ are irrelevant:
-  - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$. Applying @enqueue-enqueue-theorem,
+  - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$. Applying @ltqueue-enqueue-enqueue-theorem,
     - Both $X$ and $Y$ aren't matched, then $(3)$ cannot apply. Therefore, in this case, $Y arrow.double.not$#sub($H'$)$X$.
     - $X$ is matched but $Y$ is not matched, then $(3)$ cannot apply. Therefore, in this case, $Y arrow.double.not$#sub($H'$)$X$.
     - $X$ matches $d_x$ and $Y$ matches $d_y$ such that $d_x$ precedes $d_y$, then $(3)$ applies and we obtain $X arrow.double$#sub($H'$)$Y$.
@@ -929,10 +929,10 @@ We immediately obtain the following result.
   - An item can only be `dequeue`d once: This is trivial as a `dequeue` can only match one `enqueue`.
   - Items are `dequeue`d in the order they are `enqueue`d: Suppose there are two `enqueue`s $e_1$, $e_2$ such that $e_1 arrow.double$#sub($H'$)$e_2$ and suppose they match $d_1$ and $d_2$. Then we have obtained $e_1 arrow.double$#sub($H'$)$e_2$ either because:
     - $(3)$ applies, in this case $d_1 arrow.double$#sub($H'$)$d_2$ is a condition for it to apply.
-    - $(1)$ applies, then $e_1$ precedes $e_2$, by @enqueue-enqueue-theorem, $d_1$ must precede $d_2$, thus $d_1 arrow.double$#sub($H'$)$d_2$.
+    - $(1)$ applies, then $e_1$ precedes $e_2$, by @ltqueue-enqueue-enqueue-theorem, $d_1$ must precede $d_2$, thus $d_1 arrow.double$#sub($H'$)$d_2$.
     Therefore, if $e_1 arrow.double$#sub($H'$)$ e_2$ then $d_1 arrow.double$#sub($H'$)$d_2$.
   - An item can only be `dequeue`d after it's `enqueue`d: Suppose there is an `enqueue` $e$ matched by $d$. By $(2)$, obviously $e =>$#sub($H'$)$d$.
-  - If the queue is empty, `dequeue`s return nothing. Suppose a dequeue $d$ such that any $e arrow.double$#sub($H'$)$d$ is all matched by some $d'$ and $d' arrow.double$#sub($H'$)$d$, we will prove that $d$ is unmatched. By @matching-dequeue-enqueue-lemma, $d$ can only match an `enqueue` $e_0$ that precedes or overlaps with $d$.
+  - If the queue is empty, `dequeue`s return nothing. Suppose a dequeue $d$ such that any $e arrow.double$#sub($H'$)$d$ is all matched by some $d'$ and $d' arrow.double$#sub($H'$)$d$, we will prove that $d$ is unmatched. By @ltqueue-matching-dequeue-enqueue-lemma, $d$ can only match an `enqueue` $e_0$ that precedes or overlaps with $d$.
     - If $e_0$ precedes $d$, by our assumption, it's already matched by another `dequeue`.
     - If $e_0$ overlaps with $d$, by our assumption, $d arrow.double$#sub($H'$)$e_0$ because if $e_0 arrow.double$#sub($H'$)$d$, $e_0$ is already matched by another $d'$. Then, we can only obtain this because $(4)$ applies, but then $d$ does not match $e_0$.
     Therefore, $d$ is unmatched.
