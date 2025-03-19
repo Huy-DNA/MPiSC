@@ -297,13 +297,7 @@ In this section, we prove that the local SPSC is linearizable.
 
 Noticeably, we use no scheme to avoid ABA problem in Slot-queue. In actuality, ABA problem does not adversely affect our algorithm's correctness, except in the extreme case that the 64-bit global counter overflows, which is unlikely.
 
-Notice that we only use `CAS` on:
-- Line 13 of `refreshEnqueue` (@slotqueue-refresh-enqueue), or an `enqueue` in general (@slotqueue-enqueue).
-- Line 42 of `refreshDequeue` (@slotqueue-refresh-dequeue) or a `dequeue` in general (@slotqueue-dequeue).
-
-Both `CAS` all target a slot in the `slots` array.
-
-== ABA-safe
+== ABA-safety
 
 Not every ABA problem is unsafe. We formalize in this section which ABA problem is safe and which is not.
 
@@ -315,6 +309,12 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 ]
 
 == Proof of ABA-safety
+
+Notice that we only use `CAS` on:
+- Line 13 of `refreshEnqueue` (@slotqueue-refresh-enqueue), or an `enqueue` in general (@slotqueue-enqueue).
+- Line 42 of `refreshDequeue` (@slotqueue-refresh-dequeue) or a `dequeue` in general (@slotqueue-dequeue).
+
+Both `CAS` target some slot in the `slots` array.
 
 We apply some domain knowledge of our algorithm to the above formalism.
 
@@ -352,11 +352,15 @@ We can now turn to our interested problem in this section.
   For `refreshEnqueue` to change the slot's value, the condition on line 11 must be false. Then `new-timestamp` must equal to `ts`, which is not `MAX`. It's obvious that the `CAS` on line 13 changes the slot to a value other than `MAX`.
 ]
 
-#theorem(name: [No ABA problem in `dequeue`])[ ] <slotqueue-aba-safe-dequeue-theorem>
+#theorem(
+  name: [No ABA problem in `dequeue`],
+)[ ] <slotqueue-aba-safe-dequeue-theorem>
 
 #proof[ ]
 
-#theorem(name: [No ABA problem in `enqueue`])[ ] <slotqueue-aba-safe-enqueue-theorem>
+#theorem(
+  name: [No ABA problem in `enqueue`],
+)[ ] <slotqueue-aba-safe-enqueue-theorem>
 
 #proof[ ]
 
