@@ -480,10 +480,12 @@ We will prove the linearizability of Slot-queue by pointing out the linearizatio
   name: "Linearizability of Slot-queue",
 )[The local SPSC is linearizable.] <slotqueue-spsc-linearizability-lemma>
 
-
-
 = Wait-freedom
 
+The algorithm is trvially wait-free as there is no possibilities of infinite loops.
+
 = Memory-safety
+
+The algorithm is memory-safe: No memory deallocation happens and accesses are only made on allocated memory.
 
 #bibliography("/bibliography.yml", title: [References])
