@@ -466,15 +466,56 @@ We can now turn to our interested problem in this section.
 
 = Linearizability of Slot-queue
 
-We will prove the linearizability of Slot-queue by pointing out the linearization points of `enqueue` (@slotqueue-enqueue) and `dequeue` (@slotqueue-dequeue).
+#definition[An `enqueue` operation $e$ is said to *match* a `dequeue` operation $d$ if $d$ returns a timestamp that $e$ enqueues. Similarly, $d$ is said to *match* $e$. In this case, both $e$ and $d$ are said to be *matched*.]
 
-#lemma(
-  name: [Linearizability of `enqueue`],
-)[The linearization point of `enqueue` is right after .] <slotqueue-enqueue-linearization-point-lemma>
+#definition[An `enqueue` operation $e$ is said to be *unmatched* if no `dequeue` operation *matches* it.]
 
-#lemma(
-  name: [Linearizability of `dequeue`],
-)[The linearization point of `dequeue` is right after .] <slotqueue-dequeue-linearization-point-lemma>
+#definition[A `dequeue` operation $d$ is said to be *unmatched* if no `enqueue` operation *matches* it, in other word, $d$ returns $bot$.]
+
+
+#theorem[If an `enqueue` $e$ precedes another `dequeue` $d$, then either:
+  - $d$ isn't matched.
+  - $d$ matches $e$.
+  - $e$ matches $d'$ and $d'$ precedes $d$.
+  - $d$ matches $e'$ and $e'$ precedes $e$.
+  - $d$ matches $e'$ and $e'$ overlaps with $e$.
+] <slotqueue-enqueue-dequeue-theorem>
+
+#proof[
+]
+
+#lemma[
+  If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
+] <slotqueue-matching-dequeue-enqueue-lemma>
+
+#proof[
+]
+
+#theorem[If a `dequeue` $d$ precedes another `enqueue` $e$, then either:
+  - $d$ isn't matched.
+  - $d$ matches $e'$ such that $e'$ precedes or overlaps with $e$ and $e' eq.not e$.
+] <slotqueue-dequeue-enqueue-theorem>
+
+#proof[
+]
+
+#theorem[If an `enqueue` $e_0$ precedes another `enqueue` $e_1$, then either:
+  - Both $e_0$ and $e_1$ aren't matched.
+  - $e_0$ is matched but $e_1$ is not matched.
+  - $e_0$ matches $d_0$ and $e_1$ matches $d_1$ such that $d_0$ precedes $d_1$.
+] <slotqueue-enqueue-enqueue-theorem>
+
+#proof[
+]
+
+#theorem[If a `dequeue` $d_0$ precedes another `dequeue` $d_1$, then either:
+  - $d_0$ isn't matched.
+  - $d_1$ isn't matched.
+  - $d_0$ matches $e_0$ and $d_1$ matches $e_1$ such that $e_0$ precedes or overlaps with $e_1$.
+] <slotqueue-dequeue-dequeue-theorem>
+
+#proof[
+]
 
 #theorem(
   name: "Linearizability of Slot-queue",
