@@ -454,9 +454,9 @@ public:
   SlotDequeuer(const SlotDequeuer &) = delete;
   SlotDequeuer &operator=(const SlotDequeuer &) = delete;
   ~SlotDequeuer() {
+    MPI_Win_free(&this->_counter_win);
     MPI_Win_free(&this->_min_timestamp_win);
     delete[] this->_min_timestamp_buf;
-    MPI_Win_free(&this->_counter_win);
   }
 
   bool dequeue(T *output) {
