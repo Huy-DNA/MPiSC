@@ -430,7 +430,7 @@ We can now turn to our interested problem in this section.
 
   Therefore, $t_d = t_e$.
 
-  If $t_d = t_e = $ `MAX`, this means $e$ observes a value of `MAX` before $d$ even sets `s` to `MAX`. If this `MAX` value is the initialized value of `s`, it's a contradiction, as `s` must be non-`MAX` at some point for a `dequeue` such as $d$ to run. If this `MAX` value is set by an `enqueue`, it's also a contradiction, as `refreshEnqueue` cannot set a slot to `MAX`. Therefore, this `MAX` value is set by a dequeue $d'$. If $d' equiv.not d$ then it's a contradiction, because between $d'$ and $d$, `s` must be set to be a non-`MAX` value before $d$ can be run. Therefore, $d' equiv d$. But, this means $e$ observes a value set by $d$, which violates our assumption.
+  If $t_d = t_e = $ `MAX`, this means $e$ observes a value of `MAX` before $d$ even sets `s` to `MAX`. If this `MAX` value is the initialized value of `s`, it's a contradiction, as `s` must be non-`MAX` at some point for a `dequeue` such as $d$ to run. If this `MAX` value is set by an `enqueue`, it's also a contradiction, as `refreshEnqueue` cannot set a slot to `MAX`. Therefore, this `MAX` value is set by a dequeue $d'$. If $d' != d$ then it's a contradiction, because between $d'$ and $d$, `s` must be set to be a non-`MAX` value before $d$ can be run. Therefore, $d' = d$. But, this means $e$ observes a value set by $d$, which violates our assumption.
 
   Therefore $t_d = t_e = t' != $ `MAX`. $e$ cannot observe the value $t'$ set by $d$ due to our assumption. Suppose $e$ observes the value $t'$ from `s` set by another enqueue/dequeue call other than $d$.
 
