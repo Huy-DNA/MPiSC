@@ -146,7 +146,7 @@ private:
       return true;
     }
 
-    bool read_front(uint64_t *output_timestamp) {
+    bool read_front(timestamp_t *output_timestamp) {
       if (this->_first_buf >= this->_last_buf) {
         return false;
       }
@@ -170,7 +170,9 @@ private:
     aread_sync(&old_timestamp, this->_enqueuer_order, this->_dequeuer_rank,
                this->_min_timestamp_win);
     timestamp_t new_timestamp;
-    this->_spsc.read_front(&new_timestamp);
+    if (!this->_spsc.read_front(&new_timestamp)) {
+      new_timestamp = MAX_TIMESTAMP;
+    }
     if (new_timestamp != ts) {
       MPI_Win_unlock_all(this->_min_timestamp_win);
       return true;
@@ -345,7 +347,7 @@ private:
       return true;
     }
 
-    bool read_front(uint64_t *output_timestamp, int enqueuer_rank) {
+    bool read_front(timestamp_t *output_timestamp, int enqueuer_rank) {
       MPI_Win_lock_all(0, this->_first_win);
       MPI_Win_lock_all(0, this->_last_win);
       MPI_Win_lock_all(0, this->_data_win);
@@ -381,8 +383,8 @@ private:
                      this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
-      if (min_timestamp < timestamp) {
-        rank = i;
+      if (timestamp < min_timestamp) {
+        rank = i >= this->_self_rank ? i + 1 : i;
         min_timestamp = timestamp;
       }
     }
@@ -397,7 +399,9 @@ private:
     aread_sync(&old_timestamp, enqueuer_order, this->_self_rank,
                this->_min_timestamp_win);
     timestamp_t new_timestamp;
-    this->_spsc.read_front(&new_timestamp, rank);
+    if (!this->_spsc.read_front(&new_timestamp, rank)) {
+      new_timestamp = MAX_TIMESTAMP;
+    }
     if (new_timestamp != MAX_TIMESTAMP) {
       awrite_sync(&new_timestamp, enqueuer_order, this->_self_rank,
                   this->_min_timestamp_win);
@@ -437,6 +441,11 @@ public:
     MPI_Win_allocate(this->_number_of_enqueuers * sizeof(timestamp_t),
                      sizeof(timestamp_t), info, comm, &this->_min_timestamp_ptr,
                      &this->_min_timestamp_win);
+    MPI_Win_lock_all(0, this->_min_timestamp_win);
+    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
+      this->_min_timestamp_ptr[i] = MAX_TIMESTAMP;
+    }
+    MPI_Win_unlock_all(this->_min_timestamp_win);
     this->_min_timestamp_buf = new timestamp_t[this->_number_of_enqueuers];
 
     MPI_Barrier(comm);
