@@ -383,7 +383,7 @@ private:
         min_timestamp = timestamp;
       }
     }
-    MPI_Win_unlock_all(0, this->_min_timestamp_win);
+    MPI_Win_unlock_all(this->_min_timestamp_win);
     return rank;
   }
 
@@ -406,6 +406,7 @@ private:
                           enqueuer_order, this->_self_rank,
                           this->_min_timestamp_win);
     MPI_Win_unlock_all(this->_min_timestamp_win);
+    return result == old_timestamp;
   }
 
   int _get_enqueuer_order(MPI_Aint rank) const {
@@ -451,10 +452,12 @@ public:
     if (rank == DUMMY_RANK) {
       return false;
     }
-    bool res = this->_spsc.dequeue(output, rank);
+    data_t output_data;
+    bool res = this->_spsc.dequeue(&output_data, rank);
     if (!res) {
       return false;
     }
+    *output = output_data.data;
     if (!this->_refreshDequeue(rank)) {
       this->_refreshDequeue(rank);
     }
