@@ -482,7 +482,7 @@ We will prove the linearizability of Slot-queue by pointing out the linearizatio
 
 = Wait-freedom
 
-The algorithm is trvially wait-free as there is no possibilities of infinite loops.
+The algorithm is trivially wait-free as there is no possibility of infinite loops.
 
 = Memory-safety
 
