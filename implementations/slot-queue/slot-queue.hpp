@@ -14,7 +14,7 @@ private:
 
   struct data_t {
     T data;
-    uint32_t timestamp;
+    uint64_t timestamp;
   };
 
   MPI_Comm _comm;
@@ -23,7 +23,7 @@ private:
   const MPI_Aint _dequeuer_rank;
 
   MPI_Win _counter_win;
-  MPI_Aint *_counter_ptr;
+  timestamp_t *_counter_ptr;
 
   MPI_Win _min_timestamp_win;
   timestamp_t *_min_timestamp_ptr;
@@ -146,7 +146,7 @@ private:
       return true;
     }
 
-    bool read_front(uint32_t *output_timestamp) {
+    bool read_front(uint64_t *output_timestamp) {
       if (this->_first_buf >= this->_last_buf) {
         return false;
       }
@@ -164,6 +164,25 @@ private:
     }
   } _spsc;
 
+  bool _refreshEnqueue(timestamp_t ts) {
+    MPI_Win_lock_all(0, this->_min_timestamp_win);
+    timestamp_t old_timestamp;
+    aread_sync(&old_timestamp, this->_enqueuer_order, this->_dequeuer_rank,
+               this->_min_timestamp_win);
+    timestamp_t new_timestamp;
+    this->_spsc.read_front(&new_timestamp);
+    if (new_timestamp != ts) {
+      MPI_Win_unlock_all(this->_min_timestamp_win);
+      return true;
+    }
+    timestamp_t result;
+    compare_and_swap_sync(&old_timestamp, &new_timestamp, &result,
+                          this->_enqueuer_order, this->_dequeuer_rank,
+                          this->_min_timestamp_win);
+    MPI_Win_unlock_all(this->_min_timestamp_win);
+    return result == old_timestamp;
+  }
+
 public:
   SlotEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
                MPI_Comm comm)
@@ -174,7 +193,7 @@ public:
     MPI_Info_create(&info);
     MPI_Info_set(info, "same_disp_unit", "true");
 
-    MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_counter_ptr,
+    MPI_Win_allocate(0, sizeof(timestamp_t), info, comm, &this->_counter_ptr,
                      &this->_counter_win);
 
     MPI_Win_allocate(0, sizeof(timestamp_t), info, comm,
@@ -188,29 +207,69 @@ public:
 
   ~SlotEnqueuer() { MPI_Win_free(&this->_counter_win); }
 
-  bool enqueue(const T &data) {}
+  bool enqueue(const T &data) {
+    MPI_Win_lock_all(0, this->_counter_win);
+    timestamp_t counter;
+    fetch_and_add_sync(&counter, 1, 0, this->_dequeuer_rank,
+                       this->_counter_win);
+    MPI_Win_unlock_all(this->_counter_win);
+    data_t value{data, counter};
+    bool res = this->_spsc.enqueue(value);
+    if (!res) {
+      return false;
+    }
+    if (!this->_refreshEnqueue(counter)) {
+      this->_refreshEnqueue(counter);
+    }
+    return res;
+  }
 
-  bool enqueue(const std::vector<T> &data) {}
+  bool enqueue(const std::vector<T> &data) {
+    if (data.size() == 0) {
+      return true;
+    }
+
+    MPI_Win_lock_all(0, this->_counter_win);
+    timestamp_t counter;
+    fetch_and_add_sync(&counter, 1, 0, this->_dequeuer_rank,
+                       this->_counter_win);
+    MPI_Win_unlock_all(this->_counter_win);
+    std::vector<data_t> timestamped_data;
+    for (const T &datum : data) {
+      timestamped_data.push_back(data_t{datum, counter});
+    }
+    bool res = this->_spsc.enqueue(timestamped_data);
+    if (!res) {
+      return false;
+    }
+    if (!this->_refreshEnqueue(counter)) {
+      this->_refreshEnqueue(counter);
+    }
+    return res;
+  }
 };
 
 template <typename T> class SlotDequeuer {
 private:
   typedef uint64_t timestamp_t;
   constexpr static timestamp_t MAX_TIMESTAMP = ~((uint64_t)0);
+  constexpr static MPI_Aint DUMMY_RANK = ~((MPI_Aint)0);
 
   struct data_t {
     T data;
-    uint32_t timestamp;
+    uint64_t timestamp;
   };
 
   const MPI_Aint _self_rank;
   MPI_Comm _comm;
+  MPI_Aint _number_of_enqueuers;
 
   MPI_Win _counter_win;
-  MPI_Aint *_counter_ptr;
+  timestamp_t *_counter_ptr;
 
   MPI_Win _min_timestamp_win;
   timestamp_t *_min_timestamp_ptr;
+  timestamp_t *_min_timestamp_buf;
 
   class Spsc {
     const MPI_Aint _self_rank;
@@ -283,7 +342,7 @@ private:
       return true;
     }
 
-    bool read_front(uint32_t *output_timestamp, int enqueuer_rank) {
+    bool read_front(uint64_t *output_timestamp, int enqueuer_rank) {
       MPI_Win_lock_all(0, this->_first_win);
       MPI_Win_lock_all(0, this->_last_win);
       MPI_Win_lock_all(0, this->_data_win);
@@ -311,15 +370,58 @@ private:
     }
   } _spsc;
 
+  MPI_Aint _readMinimumRank() {
+    MPI_Win_lock_all(0, this->_min_timestamp_win);
+    MPI_Aint rank = DUMMY_RANK;
+    timestamp_t min_timestamp = MAX_TIMESTAMP;
+    batch_aread_sync(this->_min_timestamp_buf, this->_number_of_enqueuers, 0,
+                     this->_self_rank, this->_min_timestamp_win);
+    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
+      timestamp_t timestamp = this->_min_timestamp_buf[i];
+      if (min_timestamp < timestamp) {
+        rank = i;
+        min_timestamp = timestamp;
+      }
+    }
+    MPI_Win_unlock_all(0, this->_min_timestamp_win);
+    return rank;
+  }
+
+  bool _refreshDequeue(MPI_Aint rank) {
+    MPI_Win_lock_all(0, this->_min_timestamp_win);
+    MPI_Aint enqueuer_order = this->_get_enqueuer_order(rank);
+    timestamp_t old_timestamp;
+    aread_sync(&old_timestamp, enqueuer_order, this->_self_rank,
+               this->_min_timestamp_win);
+    timestamp_t new_timestamp;
+    this->_spsc.read_front(&new_timestamp, rank);
+    if (new_timestamp != MAX_TIMESTAMP) {
+      awrite_sync(&new_timestamp, enqueuer_order, this->_self_rank,
+                  this->_min_timestamp_win);
+      MPI_Win_unlock_all(this->_min_timestamp_win);
+      return true;
+    }
+    timestamp_t result;
+    compare_and_swap_sync(&old_timestamp, &new_timestamp, &result,
+                          enqueuer_order, this->_self_rank,
+                          this->_min_timestamp_win);
+    MPI_Win_unlock_all(this->_min_timestamp_win);
+  }
+
+  int _get_enqueuer_order(MPI_Aint rank) const {
+    return rank > this->_self_rank ? rank - 1 : rank;
+  }
+
 public:
   SlotDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
                MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _spsc{capacity, self_rank, comm} {
+
     MPI_Info info;
     MPI_Info_create(&info);
     MPI_Info_set(info, "same_disp_unit", "true");
 
-    MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
+    MPI_Win_allocate(sizeof(timestamp_t), sizeof(timestamp_t), info, comm,
                      &this->_counter_ptr, &this->_counter_win);
     MPI_Win_lock_all(0, this->_counter_win);
     *this->_counter_ptr = 0;
@@ -327,9 +429,11 @@ public:
 
     int size;
     MPI_Comm_size(comm, &size);
-    MPI_Win_allocate((size - 1) * sizeof(timestamp_t), sizeof(timestamp_t), info,
-                     comm, &this->_min_timestamp_ptr,
+    this->_number_of_enqueuers = size - 1;
+    MPI_Win_allocate(this->_number_of_enqueuers * sizeof(timestamp_t),
+                     sizeof(timestamp_t), info, comm, &this->_min_timestamp_ptr,
                      &this->_min_timestamp_win);
+    this->_min_timestamp_buf = new timestamp_t[this->_number_of_enqueuers];
 
     MPI_Barrier(comm);
   }
@@ -338,8 +442,22 @@ public:
   SlotDequeuer &operator=(const SlotDequeuer &) = delete;
   ~SlotDequeuer() {
     MPI_Win_free(&this->_min_timestamp_win);
+    delete[] this->_min_timestamp_buf;
     MPI_Win_free(&this->_counter_win);
   }
 
-  bool dequeue(T *output) {}
+  bool dequeue(T *output) {
+    MPI_Aint rank = this->_readMinimumRank();
+    if (rank == DUMMY_RANK) {
+      return false;
+    }
+    bool res = this->_spsc.dequeue(output, rank);
+    if (!res) {
+      return false;
+    }
+    if (!this->_refreshDequeue(rank)) {
+      this->_refreshDequeue(rank);
+    }
+    return true;
+  }
 };
