@@ -472,6 +472,15 @@ We can now turn to our interested problem in this section.
 
 #definition[A `dequeue` operation $d$ is said to be *unmatched* if no `enqueue` operation *matches* it, in other word, $d$ returns $bot$.]
 
+#lemma[
+  If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
+] <slotqueue-matching-dequeue-enqueue-lemma>
+
+#proof[
+  If $d$ precedes $e$, none of the local SPSCs can contain an item with the timestamp of $e$. Therefore, $d$ cannot return an item with a timestamp of $e$. Thus $d$ cannot match $e$.
+
+  Therefore, $e$ either precedes or overlaps with $d$.
+]
 
 #theorem[If an `enqueue` $e$ precedes another `dequeue` $d$, then either:
   - $d$ isn't matched.
@@ -481,23 +490,20 @@ We can now turn to our interested problem in this section.
   - $d$ matches $e'$ and $e'$ overlaps with $e$.
 ] <slotqueue-enqueue-dequeue-theorem>
 
-#proof[
-]
+#proof[ ]
 
 #lemma[
   If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
 ] <slotqueue-matching-dequeue-enqueue-lemma>
 
-#proof[
-]
+#proof[ ]
 
 #theorem[If a `dequeue` $d$ precedes another `enqueue` $e$, then either:
   - $d$ isn't matched.
   - $d$ matches $e'$ such that $e'$ precedes or overlaps with $e$ and $e' eq.not e$.
 ] <slotqueue-dequeue-enqueue-theorem>
 
-#proof[
-]
+#proof[ ]
 
 #theorem[If an `enqueue` $e_0$ precedes another `enqueue` $e_1$, then either:
   - Both $e_0$ and $e_1$ aren't matched.
@@ -505,8 +511,7 @@ We can now turn to our interested problem in this section.
   - $e_0$ matches $d_0$ and $e_1$ matches $d_1$ such that $d_0$ precedes $d_1$.
 ] <slotqueue-enqueue-enqueue-theorem>
 
-#proof[
-]
+#proof[ ]
 
 #theorem[If a `dequeue` $d_0$ precedes another `dequeue` $d_1$, then either:
   - $d_0$ isn't matched.
@@ -514,8 +519,7 @@ We can now turn to our interested problem in this section.
   - $d_0$ matches $e_0$ and $d_1$ matches $e_1$ such that $e_0$ precedes or overlaps with $e_1$.
 ] <slotqueue-dequeue-dequeue-theorem>
 
-#proof[
-]
+#proof[ ]
 
 #theorem(
   name: "Linearizability of Slot-queue",

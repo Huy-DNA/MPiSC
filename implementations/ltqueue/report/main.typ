@@ -779,7 +779,7 @@ We immediately obtain the following result.
 ] <ltqueue-enqueue-dequeue-theorem>
 
 #proof[
-  If $d$ doesn't match anything, the theorem holds.If $d$ matches $e$, the theorem also holds. Suppose $d$ matches $e'$, $e' eq.not e$.
+  If $d$ doesn't match anything, the theorem holds. If $d$ matches $e$, the theorem also holds. Suppose $d$ matches $e'$, $e' eq.not e$.
 
   If $e$ matches $d'$ and $d'$ precedes $d$, the theorem also holds. Suppose $e$ matches $d'$ such that $d$ precedes $d'$ or is unmatched. $(1)$
 
