@@ -466,11 +466,49 @@ We can now turn to our interested problem in this section.
 
 = Linearizability of Slot-queue
 
+#definition[For an `enqueue` or `dequeue` $o p$, $r a n k(o p)$ is the rank of the enqueuer whose local SPSC is affected by $o p$.]
+
+#definition[For an enqueuer whose rank is $r$, the value stored in its corresponding slot at time $t$ is denoted as $s l o t(r, t)$.]
+
+#definition[For an enqueuer with rank $r$, the minimum timestamp among the elements between `First` and `Last` in its local SPSC at time $t$ is denoted as $m i n \- s p s c \- t s(r, t)$.]
+
+#definition[For an `enqueue`, *slot-refresh phase* refer to its execution of line 5-6 of @slotqueue-enqueue.]
+
+#definition[For a `dequeue`, *slot-refresh phase* refer to its execution of line 19-20 of @slotqueue-dequeue.]
+
+#definition[For a `dequeue`, *slot-scan phase* refer to its execution of line 24-34 of @slotqueue-read-minimum-rank.]
+
 #definition[An `enqueue` operation $e$ is said to *match* a `dequeue` operation $d$ if $d$ returns a timestamp that $e$ enqueues. Similarly, $d$ is said to *match* $e$. In this case, both $e$ and $d$ are said to be *matched*.]
 
 #definition[An `enqueue` operation $e$ is said to be *unmatched* if no `dequeue` operation *matches* it.]
 
 #definition[A `dequeue` operation $d$ is said to be *unmatched* if no `enqueue` operation *matches* it, in other word, $d$ returns $bot$.]
+
+We prove some algorithm-specific results first, which will form the basis for the more fundamental results.
+
+#lemma[If an `enqueue` $e$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` on $r a n k(e)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-enqueue-lemma>
+
+#lemma[If a `dequeue` $d$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshDequeue` on $r a n k(d)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-dequeue-lemma>
+
+#lemma[If a `dequeue` $d$ begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$, it will either:
+  - Find no slot and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(r, t) =$ `MAX` for any rank $r$ and $t in T$.
+  - Find some rank $r_0$ and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(r_0, t) gt.eq s l o t(r, t)$ for any rank $r$ and $t in T$.] <slotqueue-refresh-dequeue-lemma>
+
+#lemma[If an `enqueue` $e$ with rank $r$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* by the start of a `dequeue` $d$ at $t_1$, then $d$'s *slot-scan phase* will find a rank $r_0$ such that $s l o t (r_0, t) lt.eq s l o t(r, t)$ for any $t in T$.] <slotqueue-unmatched-enqueue-lemma>
+
+#theorem[Given a rank $r$. If within $[t_0, t_1]$, there's no uncompleted `enqueue`s on rank $r$ and all matching `dequeue`s for any completed `enqueue`s on rank $r$ has finished, then $s l o t(r, t) eq$ `MAX` for any $t in [t_0, t_1]$.] <slotqueue-matched-enqueue-lemma>
+
+We now look at the more fundamental results.
+
+#lemma[
+  If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
+] <slotqueue-matching-dequeue-enqueue-lemma>
+
+#proof[
+  If $d$ precedes $e$, none of the local SPSCs can contain an item with the timestamp of $e$. Therefore, $d$ cannot return an item with a timestamp of $e$. Thus $d$ cannot match $e$.
+
+  Therefore, $e$ either precedes or overlaps with $d$.
+]
 
 #lemma[
   If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
