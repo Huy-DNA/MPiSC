@@ -332,7 +332,7 @@ public:
     MPI_Info_create(&info);
     MPI_Info_set(info, "same_disp_unit", "true");
 
-    MPI_Win_allocate(0, sizeof(uint32_t), info, comm, &this->_counter_ptr,
+    MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_counter_ptr,
                      &this->_counter_win);
 
     MPI_Win_allocate(sizeof(timestamp_t), sizeof(timestamp_t), info, comm,
@@ -682,7 +682,7 @@ public:
     MPI_Info_create(&info);
     MPI_Info_set(info, "same_disp_unit", "true");
 
-    MPI_Win_allocate(sizeof(uint32_t), sizeof(uint32_t), info, comm,
+    MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
                      &this->_counter_ptr, &this->_counter_win);
     MPI_Win_lock_all(0, this->_counter_win);
     *this->_counter_ptr = 0;
