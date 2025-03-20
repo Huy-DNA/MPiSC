@@ -205,7 +205,10 @@ public:
   SlotEnqueuer(const SlotEnqueuer &) = delete;
   SlotEnqueuer &operator=(const SlotEnqueuer &) = delete;
 
-  ~SlotEnqueuer() { MPI_Win_free(&this->_counter_win); }
+  ~SlotEnqueuer() {
+    MPI_Win_free(&this->_counter_win);
+    MPI_Win_free(&this->_min_timestamp_win);
+  }
 
   bool enqueue(const T &data) {
     MPI_Win_lock_all(0, this->_counter_win);
