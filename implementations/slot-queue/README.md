@@ -17,4 +17,4 @@ Here's a quick comparison between the original LTQueue, the adapted LTQueue and 
 | Dequeue time complexity | $O(log n)$ RMOs + $O(log n)$ local ops | $O(log n)$ RMOs + $O(log n)$ local ops | constant RMOs + $O(log n)$ local ops |
 | Enqueue time complexity | $O(log n)$ RMOs + $O(log n)$ local ops | $O(log n)$ RMOs + $O(log n)$ local ops | constant RMOs + $O(n)$ local ops |
 | Number of elements | Infinite/Finite (depending on the SPSC implementation) | Infinite/Finite (depending on the SPSC implementation) | Infinite/Finite (depending on the SPSC implementation) |
-| Dynamic memory allocation | Yes/No (depending on the SPSC implementation) | Yes/No (depending on the SPSC implementation) | Yes (depending on the SPSC implementation) |
+| Dynamic memory allocation | Yes/No (depending on the SPSC implementation) | Yes/No (depending on the SPSC implementation) | Yes/No (depending on the SPSC implementation) |
