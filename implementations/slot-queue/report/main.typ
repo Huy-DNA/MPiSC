@@ -315,19 +315,19 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 #definition[A *history* of successful *CAS-sequences* and *modification instructions* is a timeline of when any *CAS-sequences* start/end and when any modification instructions end.]
 
 We can define a strict partial order $<$ on the set of *CAS-sequences* and *modification instructions* such that:
-- $A < B$ if $A$ and $B$ are both *CAS-sequences* and $A$ ends before $B$ starts.
+- $A < B$ if $A$ and $B$ are both *CAS-sequences* and $A$'s *modification instruction* ends before $B$'s.
 - $A < B$ if $A$ and $B$ are *modifcation instructions* and $A$ ends before $B$ ends.
 - $A < B$ if $A$ is a *modification instruction*, $B$ is a *CAS-sequence* and $A$ ends before $B$ starts.
 - $B < A$ if $A$ is a *modification instruction*, $B$ is a *CAS-sequence* and $A$ ends after $B$ ends.
 
-#definition[Consider a history of successful *CAS-sequences* and *modification instructions* on the same variable `v`. *ABA problem* is said to have occurred with `v` if there exists a *successful CAS-sequence* on `v`, during which there's some *successful modification instruction* on `v`.]
+#definition[Consider an operation $op$. Consider a history of successful *CAS-sequences* and *modification instructions* on the same variable `v`. *ABA problem* is said to occurr with `v` in $op$ if there exists one $op$'s *successful CAS-sequence* on `v`, during which there's some *successful modification instruction* on `v`.]
 
-#definition[Consider a history of successful *CAS-sequences* and *modification instructions* on the same variable `v`. A history is said to be *ABA-safe* with `v` if and only if:
-  - *ABA problem* does not occur with `v` in the history.
+#definition[Consider an operation $op$. Consider a history of successful *CAS-sequences* and *modification instructions* on the same variable `v`. $op$ is said to be *ABA-safe* with respect to `v` if and only if either:
+  - *ABA problem* does not occur with `v` in $op$ in the history.
   - We can reorder the *successful CAS-sequences* and *modification instructions* in the history such that:
-    - No two successful CAS-sequences overlap with each other.
-    - No successful modification instruction lies within another successful CAS-sequence.
+    - The strict partial order on the resulting history must be a superset of the strict partial order on the original history.
     - The resulting history after reordering produces the same output as the original history.
+    - *ABA problem* does not occur with `v` in $op$ in the resulting history.
 ]
 
 == Proof of ABA-safety
