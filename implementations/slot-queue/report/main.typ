@@ -528,14 +528,9 @@ We prove some algorithm-specific results first, which will form the basis for th
   The theorem holds.
 ]
 
-#lemma[If a `dequeue` $d$ begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$, it will either:
-  - Find no rank whose slot stores a non-`MAX` value and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(r, t) =$ `MAX` for any rank $r$ and $t in T$.
-  - Find some rank $i$ and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(i, t) lt.eq s l o t(r, t)$ for any rank $r$ and $t in T$.] <slotqueue-slot-scan-lemma>
+#lemma[If a `dequeue` $d$ begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$] <slotqueue-slot-scan-lemma>
 
 #proof[
-  If $d$ finds no rank whose slot stores a non-`MAX` value, that means for each rank $r$, there exists a time $t_r in [t_0, t_1]$ such that $s l o t(r, t_r) =$ `MAX`. Choose $T = [t_0, min_r t_r]$, by @slotqueue-scan-MAX-lemma, the lemma holds.
-
-  Suppose $d$ finds some rank $i$.
 ]
 
 We now look at the more fundamental results.
