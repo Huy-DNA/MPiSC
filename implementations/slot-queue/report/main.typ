@@ -393,9 +393,9 @@ We can now turn to our interested problem in this section.
 
   Therefore, $t_e = t_d$.
 
-  Note that $e$ can only set `s` to the timestamp of the item it enqueues. That means, $e$ must have enqueued a value with timestamp $t_d$. However, by definition, $t_d$ is read before $e$ executes the CAS. This means another process (dequeuer/enqueuer) has seen the value $e$ enqueued and CAS `s` for $e$ before $t_d$. By @slotqueue-one-enqueuer-one-dequeuer-lemma, this "another process" must be another dequeuer $d'$ that precedes $d$.
+  Note that $e$ can only set `s` to the timestamp of the item it enqueues. That means, $e$ must have enqueued a value with timestamp $t_d$. However, by definition, $t_d$ is read before $e$ executes the CAS. This means another process (dequeuer/enqueuer) has seen the value $e$ enqueued and CAS `s` for $e$ before $t_d$. By @slotqueue-one-enqueuer-one-dequeuer-lemma, this "another process" must be another dequeuer $d'$ that precedes $d$ because it overlaps with $e$.
 
-  Because $d'$ and $d$ cannot overlap, while $e$ overlaps with both $d'$ and $d$, $e$ must be the _first_ `enqueue` on `s` that overlaps with $d$. Combining with @slotqueue-one-enqueuer-one-dequeuer-lemma and the fact that $e$ executes the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, $e$ must be the only `enqueue` that executes a *successful slot-modification instruction* within $d$'s *successful CAS-sequence*.
+  Because $d'$ and $d$ cannot overlap, while $e$ overlaps with both $d'$ and $d$, $e$ must be the _first_ `enqueue` on `s` that overlaps with $d$. Combining with @slotqueue-one-enqueuer-one-dequeuer-lemma and the fact that $e$ executes the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, $e$ must be the only `enqueue` that executes a *successful slot-modification instruction* on `s` within $d$'s *successful CAS-sequence*.
 
   During the start of $d$'s successful CAS-sequence till the end of $e$, `spsc_readFront` on the local SPSC must return the same element, because:
   - There's no other `dequeue`s running during this time.
@@ -406,9 +406,9 @@ We can now turn to our interested problem in this section.
   - The CAS sequence does not modify any values except for the last CAS instruction, and the ending time of the CAS sequence is still the same.
   - The CAS sequence modifies `slots[rank]` at the CAS but the target value is the same because inputs and shared values are the same in both cases.
 
-  We have proven that if we move $d$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, we still retain the program's output.
+  We have proven that if we move $d$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, we still retain the program's output. Furthermore, we only move the starting time of a CAS-sequence, therefore, the strict partial order defined above is not changed.
 
-  The theorem directly follows.
+  If we apply the reordering for every `dequeue`, the theorem directly follows.
 ]
 
 #theorem(
@@ -436,7 +436,11 @@ We can now turn to our interested problem in this section.
 
   If this "another call" is a `dequeue` $d'$ other than $d$, $d'$ precedes $d$. By @slotqueue-spsc-timestamp-monotonicity-theorem, after each `dequeue`, the front element's timestamp will be increasing, therefore, $d'$ must have set `s` to a timestamp smaller than $t_d$. However, $e$ observes $t_e = t_d$. This is a contradiction.
 
-  Therefore, this "another call" is an `enqueue` $e'$ other than $e$, $e'$ precedes $e$. We know that an `enqueue` only sets `s` to the timestamp it obtains. If $e'$ does not overlap with $d$, then after $e'$ has ended, the local SPSC is either empty or has the item $e'$ enqueues as the front element. Therefore, when $d$ runs, it dequeues out the item $e'$ enqueues and set `s` to $t_d$ which is greater than the timestamp of the item $e'$ enqueues. Therefore, $e'$ overlaps with $d$.
+  Therefore, this "another call" is an `enqueue` $e'$ other than $e$ and $e'$ precedes $e$. We know that an `enqueue` only sets `s` to the timestamp it obtains.
+
+  Suppose $e'$ does not overlap with $d$. $e'$ can only set `s` to $t'$ if $e'$ sees that the local SPSC has the front element as the element it enqueues. Due to @slotqueue-one-enqueuer-one-dequeuer-lemma, this means $e'$ must observe a local SPSC with only the element it enqueues. Then, when $d$ executes `readFront`, the item $e'$ enqueues must have been dequeued out already, thus, $d$ cannot set `s` to $t'$. This is a contradiction.
+
+  Therefore, $e'$ overlaps with $d$.
 
   For $e'$ to set `s` to the same value as $d$, $e'$'s `spsc_readFront` must serialize after $d$'s `spsc_dequeue`.
 
@@ -451,9 +455,9 @@ We can now turn to our interested problem in this section.
   - The CAS sequence does not modify any values except for the last CAS/store instruction, and the ending time of the CAS sequence is still the same.
   - The CAS sequence modifies `slots[rank]` at the CAS but the target value is the same because inputs and shared values are the same in both cases.
 
-  We have proven that if we move $e$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*, we still retain the program's output.
+  We have proven that if we move $e$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*, we still retain the program's output. Furthermore, we only move the starting time of a CAS-sequence, therefore, the strict partial order defined above is not changed.
 
-  The theorem directly follows.
+  If we apply the reordering for every `enqueue`, the theorem directly follows.
 ]
 
 #theorem(
