@@ -617,7 +617,7 @@ We immediately obtain the following result.
 #theorem[If an `enqueue` or a `dequeue` $op$ begins its *timestamp-refresh phase* at $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshTimestamp` on $r a n k(op)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <ltqueue-refresh-timestamp-theorem>
 
 #proof[
-  If one of the two `refreshTimestamp`s succeeds, then we have obtain the theorem.
+  If one of the two `refreshTimestamp`s succeeds, then the theorem obviously holds.
 
   Consider the case where both fail.
 

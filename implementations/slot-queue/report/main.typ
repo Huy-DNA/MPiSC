@@ -486,9 +486,23 @@ We can now turn to our interested problem in this section.
 
 We prove some algorithm-specific results first, which will form the basis for the more fundamental results.
 
-#lemma[If an `enqueue` $e$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` on $r a n k(e)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-enqueue-lemma>
+#lemma[If an `enqueue` $e$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` or `refreshDequeue` on $r a n k(e)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-enqueue-lemma>
 
-#lemma[If a `dequeue` $d$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshDequeue` on $r a n k(d)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-dequeue-lemma>
+#proof[
+  If one of the two `refreshEnqueue`s succeeds, then the lemma obviously holds.
+
+  Consider the case where both fail.
+
+  The first `refreshEnqueue` fails because there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the first `refreshEnqueue`'s *CAS-sequence*.
+
+  The second `refreshEnqueue` fails because there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the second `refreshEnqueue`'s *CAS-sequence*. This another `refreshDequeue` must start its *CAS-sequence* after the end of the first successful `refreshDequeue`, due to @slotqueue-one-enqueuer-one-dequeuer-lemma. In other words, this another `refreshDequeue` starts and successfully ends its *CAS-sequence* between $t_0$ and $t_1$.
+
+  We have proved the theorem.
+]
+
+#lemma[If a `dequeue` $d$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` or `refreshDequeue` on $r a n k(d)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-dequeue-lemma>
+
+#proof[This is similar to the above lemma.]
 
 #lemma[If a `dequeue` $d$ begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$, it will either:
   - Find no slot and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(r, t) =$ `MAX` for any rank $r$ and $t in T$.
