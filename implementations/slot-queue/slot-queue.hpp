@@ -377,19 +377,40 @@ private:
 
   MPI_Aint _readMinimumRank() {
     MPI_Win_lock_all(0, this->_min_timestamp_win);
-    MPI_Aint rank = DUMMY_RANK;
+
+    MPI_Aint order = DUMMY_RANK;
     timestamp_t min_timestamp = MAX_TIMESTAMP;
-    batch_aread_sync(this->_min_timestamp_buf, this->_number_of_enqueuers, 0,
-                     this->_self_rank, this->_min_timestamp_win);
+
+    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
+      aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
+                  this->_min_timestamp_win);
+    }
+    MPI_Win_flush(this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
-        rank = i >= this->_self_rank ? i + 1 : i;
+        order = i;
+        min_timestamp = timestamp;
+      }
+    }
+    if (order == DUMMY_RANK) {
+      MPI_Win_unlock_all(this->_min_timestamp_win);
+      return DUMMY_RANK;
+    }
+    for (int i = 0; i < order; ++i) {
+      aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
+                  this->_min_timestamp_win);
+    }
+    MPI_Win_flush(this->_self_rank, this->_min_timestamp_win);
+    for (int i = 0; i < order; ++i) {
+      timestamp_t timestamp = this->_min_timestamp_buf[i];
+      if (timestamp < min_timestamp) {
+        order = i;
         min_timestamp = timestamp;
       }
     }
     MPI_Win_unlock_all(this->_min_timestamp_win);
-    return rank;
+    return order >= this->_self_rank ? order + 1 : order;
   }
 
   bool _refreshDequeue(MPI_Aint rank) {
