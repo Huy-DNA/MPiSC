@@ -317,8 +317,8 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 We can define a strict partial order $<$ on the set of *CAS-sequences* and *modification instructions* such that:
 - $A < B$ if $A$ and $B$ are both *CAS-sequences* and $A$'s *modification instruction* ends before $B$'s.
 - $A < B$ if $A$ and $B$ are *modifcation instructions* and $A$ ends before $B$ ends.
-- $A < B$ if $A$ is a *modification instruction*, $B$ is a *CAS-sequence* and $A$ ends before $B$ starts.
-- $B < A$ if $A$ is a *modification instruction*, $B$ is a *CAS-sequence* and $A$ ends after $B$ ends.
+- $A < B$ if $A$ is a *modification instruction*, $B$ is a *CAS-sequence* and $A$ ends before $B$'s *modification instruction*.
+- $B < A$ if $A$ is a *modification instruction*, $B$ is a *CAS-sequence* and $A$ ends after $B$'s *modification instruction*.
 
 #definition[Consider an operation $op$. Consider a history of successful *CAS-sequences* and *modification instructions* on the same variable `v`. *ABA problem* is said to occurr with `v` in $op$ if there exists one $op$'s *successful CAS-sequence* on `v`, during which there's some *successful modification instruction* on `v`.]
 
