@@ -528,11 +528,6 @@ We prove some algorithm-specific results first, which will form the basis for th
   The theorem holds.
 ]
 
-#lemma[If a `dequeue` $d$ begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$] <slotqueue-slot-scan-lemma>
-
-#proof[
-]
-
 We now look at the more fundamental results.
 
 #lemma[
@@ -553,7 +548,9 @@ We now look at the more fundamental results.
   - $d$ matches $e'$ and $e'$ overlaps with $e$.
 ] <slotqueue-enqueue-dequeue-theorem>
 
-#proof[ ]
+#proof[
+
+]
 
 #lemma[
   If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
@@ -586,7 +583,7 @@ We now look at the more fundamental results.
 
 #theorem(
   name: "Linearizability of Slot-queue",
-)[The local SPSC is linearizable.] <slotqueue-spsc-linearizability-lemma>
+)[Slot-queue is linearizable.] <slotqueue-spsc-linearizability-lemma>
 
 = Wait-freedom
 
