@@ -504,25 +504,41 @@ We prove some algorithm-specific results first, which will form the basis for th
 
 #proof[This is similar to the above lemma.]
 
-#lemma[If a `dequeue` $d$ begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$, it will either:
-  - Find no slot and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(r, t) =$ `MAX` for any rank $r$ and $t in T$.
-  - Find some rank $r_0$ and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(r_0, t) gt.eq s l o t(r, t)$ for any rank $r$ and $t in T$.] <slotqueue-slot-scan-lemma>
-
-#lemma[If an `enqueue` $e$ with rank $r$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* by the start of a `dequeue` $d$ at $t_1$, then $d$'s *slot-scan phase* will find a rank $r_0$ such that $s l o t (r_0, t) lt.eq s l o t(r, t)$ for any $t in T$.] <slotqueue-unmatched-enqueue-lemma>
-
-#theorem[Given a rank $r$. If within $[t_0, t_1]$, there's no uncompleted `enqueue`s on rank $r$ and all matching `dequeue`s for any completed `enqueue`s on rank $r$ has finished, then $s l o t(r, t) eq$ `MAX` for any $t in [t_0, t_1]$.] <slotqueue-matched-enqueue-lemma>
-
-We now look at the more fundamental results.
-
 #lemma[
-  If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
-] <slotqueue-matching-dequeue-enqueue-lemma>
+  Given a rank $r$ and a `dequeue` $d$ that begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$. If $d$ finds that $s l o t(r, t') = s_0 !=$ `MAX` for some time $t'$ such that $t_0 lt.eq t' lt.eq t_1$, then $s l o t (r, t) = s_0 !=$ `MAX` for any $t$ such that $t' lt.eq t lt.eq t_1$.
+] <slotqueue-scan-non-MAX-lemma>
 
 #proof[
-  If $d$ precedes $e$, none of the local SPSCs can contain an item with the timestamp of $e$. Therefore, $d$ cannot return an item with a timestamp of $e$. Thus $d$ cannot match $e$.
+  Denote $s_r$ as the slot of rank $r$.
 
-  Therefore, $e$ either precedes or overlaps with $d$.
+  $s l o t(r, t') = s_0 != $ `MAX` because some processes have executed a successful slot-modification instruction on $s_r$ to set it to $s_0$.
+
+  Take $op$ to be the `enqueue`/`dequeue` that executes the last successful slot-modification instruction on $s_r$ before $t'$. By definition, $op$ set $s_r$ to $s_0$.
+
+  Any `dequeue` before $d$ would have finished before $t_0$, and thus its *slot-fresh phase*. By @slotqueue-refresh-dequeue-lemma, for each `dequeue` before $d$, there must be some successful refresh call that sees the local SPSC after $d$'s `spsc_dequeue`. Therefore, by definition, $op$'s refresh call must see the local SPSC after any of the previous `dequeue`s' `spsc_dequeue` calls. In other words, $op$ has set $s_r$ to the front element's timestamp after it has observed all previous `spsc_dequeue` before $d$. During $t_0$ to $t_1$, there's no `spsc_dequeue`. Therefore, from after $op$'s successful refresh call until $t_1$, there is no new `spsc_dequeue` that can be observed. Any refresh calls after $op$ until $t_1$ can only observe new `spsc_enqueue`s, but because $op$ set $s_r$ to a non-`MAX` value, their corresponding `refreshEnqueue`s cannot affect $s_r$. Therefore, the lemma holds.
 ]
+
+#lemma[
+  Given a rank $r$ and a `dequeue` $d$ that begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$. If $d$ finds that $s l o t(r, t') =$ `MAX` for some time $t'$ such that $t_0 lt.eq t' lt.eq t_1$, then $s l o t (r, t) !=$ `MAX` for any $t$ such that $t_0 lt.eq t lt.eq t'$.
+] <slotqueue-scan-MAX-lemma>
+
+#proof[
+  Because during $d$'s *slot-scan phase*, no other `dequeue` can run and `enqueue`s can only set a slot to non-`MAX`, if $d$ finds that $s l o t(r, t') =$ `MAX` for some time $t'$ such that $t_0 lt.eq t' lt.eq t_1$, then $s l o t (r, t) !=$ `MAX` for any $t$ such that $t_0 lt.eq t lt.eq t'$.
+
+  The theorem holds.
+]
+
+#lemma[If a `dequeue` $d$ begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$, it will either:
+  - Find no rank whose slot stores a non-`MAX` value and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(r, t) =$ `MAX` for any rank $r$ and $t in T$.
+  - Find some rank $i$ and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(i, t) lt.eq s l o t(r, t)$ for any rank $r$ and $t in T$.] <slotqueue-slot-scan-lemma>
+
+#proof[
+  If $d$ finds no rank whose slot stores a non-`MAX` value, that means for each rank $r$, there exists a time $t_r in [t_0, t_1]$ such that $s l o t(r, t_r) =$ `MAX`. Choose $T = [t_0, min_r t_r]$, by @slotqueue-scan-MAX-lemma, the lemma holds.
+
+  Suppose $d$ finds some rank $i$.
+]
+
+We now look at the more fundamental results.
 
 #lemma[
   If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
