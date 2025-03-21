@@ -506,7 +506,7 @@ We prove some algorithm-specific results first, which will form the basis for th
 
 #lemma[If a `dequeue` $d$ begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$, it will either:
   - Find no slot and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(r, t) =$ `MAX` for any rank $r$ and $t in T$.
-  - Find some rank $r_0$ and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(r_0, t) gt.eq s l o t(r, t)$ for any rank $r$ and $t in T$.] <slotqueue-refresh-dequeue-lemma>
+  - Find some rank $r_0$ and there exists a subrange $T$ of $[t_0, t_1]$ such that $s l o t(r_0, t) gt.eq s l o t(r, t)$ for any rank $r$ and $t in T$.] <slotqueue-slot-scan-lemma>
 
 #lemma[If an `enqueue` $e$ with rank $r$ obtains a timestamp $c$ and finishes at time $t_0$ and is still *unmatched* by the start of a `dequeue` $d$ at $t_1$, then $d$'s *slot-scan phase* will find a rank $r_0$ such that $s l o t (r_0, t) lt.eq s l o t(r, t)$ for any $t in T$.] <slotqueue-unmatched-enqueue-lemma>
 
