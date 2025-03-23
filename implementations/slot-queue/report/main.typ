@@ -628,11 +628,23 @@ We now look at the more fundamental results.
   - $d_0$ matches $e_0$ and $d_1$ matches $e_1$ such that $e_0$ precedes or overlaps with $e_1$.
 ] <slotqueue-dequeue-dequeue-theorem>
 
-#proof[ ]
+#proof[
+  If either $d_0$ isn't matched or $d_1$ isn't matched, the theorem holds.
+
+  Suppose $d_0$ matches $e_0$ and $d_1$ matches $e_1$.
+
+  If $e_1$ precedes $e_0$, applying @slotqueue-enqueue-enqueue-theorem, we have $e_1$ matches $d_1$ and $e_0$ matches $d_0$ such that $d_1$ precedes $d_0$. This is a contradiction.
+
+  Therefore, $e_0$ either precedes or overlaps with $e_1$.
+]
 
 #theorem(
   name: "Linearizability of Slot-queue",
 )[Slot-queue is linearizable.] <slotqueue-spsc-linearizability-lemma>
+
+#proof[
+
+]
 
 = Wait-freedom
 
