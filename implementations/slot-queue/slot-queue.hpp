@@ -397,12 +397,12 @@ private:
       MPI_Win_unlock_all(this->_min_timestamp_win);
       return DUMMY_RANK;
     }
-    for (int i = 0; i < order; ++i) {
+    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
                   this->_min_timestamp_win);
     }
     MPI_Win_flush(this->_self_rank, this->_min_timestamp_win);
-    for (int i = 0; i < order; ++i) {
+    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
         order = i;
