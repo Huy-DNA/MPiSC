@@ -26,6 +26,7 @@
 )
 
 #set par(justify: true)
+#set list(marker: ([•], [•]))
 
 #set heading(numbering: "1.")
 #show heading.where(level: 3): set heading(numbering: none)
