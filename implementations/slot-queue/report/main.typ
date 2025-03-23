@@ -543,7 +543,39 @@ We prove some algorithm-specific results first, which will form the basis for th
   It follows that $s l o t(r, t) = m i n \- s p s c \- t s (r, t)$.
 ]
 
+#lemma[
+  Given a rank $r$, if an `enqueue` $e$ on $r$ that obtains the timestamp $c$ completes at $t_0$ and is still unmatched by $t_1$, then $s l o t (r, t) lt.eq c$ for any $t in [t_0, t_1]$.
+] <slotqueue-unmatched-enqueue-lemma>
+
+#proof[
+  Take $t'$ to be the time $e$'s `spsc_enqueue` takes effect.
+  
+  By @slotqueue-refresh-enqueue-lemma, there must be a successful refresh call that observes the effect of `spsc_enqueue` happening at $t''$, $t'' in [t', t_0]$.
+
+  By the same reasoning as in @aba-safe-slotqueue-theorem, any successful slot-modification instructions happening after $t''$ must observe the effect of `spsc_enqueue`. However, because $e$ is never matched between $t''$ and $t_1$, the timestamp $c$ is in the local SPSC the whole timespan $[t'', t_1]$. Therefore, any slot-modification instructions during $[t'', t_1]$ must set the slot's value to some value not greater than $c$.
+]
+
 We now look at the more fundamental results.
+
+#theorem[If an `enqueue` $e$ precedes another `dequeue` $d$, then either:
+  - $d$ isn't matched.
+  - $d$ matches $e$.
+  - $e$ matches $d'$ and $d'$ precedes $d$.
+  - $d$ matches $e'$ and $e'$ precedes $e$.
+  - $d$ matches $e'$ and $e'$ overlaps with $e$.
+] <slotqueue-enqueue-dequeue-theorem>
+
+#proof[
+  If $d$ doesn't match anything, the theorem holds. If $d$ matches $e$, the theorem also holds. Suppose $d$ matches $e'$, $e' eq.not e$.
+
+  If $e$ matches $d'$ and $d'$ precedes $d$, the theorem also holds. Suppose $e$ matches $d'$ such that $d$ precedes $d'$ or is unmatched. $(1)$
+
+  Suppose $e$ obtains a timestamp of $c$ and $e'$ obtains a timestamp of $c'$.
+
+  Due to $(1)$, at the time $d$ starts, $e$ is still unmatched. By the way @slotqueue-read-minimum-rank is defined, $d$ would find a slot that stores a timestamp that is not greater than the one $e$ enqueues. In other word, $c' lt.eq c$. But $c' != c$, then $c' < c$. Therefore, $e$ cannot precede $e'$, otherwise, $c < c'$.
+
+  So, either $e'$ precedes or overlaps with $e$. The theorem holds.
+]
 
 #lemma[
   If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
@@ -555,30 +587,18 @@ We now look at the more fundamental results.
   Therefore, $e$ either precedes or overlaps with $d$.
 ]
 
-#theorem[If an `enqueue` $e$ precedes another `dequeue` $d$, then either:
-  - $d$ isn't matched.
-  - $d$ matches $e$.
-  - $e$ matches $d'$ and $d'$ precedes $d$.
-  - $d$ matches $e'$ and $e'$ precedes $e$.
-  - $d$ matches $e'$ and $e'$ overlaps with $e$.
-] <slotqueue-enqueue-dequeue-theorem>
-
-#proof[
-
-]
-
-#lemma[
-  If $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
-] <slotqueue-matching-dequeue-enqueue-lemma>
-
-#proof[ ]
-
 #theorem[If a `dequeue` $d$ precedes another `enqueue` $e$, then either:
   - $d$ isn't matched.
   - $d$ matches $e'$ such that $e'$ precedes or overlaps with $e$ and $e' eq.not e$.
 ] <slotqueue-dequeue-enqueue-theorem>
 
-#proof[ ]
+#proof[
+  If $d$ isn't matched, the theorem holds.
+
+  Suppose $d$ matches $e'$. By @slotqueue-matching-dequeue-enqueue-lemma, either $e'$ precedes or overlaps with $d$. Therefore, $e' != e$. Furthermore, $e$ cannot precede $e'$, because then $d$ would precede $e'$.
+
+  We have proved the theorem.
+]
 
 #theorem[If an `enqueue` $e_0$ precedes another `enqueue` $e_1$, then either:
   - Both $e_0$ and $e_1$ aren't matched.
