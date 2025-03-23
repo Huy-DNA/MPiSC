@@ -423,12 +423,6 @@ private:
     if (!this->_spsc.read_front(&new_timestamp, rank)) {
       new_timestamp = MAX_TIMESTAMP;
     }
-    if (new_timestamp != MAX_TIMESTAMP) {
-      awrite_sync(&new_timestamp, enqueuer_order, this->_self_rank,
-                  this->_min_timestamp_win);
-      MPI_Win_unlock_all(this->_min_timestamp_win);
-      return true;
-    }
     timestamp_t result;
     compare_and_swap_sync(&old_timestamp, &new_timestamp, &result,
                           enqueuer_order, this->_self_rank,

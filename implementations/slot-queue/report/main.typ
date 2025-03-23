@@ -264,9 +264,6 @@ The `dequeue` operations are given as follows:
     + `old-timestamp = slots[rank]`
     + `front = spsc_readFront(spscs[rank])`
     + `new-timestamp = front == `$bot$` ? MAX : front.timestamp`
-    + *if* `(front !=` $bot$`)`
-      + `slots[rank] = new-timestamp`
-      + *return* `true`
     + *return* `CAS(&slots[rank], old-timestamp, new-timestamp)`
   ],
 ) <slotqueue-refresh-dequeue>
