@@ -497,54 +497,6 @@ We prove some algorithm-specific results first, which will form the basis for th
 #proof[This is similar to the above lemma.]
 
 #lemma[
-  Given a rank $r$ and a `dequeue` $d$ that begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$. If $d$ finds that $s l o t(r, t') = s_0 !=$ `MAX` for some time $t'$ such that $t_0 lt.eq t' lt.eq t_1$, then $s l o t (r, t) = s_0 !=$ `MAX` for any $t$ such that $t' lt.eq t lt.eq t_1$.
-] <slotqueue-scan-non-MAX-lemma>
-
-#proof[
-  Denote $s_r$ as the slot of rank $r$.
-
-  $s l o t(r, t') = s_0 != $ `MAX` because some processes have executed a successful slot-modification instruction on $s_r$ to set it to $s_0$.
-
-  Take $op$ to be the `enqueue`/`dequeue` that executes the last successful slot-modification instruction on $s_r$ before $t'$. By definition, $op$ set $s_r$ to $s_0$.
-
-  Any `dequeue` before $d$ would have finished before $t_0$, and thus its *slot-fresh phase*. By @slotqueue-refresh-dequeue-lemma, for each `dequeue` before $d$, there must be some successful refresh call whose `spsc_readFront` observes the state of the local SPSC after $d$'s `spsc_dequeue`. By definition, $op$'s refresh call ended after all of these successful refresh call. In the process of proving @aba-safe-slotqueue-theorem, we have proved that the net effect is as if $op$ starts after all of these successful refresh calls. Therefore, $op$ can be treated as if it has seen the local SPSC after any of the previous `dequeue`s' `spsc_dequeue` calls. In other words, $op$ has set $s_r$ to the front element's timestamp after it has observed all previous `spsc_dequeue` before $d$. During $t_0$ to $t_1$, there's no `spsc_dequeue`. Therefore, from after $op$'s successful refresh call until $t_1$, there is no new `spsc_dequeue` that can be observed. Any refresh calls after $op$ until $t_1$ can only observe new `spsc_enqueue`s, but because $op$ set $s_r$ to a non-`MAX` value, their corresponding `refreshEnqueue`s cannot affect $s_r$. Therefore, the lemma holds.
-]
-
-#lemma[
-  Given a rank $r$ and a `dequeue` $d$ that begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$. If $d$ finds that $s l o t(r, t') =$ `MAX` for some time $t'$ such that $t_0 lt.eq t' lt.eq t_1$, then $s l o t (r, t) !=$ `MAX` for any $t$ such that $t_0 lt.eq t lt.eq t'$.
-] <slotqueue-scan-MAX-lemma>
-
-#proof[
-  Because during $d$'s *slot-scan phase*, no other `dequeue` can run and `enqueue`s can only set a slot to non-`MAX`, if $d$ finds that $s l o t(r, t') =$ `MAX` for some time $t'$ such that $t_0 lt.eq t' lt.eq t_1$, then $s l o t (r, t) !=$ `MAX` for any $t$ such that $t_0 lt.eq t lt.eq t'$.
-
-  The theorem holds.
-]
-
-#lemma[
-  Given a rank $r$ and a `dequeue` $d$ that begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$. If $d$ finds that $s l o t(r, t') =$ `MAX` for some time $t'$ such that $t_0 lt.eq t' lt.eq t_1$, then $s l o t (r, t) !=$ `MAX` for any $t$ such that $t_0 lt.eq t lt.eq t'$.
-] <slotqueue-scan-MAX-lemma>
-
-#proof[
-  Because during $d$'s *slot-scan phase*, no other `dequeue` can run and `enqueue`s can only set a slot to non-`MAX`, if $d$ finds that $s l o t(r, t') =$ `MAX` for some time $t'$ such that $t_0 lt.eq t' lt.eq t_1$, then $s l o t (r, t) !=$ `MAX` for any $t$ such that $t_0 lt.eq t lt.eq t'$.
-
-  The theorem holds.
-]
-
-#lemma[
-  Given a rank $r$, if at time $t$, there's no `enqueue` and no `dequeue` running on rank $r$, then $s l o t (r, t) = m i n \- s p s c \- t s(r, t)$.
-] <slotqueue-idle-slot-lemma>
-
-#proof[
-  Take $op$ to be the `enqueue`/`dequeue` that executes the last *slot-modification instruction* on the slot of rank $r$ before $t$.
-
-  If $op$ does not exist, that means either no `enqueue`/`dequeue` has started yet or they haven't performed the *slot-modification instruction*. If no `enqueue`/`dequeue` has started yet, it's trivial that $s l o t (r, t) = m i n \- s p s c \- t s(r, t) =$ `MAX`. If some has started but haven't performed the *slot-modification instruction* until $t$, this is a contradiction as at $t$, no `enqueue` and `dequeue` is running on rank $r$.
-
-  Consider $op'$ to be any `enqueue`/`dequeue` that finishes before $t$. By definition, it must have finished its *slot-refresh phase* before $t$. By @slotqueue-refresh-enqueue-lemma and @slotqueue-refresh-dequeue-lemma, there must be some successful refresh calls before $t$ that observes the effect of $op's$'s `spsc_dequeue`/`spsc_enqueue`. By our assumption, $op$'s *slot-modification instruction* happens after all of these refresh calls. In the process of proving @aba-safe-slotqueue-theorem, we have proved that $op$'s *CAS-sequence* can be treated as if it observe the state of the local SPSC after any of these `spsc_dequeue`/`spsc_enqueue`. Therefore, it sets the slot of $r$ to the minimum timestamp in the local SPSC after all `spsc_dequeue`/`spsc_dequeue` before $t$ have taken effect.
-
-  It follows that $s l o t(r, t) = m i n \- s p s c \- t s (r, t)$.
-]
-
-#lemma[
   Given a rank $r$, if an `enqueue` $e$ on $r$ that obtains the timestamp $c$ completes at $t_0$ and is still unmatched by $t_1$, then $s l o t (r, t) lt.eq c$ for any $t in [t_0, t_1]$.
 ] <slotqueue-unmatched-enqueue-lemma>
 
@@ -573,7 +525,7 @@ We now look at the more fundamental results.
 
   Suppose $e$ obtains a timestamp of $c$ and $e'$ obtains a timestamp of $c'$.
 
-  Due to $(1)$, at the time $d$ starts, $e$ has finished but it is still unmatched. By the way @slotqueue-read-minimum-rank is defined, $d$ would find a slot that stores a timestamp that is not greater than the one $e$ enqueues. In other word, $c' lt.eq c$. But $c' != c$, then $c' < c$. Therefore, $e$ cannot precede $e'$, otherwise, $c < c'$.
+  Due to $(1)$, at the time $d$ starts, $e$ has finished but it is still unmatched. By the way @slotqueue-read-minimum-rank is defined and by @slotqueue-unmatched-enqueue-lemma, $d$ would find a slot that stores a timestamp that is not greater than the one $e$ enqueues. In other word, $c' lt.eq c$. But $c' != c$, then $c' < c$. Therefore, $e$ cannot precede $e'$, otherwise, $c < c'$.
 
   So, either $e'$ precedes or overlaps with $e$. The theorem holds.
 ]
