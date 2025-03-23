@@ -298,33 +298,23 @@ Noticeably, we use no scheme to avoid ABA problem in Slot-queue. In actuality, A
 
 Not every ABA problem is unsafe. We formalize in this section which ABA problem is safe and which is not.
 
-#definition[A *CAS-sequence* on a variable `v` is a sequence of instructions that:
-  - Starts with a load $v_0 = $`load(`$v$`)`.
-  - Ends with a `CAS(&`$v$`,`$v_0$`,`$v_1$`)`.
-]
-
-#definition[A *successful CAS-sequence* on a variable `v` is a *CAS-sequence* on `v` that ends with a successful CAS.]
-
 #definition[A *modification instruction* on a variable `v` is an atomic instruction that may change the value of `v` e.g. a store or a CAS.]
 
 #definition[A *successful modification instruction* on a variable `v` is an atomic instruction that changes the value of `v` e.g. a store or a successful CAS.]
 
-#definition[A *history* of successful *CAS-sequences* and *modification instructions* is a timeline of when any *CAS-sequences* start/end and when any modification instructions end.]
+#definition[A *CAS-sequence* on a variable `v` is a sequence of instructions of a method $m$ such that:
+  - The first instruction is a load $v_0 = $`load(`$v$`)`.
+  - The last instruction is a `CAS(&`$v$`,`$v_0$`,`$v_1$`)`.
+  - There's no modification instruction on `v` between the first and the last instruction.
+]
 
-We can define a strict partial order $<$ on the set of *CAS-sequences* and *modification instructions* such that:
-- $A < B$ if $A$ and $B$ are both *CAS-sequences* and $A$'s *modification instruction* ends before $B$'s.
-- $A < B$ if $A$ and $B$ are *modifcation instructions* and $A$ ends before $B$ ends.
-- $A < B$ if $A$ is a *modification instruction*, $B$ is a *CAS-sequence* and $A$ ends before $B$'s *modification instruction*.
-- $B < A$ if $A$ is a *modification instruction*, $B$ is a *CAS-sequence* and $A$ ends after $B$'s *modification instruction*.
+#definition[A *successful CAS-sequence* on a variable `v` is a *CAS-sequence* on `v` that ends with a successful CAS.]
 
-#definition[Consider an operation $op$. Consider a history of successful *CAS-sequences* and *modification instructions* on the same variable `v`. *ABA problem* is said to occurr with `v` in $op$ if there exists one $op$'s *successful CAS-sequence* on `v`, during which there's some *successful modification instruction* on `v`.]
-
-#definition[Consider an operation $op$. Consider a history of successful *CAS-sequences* and *modification instructions* on the same variable `v`. $op$ is said to be *ABA-safe* with respect to `v` if and only if either:
-  - *ABA problem* does not occur with `v` in $op$ in the history.
-  - We can reorder the *successful CAS-sequences* and *modification instructions* in the history such that:
-    - The strict partial order on the resulting history must be a superset of the strict partial order on the original history.
-    - The resulting history after reordering produces the same output as the original history.
-    - *ABA problem* does not occur with `v` in $op$ in the resulting history.
+#definition[Consider a method $m$ on a concurrent object $S$. $m$ is said to be *ABA-safe* if and only if for any history of method calls produced from $S$, we can reorder any successful CAS-sequences by an invocation of $m$ in the following fashion:
+  - If a successful CAS-sequence is part of an invocation of $m$, after reordering, it must still be part of that invocation.
+  - If a successful CAS-sequence by an invocation of $m$ precedes another in a method invocation, after reordering, this ordering is still respected.
+  - Any successful CAS-sequence by an invocation of $m$ after reordering must not overlap with a successful modification instruction on the same variable.
+  - After reordering, all method calls' response events on the concurrent object $S$ stay the same.
 ]
 
 == Proof of ABA-safety
@@ -403,7 +393,7 @@ We can now turn to our interested problem in this section.
   - The CAS sequence does not modify any values except for the last CAS instruction, and the ending time of the CAS sequence is still the same.
   - The CAS sequence modifies `slots[rank]` at the CAS but the target value is the same because inputs and shared values are the same in both cases.
 
-  We have proven that if we move $d$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, we still retain the program's output. Furthermore, we only move the starting time of a CAS-sequence, therefore, the strict partial order defined above is not changed.
+  We have proved that if we move $d$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, we still retain the program's output.
 
   If we apply the reordering for every `dequeue`, the theorem directly follows.
 ]
@@ -452,7 +442,7 @@ We can now turn to our interested problem in this section.
   - The CAS sequence does not modify any values except for the last CAS/store instruction, and the ending time of the CAS sequence is still the same.
   - The CAS sequence modifies `slots[rank]` at the CAS but the target value is the same because inputs and shared values are the same in both cases.
 
-  We have proven that if we move $e$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*, we still retain the program's output. Furthermore, we only move the starting time of a CAS-sequence, therefore, the strict partial order defined above is not changed.
+  We have proved that if we move $e$'s successful CAS-sequence to start after the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*, we still retain the program's output.
 
   If we apply the reordering for every `enqueue`, the theorem directly follows.
 ]
@@ -516,7 +506,7 @@ We prove some algorithm-specific results first, which will form the basis for th
 
   Take $op$ to be the `enqueue`/`dequeue` that executes the last successful slot-modification instruction on $s_r$ before $t'$. By definition, $op$ set $s_r$ to $s_0$.
 
-  Any `dequeue` before $d$ would have finished before $t_0$, and thus its *slot-fresh phase*. By @slotqueue-refresh-dequeue-lemma, for each `dequeue` before $d$, there must be some successful refresh call whose `spsc_readFront` observes the state of the local SPSC after $d$'s `spsc_dequeue`. By definition, $op$'s refresh call ended after all of these successful refresh call. By @aba-safe-slotqueue-theorem, the effect is as if $op$ starts after all of these successful refresh call. Therefore, $op$ can be treated as if it has seen the local SPSC after any of the previous `dequeue`s' `spsc_dequeue` calls. In other words, $op$ has set $s_r$ to the front element's timestamp after it has observed all previous `spsc_dequeue` before $d$. During $t_0$ to $t_1$, there's no `spsc_dequeue`. Therefore, from after $op$'s successful refresh call until $t_1$, there is no new `spsc_dequeue` that can be observed. Any refresh calls after $op$ until $t_1$ can only observe new `spsc_enqueue`s, but because $op$ set $s_r$ to a non-`MAX` value, their corresponding `refreshEnqueue`s cannot affect $s_r$. Therefore, the lemma holds.
+  Any `dequeue` before $d$ would have finished before $t_0$, and thus its *slot-fresh phase*. By @slotqueue-refresh-dequeue-lemma, for each `dequeue` before $d$, there must be some successful refresh call whose `spsc_readFront` observes the state of the local SPSC after $d$'s `spsc_dequeue`. By definition, $op$'s refresh call ended after all of these successful refresh call. In the process of proving @aba-safe-slotqueue-theorem, we have proved that the net effect is as if $op$ starts after all of these successful refresh calls. Therefore, $op$ can be treated as if it has seen the local SPSC after any of the previous `dequeue`s' `spsc_dequeue` calls. In other words, $op$ has set $s_r$ to the front element's timestamp after it has observed all previous `spsc_dequeue` before $d$. During $t_0$ to $t_1$, there's no `spsc_dequeue`. Therefore, from after $op$'s successful refresh call until $t_1$, there is no new `spsc_dequeue` that can be observed. Any refresh calls after $op$ until $t_1$ can only observe new `spsc_enqueue`s, but because $op$ set $s_r$ to a non-`MAX` value, their corresponding `refreshEnqueue`s cannot affect $s_r$. Therefore, the lemma holds.
 ]
 
 #lemma[
