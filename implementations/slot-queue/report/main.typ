@@ -519,6 +519,30 @@ We prove some algorithm-specific results first, which will form the basis for th
   The theorem holds.
 ]
 
+#lemma[
+  Given a rank $r$ and a `dequeue` $d$ that begins its *slot-scan phase* at time $t_0$ and finishes at time $t_1$. If $d$ finds that $s l o t(r, t') =$ `MAX` for some time $t'$ such that $t_0 lt.eq t' lt.eq t_1$, then $s l o t (r, t) !=$ `MAX` for any $t$ such that $t_0 lt.eq t lt.eq t'$.
+] <slotqueue-scan-MAX-lemma>
+
+#proof[
+  Because during $d$'s *slot-scan phase*, no other `dequeue` can run and `enqueue`s can only set a slot to non-`MAX`, if $d$ finds that $s l o t(r, t') =$ `MAX` for some time $t'$ such that $t_0 lt.eq t' lt.eq t_1$, then $s l o t (r, t) !=$ `MAX` for any $t$ such that $t_0 lt.eq t lt.eq t'$.
+
+  The theorem holds.
+]
+
+#lemma[
+  Given a rank $r$, if at time $t$, there's no `enqueue` and no `dequeue` running on rank $r$, then $s l o t (r, t) = m i n \- s p s c \- t s(r, t)$.
+] <slotqueue-idle-slot-lemma>
+
+#proof[
+  Take $op$ to be the `enqueue`/`dequeue` that executes the last *slot-modification instruction* on the slot of rank $r$ before $t$.
+
+  If $op$ does not exist, that means either no `enqueue`/`dequeue` has started yet or they haven't performed the *slot-modification instruction*. If no `enqueue`/`dequeue` has started yet, it's trivial that $s l o t (r, t) = m i n \- s p s c \- t s(r, t) =$ `MAX`. If some has started but haven't performed the *slot-modification instruction* until $t$, this is a contradiction as at $t$, no `enqueue` and `dequeue` is running on rank $r$.
+
+  Consider $op'$ to be any `enqueue`/`dequeue` that finishes before $t$. By definition, it must have finished its *slot-refresh phase* before $t$. By @slotqueue-refresh-enqueue-lemma and @slotqueue-refresh-dequeue-lemma, there must be some successful refresh calls before $t$ that observes the effect of $op's$'s `spsc_dequeue`/`spsc_enqueue`. By our assumption, $op$'s *slot-modification instruction* happens after all of these refresh calls. In the process of proving @aba-safe-slotqueue-theorem, we have proved that $op$'s *CAS-sequence* can be treated as if it observe the state of the local SPSC after any of these `spsc_dequeue`/`spsc_enqueue`. Therefore, it sets the slot of $r$ to the minimum timestamp in the local SPSC after all `spsc_dequeue`/`spsc_dequeue` before $t$ have taken effect.
+
+  It follows that $s l o t(r, t) = m i n \- s p s c \- t s (r, t)$.
+]
+
 We now look at the more fundamental results.
 
 #lemma[
