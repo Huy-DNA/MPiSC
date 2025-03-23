@@ -549,7 +549,7 @@ We prove some algorithm-specific results first, which will form the basis for th
 
 #proof[
   Take $t'$ to be the time $e$'s `spsc_enqueue` takes effect.
-  
+
   By @slotqueue-refresh-enqueue-lemma, there must be a successful refresh call that observes the effect of `spsc_enqueue` happening at $t''$, $t'' in [t', t_0]$.
 
   By the same reasoning as in @aba-safe-slotqueue-theorem, any successful slot-modification instructions happening after $t''$ must observe the effect of `spsc_enqueue`. However, because $e$ is never matched between $t''$ and $t_1$, the timestamp $c$ is in the local SPSC the whole timespan $[t'', t_1]$. Therefore, any slot-modification instructions during $[t'', t_1]$ must set the slot's value to some value not greater than $c$.
@@ -572,7 +572,7 @@ We now look at the more fundamental results.
 
   Suppose $e$ obtains a timestamp of $c$ and $e'$ obtains a timestamp of $c'$.
 
-  Due to $(1)$, at the time $d$ starts, $e$ is still unmatched. By the way @slotqueue-read-minimum-rank is defined, $d$ would find a slot that stores a timestamp that is not greater than the one $e$ enqueues. In other word, $c' lt.eq c$. But $c' != c$, then $c' < c$. Therefore, $e$ cannot precede $e'$, otherwise, $c < c'$.
+  Due to $(1)$, at the time $d$ starts, $e$ has finished but it is still unmatched. By the way @slotqueue-read-minimum-rank is defined, $d$ would find a slot that stores a timestamp that is not greater than the one $e$ enqueues. In other word, $c' lt.eq c$. But $c' != c$, then $c' < c$. Therefore, $e$ cannot precede $e'$, otherwise, $c < c'$.
 
   So, either $e'$ precedes or overlaps with $e$. The theorem holds.
 ]
@@ -606,7 +606,21 @@ We now look at the more fundamental results.
   - $e_0$ matches $d_0$ and $e_1$ matches $d_1$ such that $d_0$ precedes $d_1$.
 ] <slotqueue-enqueue-enqueue-theorem>
 
-#proof[ ]
+#proof[
+  if $e_1$ is not matched, the theorem holds.
+
+  Suppose $e_1$ matches $d_1$. By @slotqueue-matching-dequeue-enqueue-lemma, either $e_1$ precedes or overlaps with $d_1$.
+
+  Suppose the contrary, $e_0$ is unmatched or $e_0$ matches $d_0$ such that $d_1$ precedes $d_0$, then when $d_1$ starts, $e_0$ is still unmatched.
+
+  If $e_0$ and $e_1$ targets the same rank, it's obvious that $d_1$ must prioritize $e_0$ over $e_1$. Thus $d_1$ cannot match $e_1$.
+
+  If $e_0$ targets a later rank than $e_1$, $d_1$ cannot find $e_1$ in the first scan, because the scan is left-to-right, and if it finds $e_1$ it would later find $e_0$ that has a lower timestamp. Suppose $d_1$ finds $e_1$ in the second scan, that means $d_1$ finds $e' != e_1$ and $e'$'s timestamp is larger than $e_1$'s, which is larger than $e_0$'s. Due to the scan being left-to-right, $e'$ must target a later rank than $e_1$. If $e'$ also targets a later rank than $e_0$, then in the second scan, $d_1$ would have prioritized $e_0$ that has a lower timestamp. Suppose $e'$ targets an earlier rank than $e_0$ but later than $e_1$. Because $e_0$'s timestamp is larger than $e'$'s, it must precede or overlap with $e$. Similarlt, $e_1$ must precede or overlap with $e$. Because $e'$ targets an earlier rank than $e_0$, $e_0$'s *slot-refresh phase* must finish after $e'$'s. That means $e_1$ must start after $e'$'s *slot-refresh phase*, because $e_0$ precedes $e_1$. But then, $e_1$ must obtain a timestamp larger than $e'$, which is a contradiction.
+
+  Suppose $e_0$ targets an earlier rank than $e_1$. If $d_1$ finds $e_1$ in the first scan, than in the second scan, $d_1$ would have prioritize $e_0$'s timestamp. Suppose $d_1$ finds $e_1$ in the second scan and during the first scan, it finds $e' != e_1$ and $e'$'s timestamp is larger than $e_1$'s, which is larger than $e_0$'s. Due to how the second scan is defined, $e'$ targets a later rank than $e_1$, which targets a later rank than $e_0$. Because during the second scan, $e_0$ is not chosen, its *slot-refresh phase* must finish after $e'$'s. Because $e_0$ preceds $e_1$, $e_1$ must start after $e'$'s *slot-refresh phase*, so it must obtain a larger timestamp than $e'$, which is a contradiction.
+
+  Therefore, by contradiction, $e_0$ must be matched and $e_0$ matches $d_0$ such that $d_0$ precedes $d_1$.
+]
 
 #theorem[If a `dequeue` $d_0$ precedes another `dequeue` $d_1$, then either:
   - $d_0$ isn't matched.
