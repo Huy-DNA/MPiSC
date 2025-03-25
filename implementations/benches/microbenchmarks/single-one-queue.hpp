@@ -24,6 +24,7 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
   double total_microseconds = 0;
   double total_enqueues_microseconds = 0;
   double total_dequeues_microseconds = 0;
+  double total_enqueues_latency_microseconds = 0;
 
   for (int i = 0; i < iterations; ++i) {
     double local_enqueues = 0;
@@ -36,7 +37,7 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
 
     if (rank == 0) {
       SlotDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
-      std::this_thread::sleep_for(std::chrono::microseconds(100));
+      std::this_thread::sleep_for(std::chrono::microseconds(1));
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
         int output;
@@ -77,6 +78,7 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     double microseconds = 0;
     double enqueues_microseconds = 0;
     double dequeues_microseconds = 0;
+    double enqueues_latency_microseconds = 0;
 
     MPI_Allreduce(&local_dequeues, &dequeues, 1, MPI_DOUBLE, MPI_SUM,
                   MPI_COMM_WORLD);
@@ -94,7 +96,11 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
                   MPI_COMM_WORLD);
 
     MPI_Allreduce(&local_enqueues_microseconds, &enqueues_microseconds, 1,
-                  MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+                  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    enqueues_microseconds /= size - 1;
+
+    MPI_Allreduce(&local_enqueues_microseconds, &enqueues_latency_microseconds,
+                  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     MPI_Allreduce(&local_dequeues_microseconds, &dequeues_microseconds, 1,
                   MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
@@ -105,13 +111,14 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     total_successful_enqueues += successful_enqueues;
     total_microseconds += microseconds;
     total_enqueues_microseconds += enqueues_microseconds;
+    total_enqueues_latency_microseconds += enqueues_latency_microseconds;
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
   report("Slotqueue", number_of_elements, iterations, total_microseconds,
          total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
-         total_enqueues, total_successful_enqueues,
-         total_enqueues_microseconds);
+         total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+         total_enqueues_latency_microseconds);
 }
 
 inline void
@@ -130,6 +137,7 @@ ltqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
   double total_microseconds = 0;
   double total_enqueues_microseconds = 0;
   double total_dequeues_microseconds = 0;
+  double total_enqueues_latency_microseconds = 0;
 
   for (int i = 0; i < iterations; ++i) {
     double local_enqueues = 0;
@@ -183,6 +191,7 @@ ltqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     double microseconds = 0;
     double enqueues_microseconds = 0;
     double dequeues_microseconds = 0;
+    double enqueues_latency_microseconds = 0;
 
     MPI_Allreduce(&local_dequeues, &dequeues, 1, MPI_DOUBLE, MPI_SUM,
                   MPI_COMM_WORLD);
@@ -200,7 +209,11 @@ ltqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
                   MPI_COMM_WORLD);
 
     MPI_Allreduce(&local_enqueues_microseconds, &enqueues_microseconds, 1,
-                  MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+                  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    enqueues_microseconds /= size - 1;
+
+    MPI_Allreduce(&local_enqueues_microseconds, &enqueues_latency_microseconds,
+                  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     MPI_Allreduce(&local_dequeues_microseconds, &dequeues_microseconds, 1,
                   MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
@@ -211,13 +224,14 @@ ltqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     total_successful_enqueues += successful_enqueues;
     total_microseconds += microseconds;
     total_enqueues_microseconds += enqueues_microseconds;
+    total_enqueues_latency_microseconds += enqueues_latency_microseconds;
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
   report("LTQueue", number_of_elements, iterations, total_microseconds,
          total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
-         total_enqueues, total_successful_enqueues,
-         total_enqueues_microseconds);
+         total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+         total_enqueues_latency_microseconds);
 }
 
 inline void
@@ -236,6 +250,7 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
   double total_microseconds = 0;
   double total_enqueues_microseconds = 0;
   double total_dequeues_microseconds = 0;
+  double total_enqueues_latency_microseconds = 0;
 
   for (int i = 0; i < iterations; ++i) {
     double local_enqueues = 0;
@@ -289,6 +304,7 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     double microseconds = 0;
     double enqueues_microseconds = 0;
     double dequeues_microseconds = 0;
+    double enqueues_latency_microseconds = 0;
 
     MPI_Allreduce(&local_dequeues, &dequeues, 1, MPI_DOUBLE, MPI_SUM,
                   MPI_COMM_WORLD);
@@ -306,7 +322,11 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
                   MPI_COMM_WORLD);
 
     MPI_Allreduce(&local_enqueues_microseconds, &enqueues_microseconds, 1,
-                  MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+                  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    enqueues_microseconds /= size - 1;
+
+    MPI_Allreduce(&local_enqueues_microseconds, &enqueues_latency_microseconds,
+                  1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     MPI_Allreduce(&local_dequeues_microseconds, &dequeues_microseconds, 1,
                   MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
@@ -317,11 +337,12 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     total_successful_enqueues += successful_enqueues;
     total_microseconds += microseconds;
     total_enqueues_microseconds += enqueues_microseconds;
+    total_enqueues_latency_microseconds += enqueues_latency_microseconds;
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
   report("FastQueue", number_of_elements, iterations, total_microseconds,
          total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
-         total_enqueues, total_successful_enqueues,
-         total_enqueues_microseconds);
+         total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+         total_enqueues_latency_microseconds);
 }
