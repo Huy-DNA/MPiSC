@@ -15,16 +15,15 @@ inline void report(const std::string &title,
 
   if (rank == 0) {
     printf("---- %s ----\n", title.c_str());
-    printf("Dequeue latency: %g ms\n",
-           dequeue_microseconds / number_of_elements / iterations / 1000);
-    printf("Dequeue throughput: %g ops/ms\n",
-           successful_dequeues / dequeue_microseconds);
-    printf("Enqueue latency: %g ms\n", enqueue_latency_microseconds /
-                                           number_of_elements / iterations /
-                                           1000);
-    printf("Enqueue throughput: %g ops/ms\n",
-           successful_enqueues / enqueue_microseconds);
-    printf("Total throughput: %g ops/ms\n",
-           (successful_enqueues + successful_dequeues) / microseconds);
+    printf("Dequeue latency: %g us\n",
+           dequeue_microseconds / number_of_elements / iterations);
+    printf("Dequeue throughput: %g 10^5ops/s\n",
+           successful_dequeues / dequeue_microseconds * 10);
+    printf("Enqueue latency: %g us\n",
+           enqueue_latency_microseconds / number_of_elements / iterations);
+    printf("Enqueue throughput: %g 10^5ops/s\n",
+           successful_enqueues / enqueue_microseconds * 10);
+    printf("Total throughput: %g 10^5ops/s\n",
+           (successful_enqueues + successful_dequeues) / microseconds * 10);
   }
 }
