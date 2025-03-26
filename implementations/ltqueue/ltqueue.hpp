@@ -80,56 +80,45 @@ private:
       MPI_Win_unlock_all(this->_first_win);
       MPI_Win_unlock_all(this->_last_win);
       MPI_Barrier(comm);
+
+      MPI_Win_lock_all(0, this->_data_win);
+      MPI_Win_lock_all(0, this->_first_win);
+      MPI_Win_lock_all(0, this->_last_win);
     }
 
     ~Spsc() {
+      MPI_Win_unlock_all(this->_data_win);
+      MPI_Win_unlock_all(this->_first_win);
+      MPI_Win_unlock_all(this->_last_win);
       MPI_Win_free(&this->_data_win);
       MPI_Win_free(&this->_first_win);
       MPI_Win_free(&this->_last_win);
     }
 
     bool enqueue(const data_t &data) {
-      MPI_Win_lock_all(0, this->_first_win);
-      MPI_Win_lock_all(0, this->_last_win);
-      MPI_Win_lock_all(0, this->_data_win);
-
       MPI_Aint new_last = this->_last_buf + 1;
 
       if (new_last - this->_first_buf > this->_capacity) {
         aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
         if (new_last - this->_first_buf > this->_capacity) {
-          MPI_Win_unlock_all(this->_first_win);
-          MPI_Win_unlock_all(this->_last_win);
-          MPI_Win_unlock_all(this->_data_win);
           return false;
         }
       }
 
       awrite_sync(&data, this->_last_buf % this->_capacity, this->_self_rank,
                   this->_data_win);
-      awrite_async(&new_last, 0, this->_self_rank, this->_last_win);
+      awrite_sync(&new_last, 0, this->_self_rank, this->_last_win);
       this->_last_buf = new_last;
-
-      MPI_Win_unlock_all(this->_first_win);
-      MPI_Win_unlock_all(this->_last_win);
-      MPI_Win_unlock_all(this->_data_win);
 
       return true;
     }
 
     bool enqueue(const std::vector<data_t> &data) {
-      MPI_Win_lock_all(0, this->_first_win);
-      MPI_Win_lock_all(0, this->_last_win);
-      MPI_Win_lock_all(0, this->_data_win);
-
       MPI_Aint new_last = this->_last_buf + data.size();
 
       if (new_last - this->_first_buf > this->_capacity) {
         aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
         if (new_last - this->_first_buf > this->_capacity) {
-          MPI_Win_unlock_all(this->_first_win);
-          MPI_Win_unlock_all(this->_last_win);
-          MPI_Win_unlock_all(this->_data_win);
           return false;
         }
       }
@@ -147,14 +136,12 @@ private:
             data.data() + this->_capacity - this->_last_buf % this->_capacity,
             data.size() - this->_capacity + this->_last_buf % this->_capacity,
             0, this->_self_rank, this->_data_win);
+        MPI_Win_flush(this->_self_rank, this->_data_win);
       }
 
-      awrite_async(&new_last, 0, this->_self_rank, this->_last_win);
+      awrite_sync(&new_last, 0, this->_self_rank, this->_last_win);
       this->_last_buf = new_last;
 
-      MPI_Win_unlock_all(this->_first_win);
-      MPI_Win_unlock_all(this->_last_win);
-      MPI_Win_unlock_all(this->_data_win);
       return true;
     }
 
@@ -164,13 +151,10 @@ private:
       }
       aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
 
-      MPI_Win_lock_all(0, this->_data_win);
-
       data_t data;
-      aread_async(&data, this->_first_buf % this->_capacity, this->_self_rank,
-                  this->_data_win);
+      aread_sync(&data, this->_first_buf % this->_capacity, this->_self_rank,
+                 this->_data_win);
 
-      MPI_Win_unlock_all(this->_data_win);
       *output_timestamp = data.timestamp;
       return true;
     }
@@ -229,11 +213,8 @@ private:
     int self_index = this->_get_self_index();
     tree_node_t self_node;
     timestamp_t min_timestamp;
-    MPI_Win_lock_all(0, this->_min_timestamp_win);
-    aread_async(&min_timestamp, 0, this->_self_rank, this->_min_timestamp_win);
-    MPI_Win_unlock_all(this->_min_timestamp_win);
+    aread_sync(&min_timestamp, 0, this->_self_rank, this->_min_timestamp_win);
 
-    MPI_Win_lock_all(0, this->_tree_win);
     aread_sync(&self_node, self_index, this->_dequeuer_rank, this->_tree_win);
     if (min_timestamp.timestamp == MAX_TIMESTAMP) {
       const tree_node_t new_node = {DUMMY_RANK, self_node.tag + 1};
@@ -251,7 +232,6 @@ private:
       res = result_node.rank == self_node.rank &&
             result_node.tag == self_node.tag;
     }
-    MPI_Win_unlock_all(this->_tree_win);
     return res;
   }
 
@@ -261,7 +241,6 @@ private:
     uint32_t min_timestamp;
     bool min_timestamp_succeeded = this->_spsc.read_front(&min_timestamp);
 
-    MPI_Win_lock_all(0, this->_min_timestamp_win);
     timestamp_t current_timestamp;
     aread_sync(&current_timestamp, 0, this->_self_rank,
                this->_min_timestamp_win);
@@ -285,7 +264,6 @@ private:
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
     }
-    MPI_Win_unlock_all(this->_min_timestamp_win);
     return res;
   }
 
@@ -293,8 +271,6 @@ private:
     tree_node_t current_node;
     uint32_t min_timestamp = MAX_TIMESTAMP;
     int32_t min_timestamp_rank = DUMMY_RANK;
-    MPI_Win_lock_all(0, this->_tree_win);
-    MPI_Win_lock_all(0, this->_min_timestamp_win);
     aread_sync(&current_node, current_index, this->_dequeuer_rank,
                this->_tree_win);
     for (const int child_index : this->_get_children_indexes(current_index)) {
@@ -312,12 +288,10 @@ private:
         min_timestamp_rank = child_node.rank;
       }
     }
-    MPI_Win_unlock_all(this->_min_timestamp_win);
     const tree_node_t new_node = {min_timestamp_rank, current_node.tag + 1};
     tree_node_t result_node;
     compare_and_swap_sync(&current_node, &new_node, &result_node, current_index,
                           this->_dequeuer_rank, this->_tree_win);
-    MPI_Win_unlock_all(this->_tree_win);
     return result_node.tag == current_node.tag &&
            result_node.rank == current_node.rank;
   }
@@ -348,23 +322,28 @@ public:
                      &this->_tree_win);
 
     MPI_Barrier(comm);
+
+    MPI_Win_lock_all(0, this->_min_timestamp_win);
+    MPI_Win_lock_all(0, this->_counter_win);
+    MPI_Win_lock_all(0, this->_tree_win);
   }
 
   LTEnqueuer(const LTEnqueuer &) = delete;
   LTEnqueuer &operator=(const LTEnqueuer &) = delete;
 
   ~LTEnqueuer() {
+    MPI_Win_unlock_all(this->_min_timestamp_win);
+    MPI_Win_unlock_all(this->_counter_win);
+    MPI_Win_unlock_all(this->_tree_win);
     MPI_Win_free(&this->_tree_win);
     MPI_Win_free(&this->_min_timestamp_win);
     MPI_Win_free(&this->_counter_win);
   }
 
   bool enqueue(const T &data) {
-    MPI_Win_lock_all(0, this->_counter_win);
     uint32_t timestamp;
     fetch_and_add_sync(&timestamp, 1, 0, this->_dequeuer_rank,
                        this->_counter_win);
-    MPI_Win_unlock_all(this->_counter_win);
     if (!this->_spsc.enqueue({data, timestamp})) {
       return false;
     }
@@ -379,11 +358,9 @@ public:
     if (data.size() == 0) {
       return true;
     }
-    MPI_Win_lock_all(0, this->_counter_win);
     uint32_t timestamp;
     fetch_and_add_sync(&timestamp, 1, 0, this->_dequeuer_rank,
                        this->_counter_win);
-    MPI_Win_unlock_all(this->_counter_win);
     std::vector<data_t> timestamped_data;
     for (const T &datum : data) {
       timestamped_data.push_back(data_t{datum, timestamp});
@@ -466,65 +443,52 @@ private:
       MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_last_ptr,
                        &this->_last_win);
       MPI_Barrier(comm);
+
+      MPI_Win_lock_all(0, this->_data_win);
+      MPI_Win_lock_all(0, this->_first_win);
+      MPI_Win_lock_all(0, this->_last_win);
     }
 
     ~Spsc() {
+      MPI_Win_unlock_all(this->_data_win);
+      MPI_Win_unlock_all(this->_first_win);
+      MPI_Win_unlock_all(this->_last_win);
       MPI_Win_free(&this->_data_win);
       MPI_Win_free(&this->_first_win);
       MPI_Win_free(&this->_last_win);
     }
 
     bool dequeue(data_t *output, int enqueuer_rank) {
-      MPI_Win_lock_all(0, this->_first_win);
-      MPI_Win_lock_all(0, this->_last_win);
-      MPI_Win_lock_all(0, this->_data_win);
-
       MPI_Aint new_first = this->_first_buf[enqueuer_rank] + 1;
       if (new_first > this->_last_buf[enqueuer_rank]) {
         aread_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
                    this->_last_win);
         if (new_first > this->_last_buf[enqueuer_rank]) {
-          MPI_Win_unlock_all(this->_first_win);
-          MPI_Win_unlock_all(this->_last_win);
-          MPI_Win_unlock_all(this->_data_win);
           return false;
         }
       }
 
       aread_sync(output, this->_first_buf[enqueuer_rank] % this->_capacity,
                  enqueuer_rank, this->_data_win);
-      awrite_async(&new_first, 0, enqueuer_rank, this->_first_win);
+      awrite_sync(&new_first, 0, enqueuer_rank, this->_first_win);
       this->_first_buf[enqueuer_rank] = new_first;
 
-      MPI_Win_unlock_all(this->_first_win);
-      MPI_Win_unlock_all(this->_last_win);
-      MPI_Win_unlock_all(this->_data_win);
       return true;
     }
 
     bool read_front(uint32_t *output_timestamp, int enqueuer_rank) {
-      MPI_Win_lock_all(0, this->_first_win);
-      MPI_Win_lock_all(0, this->_last_win);
-      MPI_Win_lock_all(0, this->_data_win);
-
       if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
         aread_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
                    this->_last_win);
         if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
-          MPI_Win_unlock_all(this->_first_win);
-          MPI_Win_unlock_all(this->_last_win);
-          MPI_Win_unlock_all(this->_data_win);
           return false;
         }
       }
 
       data_t data;
-      aread_async(&data, this->_first_buf[enqueuer_rank] % this->_capacity,
-                  enqueuer_rank, this->_data_win);
+      aread_sync(&data, this->_first_buf[enqueuer_rank] % this->_capacity,
+                 enqueuer_rank, this->_data_win);
 
-      MPI_Win_unlock_all(this->_first_win);
-      MPI_Win_unlock_all(this->_last_win);
-      MPI_Win_unlock_all(this->_data_win);
       *output_timestamp = data.timestamp;
       return true;
     }
@@ -573,7 +537,6 @@ private:
     bool min_timestamp_succeeded =
         this->_spsc.read_front(&min_timestamp, enqueuer_rank);
 
-    MPI_Win_lock_all(0, this->_min_timestamp_win);
     timestamp_t current_timestamp;
     aread_sync(&current_timestamp, 0, enqueuer_rank, this->_min_timestamp_win);
 
@@ -596,7 +559,6 @@ private:
       res = result_timestamp.tag == current_timestamp.tag &&
             current_timestamp.timestamp == result_timestamp.timestamp;
     }
-    MPI_Win_unlock_all(this->_min_timestamp_win);
     return res;
   }
 
@@ -605,11 +567,8 @@ private:
     int self_index = this->_get_enqueuer_index(enqueuer_rank);
     tree_node_t self_node;
     timestamp_t min_timestamp;
-    MPI_Win_lock_all(0, this->_min_timestamp_win);
-    aread_async(&min_timestamp, 0, enqueuer_rank, this->_min_timestamp_win);
-    MPI_Win_unlock_all(this->_min_timestamp_win);
+    aread_sync(&min_timestamp, 0, enqueuer_rank, this->_min_timestamp_win);
 
-    MPI_Win_lock_all(0, this->_tree_win);
     aread_sync(&self_node, self_index, this->_self_rank, this->_tree_win);
     if (min_timestamp.timestamp == MAX_TIMESTAMP) {
       const tree_node_t new_node = {DUMMY_RANK, self_node.tag + 1};
@@ -626,7 +585,6 @@ private:
       res = result_node.tag == self_node.tag &&
             result_node.rank == self_node.rank;
     }
-    MPI_Win_unlock_all(this->_tree_win);
     return res;
   }
 
@@ -634,7 +592,6 @@ private:
     tree_node_t current_node;
     uint32_t min_timestamp = MAX_TIMESTAMP;
     int32_t min_timestamp_rank = DUMMY_RANK;
-    MPI_Win_lock_all(0, this->_tree_win);
     aread_sync(&current_node, current_index, this->_self_rank, this->_tree_win);
     for (const int child_index : this->_get_children_indexes(current_index)) {
       tree_node_t child_node;
@@ -642,11 +599,9 @@ private:
       if (child_node.rank == DUMMY_RANK) {
         continue;
       }
-      MPI_Win_lock_all(0, this->_min_timestamp_win);
       timestamp_t child_timestamp;
       aread_sync(&child_timestamp, 0, child_node.rank,
                  this->_min_timestamp_win);
-      MPI_Win_unlock_all(this->_min_timestamp_win);
       if (child_timestamp.timestamp < min_timestamp) {
         min_timestamp = child_timestamp.timestamp;
         min_timestamp_rank = child_node.rank;
@@ -656,7 +611,6 @@ private:
     tree_node_t result_node;
     compare_and_swap_sync(&current_node, &new_node, &result_node, current_index,
                           this->_self_rank, this->_tree_win);
-    MPI_Win_unlock_all(this->_tree_win);
     return result_node.tag == current_node.tag &&
            result_node.rank == current_node.rank;
   }
@@ -702,20 +656,25 @@ public:
     MPI_Win_unlock_all(this->_tree_win);
 
     MPI_Barrier(comm);
+
+    MPI_Win_lock_all(0, this->_min_timestamp_win);
+    MPI_Win_lock_all(0, this->_counter_win);
+    MPI_Win_lock_all(0, this->_tree_win);
   }
   LTDequeuer(const LTDequeuer &) = delete;
   LTDequeuer &operator=(const LTDequeuer &) = delete;
   ~LTDequeuer() {
+    MPI_Win_unlock_all(this->_min_timestamp_win);
+    MPI_Win_unlock_all(this->_counter_win);
+    MPI_Win_unlock_all(this->_tree_win);
     MPI_Win_free(&this->_tree_win);
     MPI_Win_free(&this->_min_timestamp_win);
     MPI_Win_free(&this->_counter_win);
   }
 
   bool dequeue(T *output) {
-    MPI_Win_lock_all(0, this->_tree_win);
     tree_node_t root;
-    aread_async(&root, 0, this->_self_rank, this->_tree_win);
-    MPI_Win_unlock_all(this->_tree_win);
+    aread_sync(&root, 0, this->_self_rank, this->_tree_win);
 
     if (root.rank == DUMMY_RANK) {
       return false;

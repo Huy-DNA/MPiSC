@@ -5,7 +5,7 @@
 #include <mpi.h>
 #include <vector>
 
-template <typename T> class FqEnqueuer {
+template <typename T> class FastEnqueuer {
 private:
   MPI_Win _head_win;
   MPI_Aint *_head_ptr;
@@ -25,8 +25,8 @@ private:
   const MPI_Aint _capacity;
 
 public:
-  FqEnqueuer(MPI_Aint capacity, MPI_Aint host, MPI_Aint self_rank,
-             MPI_Comm comm)
+  FastEnqueuer(MPI_Aint capacity, MPI_Aint host, MPI_Aint self_rank,
+               MPI_Comm comm)
       : _host{host}, _head_buf{0}, _capacity{capacity} {
     int rank;
     MPI_Comm_rank(comm, &rank);
@@ -68,14 +68,24 @@ public:
                        &this->_flag_win);
     }
     MPI_Barrier(comm);
-  }
-
-  bool enqueue(const T &data) {
     MPI_Win_lock_all(0, this->_head_win);
     MPI_Win_lock_all(0, this->_tail_win);
     MPI_Win_lock_all(0, this->_data_win);
     MPI_Win_lock_all(0, this->_flag_win);
+  }
 
+  ~FastEnqueuer() {
+    MPI_Win_unlock_all(this->_head_win);
+    MPI_Win_unlock_all(this->_tail_win);
+    MPI_Win_unlock_all(this->_data_win);
+    MPI_Win_unlock_all(this->_flag_win);
+    MPI_Win_free(&this->_head_win);
+    MPI_Win_free(&this->_tail_win);
+    MPI_Win_free(&this->_data_win);
+    MPI_Win_free(&this->_flag_win);
+  }
+
+  bool enqueue(const T &data) {
     MPI_Aint old_tail;
     fetch_and_add_sync(&old_tail, 1, 0, this->_host, this->_tail_win);
     MPI_Aint new_tail = old_tail + 1;
@@ -84,10 +94,6 @@ public:
       aread_sync(&this->_head_buf, 0, this->_host, this->_head_win);
       if (new_tail - this->_head_buf > this->_capacity) {
         fetch_and_add_sync(&old_tail, -1, 0, this->_host, this->_tail_win);
-        MPI_Win_unlock_all(this->_head_win);
-        MPI_Win_unlock_all(this->_tail_win);
-        MPI_Win_unlock_all(this->_data_win);
-        MPI_Win_unlock_all(this->_flag_win);
         return false;
       }
     }
@@ -97,10 +103,6 @@ public:
     bool set = true;
     awrite_sync(&set, old_tail % this->_capacity, this->_host, this->_flag_win);
 
-    MPI_Win_unlock_all(this->_head_win);
-    MPI_Win_unlock_all(this->_tail_win);
-    MPI_Win_unlock_all(this->_data_win);
-    MPI_Win_unlock_all(this->_flag_win);
     return true;
   }
 
@@ -108,11 +110,6 @@ public:
     if (data.size() == 0) {
       return true;
     }
-
-    MPI_Win_lock_all(0, this->_head_win);
-    MPI_Win_lock_all(0, this->_tail_win);
-    MPI_Win_lock_all(0, this->_data_win);
-    MPI_Win_lock_all(0, this->_flag_win);
 
     MPI_Aint old_tail;
     fetch_and_add_sync(&old_tail, data.size(), 0, this->_host, this->_tail_win);
@@ -123,10 +120,6 @@ public:
       if (new_tail - this->_head_buf > this->_capacity) {
         fetch_and_add_sync(&old_tail, -data.size(), 0, this->_host,
                            this->_tail_win);
-        MPI_Win_unlock_all(this->_head_win);
-        MPI_Win_unlock_all(this->_tail_win);
-        MPI_Win_unlock_all(this->_data_win);
-        MPI_Win_unlock_all(this->_flag_win);
         return false;
       }
     }
@@ -156,17 +149,13 @@ public:
           set.data() + this->_capacity - old_tail % this->_capacity,
           set.size() - this->_capacity + old_tail % this->_capacity, 0,
           this->_host, this->_flag_win);
+      MPI_Win_flush(this->_host, this->_data_win);
     }
-
-    MPI_Win_unlock_all(this->_head_win);
-    MPI_Win_unlock_all(this->_tail_win);
-    MPI_Win_unlock_all(this->_data_win);
-    MPI_Win_unlock_all(this->_flag_win);
     return true;
   }
 };
 
-template <typename T> class FqDequeuer {
+template <typename T> class FastDequeuer {
 private:
   MPI_Win _head_win;
   MPI_Aint *_head_ptr;
@@ -186,8 +175,8 @@ private:
   const MPI_Aint _capacity;
 
 public:
-  FqDequeuer(MPI_Aint capacity, MPI_Aint host, MPI_Aint self_rank,
-             MPI_Comm comm)
+  FastDequeuer(MPI_Aint capacity, MPI_Aint host, MPI_Aint self_rank,
+               MPI_Comm comm)
       : _host{host}, _tail_buf{0}, _capacity{capacity} {
     int rank;
     MPI_Comm_rank(comm, &rank);
@@ -229,14 +218,25 @@ public:
                        &this->_flag_win);
     }
     MPI_Barrier(comm);
-  }
 
-  bool dequeue(T *output) {
     MPI_Win_lock_all(0, this->_head_win);
     MPI_Win_lock_all(0, this->_tail_win);
     MPI_Win_lock_all(0, this->_data_win);
     MPI_Win_lock_all(0, this->_flag_win);
+  }
 
+  ~FastDequeuer() {
+    MPI_Win_unlock_all(this->_head_win);
+    MPI_Win_unlock_all(this->_tail_win);
+    MPI_Win_unlock_all(this->_data_win);
+    MPI_Win_unlock_all(this->_flag_win);
+    MPI_Win_free(&this->_head_win);
+    MPI_Win_free(&this->_tail_win);
+    MPI_Win_free(&this->_data_win);
+    MPI_Win_free(&this->_flag_win);
+  }
+
+  bool dequeue(T *output) {
     MPI_Aint old_head;
     fetch_and_add_sync(&old_head, 1, 0, this->_host, this->_head_win);
     MPI_Aint new_head = old_head + 1;
@@ -245,10 +245,6 @@ public:
       aread_sync(&this->_tail_buf, 0, this->_host, this->_tail_win);
       if (new_head > this->_tail_buf) {
         fetch_and_add_sync(&old_head, -1, 0, this->_host, this->_head_win);
-        MPI_Win_unlock_all(this->_head_win);
-        MPI_Win_unlock_all(this->_tail_win);
-        MPI_Win_unlock_all(this->_data_win);
-        MPI_Win_unlock_all(this->_flag_win);
         return false;
       }
     }
@@ -259,13 +255,9 @@ public:
                  this->_flag_win);
     } while (!flag);
 
-    aread_async(output, old_head % this->_capacity, this->_host,
-                this->_data_win);
+    aread_sync(output, old_head % this->_capacity, this->_host,
+               this->_data_win);
 
-    MPI_Win_unlock_all(this->_head_win);
-    MPI_Win_unlock_all(this->_tail_win);
-    MPI_Win_unlock_all(this->_data_win);
-    MPI_Win_unlock_all(this->_flag_win);
     return true;
   }
 };

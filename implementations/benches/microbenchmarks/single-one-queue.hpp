@@ -262,7 +262,7 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     double local_dequeues_microseconds = 0;
 
     if (rank == 0) {
-      FqDequeuer<int> queue(number_of_elements, rank, rank, MPI_COMM_WORLD);
+      FastDequeuer<int> queue(number_of_elements, rank, rank, MPI_COMM_WORLD);
       std::this_thread::sleep_for(std::chrono::microseconds(100));
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
@@ -280,7 +280,7 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      FqEnqueuer<int> queue(number_of_elements, 0, rank, MPI_COMM_WORLD);
+      FastEnqueuer<int> queue(number_of_elements, 0, rank, MPI_COMM_WORLD);
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue; ++i) {
         if (queue.enqueue(i)) {
