@@ -277,13 +277,39 @@ In this section, we prove that the local SPSC is linearizable.
   name: [Linearizability of `spsc_enqueue`],
 )[The linearization point of `spsc_enqueue` is right after line 2 or right after line 4.] <slotqueue-spsc-enqueue-linearization-point-lemma>
 
+#proof[
+  Notice that only `spsc_enqueue` can modify the `Last` shared variable and only `spsc_dequeue` can modify the `First` shared variable.
+
+  If line 2 is executed, that means `Last + 1 == First` and the enqueue is deemed as failed. This state can only be exited when an `spsc_dequeue` executes line 8. If line 2 is executed before line 8 of `spsc_dequeue` then it's safe that we linearize `spsc_enqueue` before `spsc_dequeue`. Therefore, line 2 is a linearization point of `spsc_enqueue`.
+
+  Suppose line 2 is not executed.
+
+  If line 4 hasn't been executed, the SPSC is as if no element has been enqueued. On the other hand, if line 4 is executed, the enqueue is sure to have completed and other `spsc_dequeue`s or `spsc_readFront` can see this enqueue's effect. Therefore, line 4 is another linearization point of `spsc_enqueue`.
+]
+
 #lemma(
   name: [Linearizability of `spsc_dequeue`],
 )[The linearization point of `spsc_dequeue` is right after line 6 or right after line 8.] <slotqueue-spsc-dequeue-linearization-point-lemma>
 
+#proof[
+  Notice that only `spsc_enqueue` can modify the `Tail` shared variable and only `spsc_dequeue` can modify the `Head` shared variable.
+
+  If line 6 is executed, that means `Last == First` and the dequeue is deemed as failed. This state can only be exited when an `spsc_enqueue` executes line 4. If line 6 is executed before line 4 of `spsc_dequeue` then it's safe that we linearize `spsc_dequeue` before `spsc_enqueue`. Therefore, line 6 is a linearization point of `spsc_enqueue`.
+
+  Suppose line 6 is not executed.
+
+  If line 8 hasn't been executed, the SPSC is as if no element has been dequeued. On the other hand, if line 8 is executed, the dequeue is sure to have completed and other `spsc_enqueue` or `spsc_readFront` can see this enqueue's effect. Therefore, line 8 is another linearization point of `spsc_enqueue`.
+]
+
 #lemma(
   name: [Linearizability of `spsc_readFront`],
 )[The linearization point `spsc_readFront` is right after line 11 or right after line 12.] <slotqueue-spsc-readFront-linearization-point-lemma>
+
+#proof[
+  If line 11 is executed, that means `spsc_readFront` has just observed and effect of line 8 of `spsc_dequeue` or has not observed line 4 of `spsc_enqueue`. In this case, `spsc_readFront` is linearized after this `spsc_dequeue` or before `spsc_enqueue`.
+
+  If line 12 is executed, that means `spsc_readFront` has just observed and effect of line 4 of `spsc_enqueue` or has not observed line 8 of `spsc_dequeue`. In this case, `spsc_readFront` is linearized after this `spsc_enqueue` or before `spsc_dequeue`.
+]
 
 #theorem(
   name: "Linearizability of local SPSC",
