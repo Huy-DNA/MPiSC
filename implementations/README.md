@@ -10,6 +10,8 @@ Some have accompanying reports to prove their correctness when modification to t
 
 - [`LTQueue` (Prasad Jayanti & Srdjan Petrovic)](/references/LTQueue/README.md): [implementation](/implementations/ltqueue)
 
+- [`Slotqueue` (custom)](/implementations/slot-queue/README.md): [implementation](/implementations/slot-queue)
+
 ## Baselines
 
 - Berkeley container library (bcl): [link](/implementations/bcl)
