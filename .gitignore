@@ -9,3 +9,5 @@ cmake_install.cmake
 compile_commands.json
 implementations/Makefile
 .cache
+Caliper*
+caliper*
