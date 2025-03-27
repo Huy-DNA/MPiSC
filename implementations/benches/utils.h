@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <cstdio>
 #include <mpi.h>
 #include <string>
@@ -26,4 +27,13 @@ inline void report(const std::string &title,
     printf("Total throughput: %g 10^5ops/s\n",
            (successful_enqueues + successful_dequeues) / microseconds * 10);
   }
+}
+
+inline double spin_wait(double us) {
+  auto t1 = std::chrono::high_resolution_clock::now();
+  auto t2 = std::chrono::high_resolution_clock::now();
+  while ((t2 - t1).count() / 1000.0 < us) {
+    t2 = std::chrono::high_resolution_clock::now();
+  }
+  return (t2 - t1).count() / 1000.0;
 }
