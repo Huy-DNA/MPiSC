@@ -187,3 +187,25 @@ bcl:
   publisher: "Association for Computing Machinery"
   address: "New York, NY, USA"
   page-total: 10
+
+isx:
+  type: article
+  author: ["Hanebutte, Ulf", "Hemstad, Jacob"]
+  title: "ISx: A Scalable Integer Sort for Co-design in the Exascale Era"
+  date: 2015
+  page-range: 102-104
+  serial-number:
+    doi: 10.1109/PGAS.2015.21
+
+bclx:
+  type: article
+  title: "A general approach for supporting nonblocking data structures on distributed-memory systems"
+  journal:
+    value: "Journal of Parallel and Distributed Computing"
+  volume: 173
+  page-ranges: 48-60
+  date: 2023
+  serial-number:
+    issn: 0743-7315
+    doi: https://doi.org/10.1016/j.jpdc.2022.11.006
+  author: ["Thanh-Dang Diep", "Phuong Hoai Ha", "Karl Fürlinger"]

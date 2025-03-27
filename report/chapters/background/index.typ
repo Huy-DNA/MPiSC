@@ -11,20 +11,21 @@ Irregular applications are interesting because they demand special treatments to
 
 == Multiple-producer, single-consumer (MPSC)
 
-Multiple-producer, single-consumer (MPSC) is a specialized concurrent first-in first-out (FIFO) data structure. A FIFO is a container data structure where items can be inserted into or taken out of, with the constraint that the items that are inserted earlier are taken out of earlier. Hence, it's also known as the queue data structure. The process that performs item insertion into the FIFO is called the producer and the process that performs items deletion (and retrieval) is called the consumer. In concurrent queues, multiple producers and consumers can run in parallel. Concurrent queues have many important applications, namely event handling, scheduling, etc. One class of concurrent FIFOs is MPSC, where one consumer may run in parallel with multiple producers. The reasons we're interested in MPSCs instead of the more general multiple-producer, multiple-consumer data structures (MPMCs) are that (1) high-performance and high-scalability MPSCs are much simpler to design than MPMCs while (2) MPSCs are powerful enough - its consensus number equals the number of producers @dqueue.
+Multiple-producer, single-consumer (MPSC) is a specialized concurrent first-in first-out (FIFO) data structure. A FIFO is a container data structure where items can be inserted into or taken out of, with the constraint that the items that are inserted earlier are taken out of earlier. Hence, it's also known as the queue data structure. The process that performs item insertion into the FIFO is called the producer and the process that performs items deletion (and retrieval) is called the consumer. In concurrent queues, multiple producers and consumers can run in parallel. Concurrent queues have many important applications, namely event handling, scheduling, etc. One class of concurrent FIFOs is MPSC, where one consumer may run in parallel with multiple producers. The reasons we're interested in MPSCs instead of the more general multiple-producer, multiple-consumer data structures (MPMCs) are that (1) high-performance and high-scalability MPSCs are much simpler to design than MPMCs while (2) MPSCs are noticeably as powerful as MPMCs - its consensus number equals the number of producers @dqueue. Thus, MPSCs can see as many use cases as MPMCs while being easily scalable and performant.
 
 == Progress guarantee
 
-Many concurrent algorithms are based on locks to create mutual exclusion, in which only some processes that have acquired the locks are able to act, while the others have to wait. While lock-based algorithms are simple to read, write and verify, these algorithms are said to be blocking: One slow process may slow down the other faster processes, for example, if the slow process successfully acquires a lock and then the OS decides to suspends it to schedule another one, this means until the process is awken again, the other processes that contend for the lock cannot continue. Lock-based algorithms introduces many problems such as:
+Many concurrent algorithms are based on locks to create mutual exclusion, in which only some processes that have acquired the locks are able to act, while the others have to wait. While lock-based algorithms are simple to read, write and verify, these algorithms are said to be blocking: One slow process may slow down the other faster processes, for example, if the slow process successfully acquires a lock and then the operating system (OS) decides to suspends it to schedule another one, this means until the process is awaken, the other processes that contend for the lock cannot continue. Lock-based algorithms introduces many problems such as:
 - Deadlock: There's a circular lock-wait dependencies among the processes, effectively prevent any processes from making progress.
 - Convoy effect: One long process holding the lock will block other shorter processes contending for the lock.
 - Priority inversion: A higher-priority process effectively has very low priority because it has to wait for another low priority process.
-Furthermore, if a process that holds the lock dies, this will corrupt the whole program, and this possibility can happen more easily in distributed computing, due to network failures, node falures, etc.
-Therefore, while lock-based algorithms are easy to write, they do not provide *progress guarantee* because *deadlock* or *livelock* can occur and unnecessarily restrictive regarding its use of mutual exclusion. These algorithms are said to be *blocking*. An algorithm is said to be *non-blocking* if a failure or slow-down in one process cannot cause the failure or slowdown in another process. Lock-free and wait-free algorithms are to especially interesting subclasses of non-blocking algorithms. Unlike lock-based algorithms, they provide *progress guarantee*.
+Furthermore, if a process that holds the lock dies, this will halt the whole program. This consideration holds even more weight in distributed computing because of a lot more failure modes, such as network failures, node falures, etc.
+
+Therefore, while lock-based algorithms are easy to write, they do not provide *progress guarantee* because *deadlock* or *livelock* can occur and its use of mutual exclusion is unnecessarily restrictive. These algorithms are said to be *blocking*. An algorithm is said to be *non-blocking* if a failure or slow-down in one process cannot cause the failure or slow-down in another process. Lock-free and wait-free algorithms are to especially interesting subclasses of non-blocking algorithms. Unlike lock-based algorithms, they provide *progress guarantee*.
 
 === Lock-free algorithms
 
-Lock-free algorithms provide the following guarantee: Even if some processes are suspended, the remaining processes are ensured to make global progress and complete in bounded time. This property is invaluable in distributed computing, one dead or suspended process will not block the whole program, providing fault-tolerance. Designing lock-free algorithms requires careful use of atomic instructions, such as Fetch-and-add (FAA), Compare-and-swap (CAS), etc. One well-known technique in achieving lock-freedom is the help mechanism, made popular by @michael-scott.
+Lock-free algorithms provide the following guarantee: Even if some processes are suspended, the remaining processes are ensured to make global progress and complete in bounded time. This property is invaluable in distributed computing, one dead or suspended process will not block the whole program, providing fault-tolerance. Designing lock-free algorithms requires careful use of atomic instructions, such as Fetch-and-add (FAA), Compare-and-swap (CAS), etc.
 
 === Wait-free algorithms
 
@@ -47,7 +48,7 @@ Then, linerizability means that if we have $l_1 < l_2 < ... < l_n$, the effect o
 
 === ABA problem
 
-In implementing concurrent lock-free algorithms, hardware atomic instructions are utilized to achieve linearizability. The most popular atomic operation instruction is compare-and-swap (CAS). The reason for its popularity is (1) CAS is a *universal atomic instruction* - it has the *concensus number* of $infinity$ - which means it's the most powerful atomic instruction @herlihy-hierarchy (2) CAS is implemented in most hardware (3) some concurrent lock-free data structures such as MPSC can only be implemented using powerful atomic instruction such as CAS. The semantic of CAS is as follows. Given the instruction `CAS(memory location, old value, new value)`, atomically compares the value at `memory location` to see if it equals `old value`; if so, sets the value at `memory location` to `new value` and returns true; otherwise, leaves the value at `memory location` unchanged and returns false. Concurrent algorithms often utilize CAS as follows:
+In implementing concurrent lock-free algorithms, hardware atomic instructions are utilized to achieve linearizability. The most popular atomic operation instruction is compare-and-swap (CAS). The reason for its popularity is (1) CAS is a *universal atomic instruction* - it has the *concensus number* of $infinity$ - which means it's the most powerful atomic instruction @herlihy-hierarchy (2) CAS is implemented in most hardware (3) some concurrent lock-free data structures such as MPSC can only be implemented using powerful atomic instructions such as CAS. The semantic of CAS is as follows. Given the instruction `CAS(memory location, old value, new value)`, atomically compares the value at `memory location` to see if it equals `old value`; if so, sets the value at `memory location` to `new value` and returns true; otherwise, leaves the value at `memory location` unchanged and returns false. Concurrent algorithms often utilize CAS as follows:
 1. Read the current value `old value = read(memory location)`.
 2. Compute `new value` from `old value` by manipulating some resources associated with `old value` and allocating new resources for `new value`.
 3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up `new value` because `old value` is no longer there, so its associated resources are not valid.
@@ -60,42 +61,42 @@ This scheme is susceptible to the notorious ABA problem:
 6. Process 3 `CAS(memory location, B, A)` and allocates new resources associated with `A`.
 7. Process 1 continues and `CAS(memory location, A, new value)` relying on the fact that the old resources associated with `A` are still valid while in fact they aren't.
 
-To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls `CAS` on that location, there's no possibility another process has `CAS` the memory location to the same value. Some notable schemes are *monotonic version tag* (used in @michael-scott) and *hazard pointer* (introduced in @hazard-pointer).
+To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls `CAS` on that location, there's no possibility another process has `CAS` the memory location to the same value. Some notable schemes are *monotonic version tag* (@michael-scott) and *hazard pointer* (@hazard-pointer).
 
 === Safe memory reclamation problem
 
 The problem of safe memory reclamation often arises in concurrent algorithms that dynamically allocate memory. In such algorithms, dynamically-allocated memory must be freed at some point. However, there's a good chance that while a process is freeing memory, other processes contending for the same memory are keeping a reference to that memory. Therefore, deallocated memory can potentially be accessed, which is erroneneous. Solutions ensure that memory is only freed when no other processes are holding references to it. In garbage-collected programming environments, this problem can be conveniently push to the garbage collector. In non-garbage-collected programming environments, however, custom schemes must be utilized. Examples include using a reference counter to count the number of processes holding a reference to some memory and *hazard pointer* @hazard-pointer to announce to other processes that some memory is not to be freed.
 
 // == C++11 concurrency
-// 
+//
 // === Motivation
-// 
+//
 // C++11 came with a lot of improvements. One such improvement is the native support of multithreading inside the C++ standard library (STL). The main motivation was portability and ergonomics along with two design goals: high-level OOP facilities for working with multithreading in general while still exposing enough low-level details so that performance tuning is possible when one wants to drop down to this level. @cpp-conc
-// 
+//
 // Before C++11, to write concurrent code, programmers had to resort to compiler-specific extensions @cpp-conc. This worked but was not portable as the additional semantics of concurrency introduced by compiler extensions was not formalized in the C++ standard. Therefore, C++11 had come to define a multithreading-aware memory model, which is used to dictate correct concurrent C++11 programs.
-// 
+//
 // === C++11 memory model
-// 
+//
 // The C++11 memory model plays the foundational role in enabling native multithreading support. The C++11 memory model is not a syntatical feature or a library feature, rather it's a model to reason about the semantics of concurrent C++11 programs. In other words, the C++11 multithreading-aware memory model enables the static analysis of concurrent C++11 programs. This, in essence, is beneficial to two parties: the compiler and the programmer.
-// 
+//
 // From the compiler's point of view, it needs to translate the source code into correct machine code. Many modern CPUs are known to utilize out-of-order execution, or instruction reordering to gain better pipeline throughput. This reordering is transparent with respect to a single thread - it still observes the effect of the instructions in the program order. However, this reordering is not transparent in concurrent programs, in which case, synchronizing instructions are necessary, so the compiler has to keep this in mind. With the possibility of concurrency, it needs to conservatively apply optimizations as certain optimizations only work in sequential programs. However, optimization is important to achieve performance, if the compiler just disables the any optimizations altogether in the face of concurrency, the performance gained by using concurrency would be adversely affected. Here, the C++11 memory model comes into play. It allows the compiler to reason which optimization is valid and which is not in the presence of concurrency. Additionally, the compiler can reason about where to place synchronizing instructions to ensure the correctness of concurrent operations. Therefore, the C++11 memory allows the compiler to generate correct and performant machine code.
-// 
+//
 // Similarly, from the programmer's point of view, one can verify that their concurrent program's behavior is well-defined and reason whether their programs unnecessarily disable any optimizations. This, helps the programmer to write correct and performant C++11 concurrent programs.
-// 
+//
 // The C++11 memory consists of two aspects: the *structural* aspects and the *concurrency* aspects @cpp-conc.
-// 
+//
 // ==== Structural aspects
-// 
+//
 // The structural aspects deal with how variables are laid out in memory.
-// 
+//
 // An *object* in C++ is defined as "a region of storage". Concurrent accesses can happen to any "region of storage". These regions of storage can vary in size. One can say that there are always concurrent accesses to RAM. However, do these concurrent accesses always cause race conditions? Intuitively, no. To properly define which concurrent accesses can actually cause race conditions, the C++11 memory model defines the concept of *memory location*. That is, the C++11 memory model views an object as one or more *memory locations*. Only concurrent accesses to the same memory location can possibly cause race conditions. Conflicting concurrent accesses to the same memory location (read/write or write-write) always cause race conditions.
-// 
+//
 // The rule of what comprise a memory location is as follows @cpp-conc:
 // - Any object or sub-object (class instance's field) of a scalar type is a memory location.
 // - Any sequence of adjacent bit fields is also a memory location.
-// 
+//
 // An example: In the below struct, `a` is a memory location, `b` and `c` is another and `d` is the last.
-// 
+//
 // #figure(
 //   kind: "raw",
 //   supplement: "Listing",
@@ -112,19 +113,19 @@ The problem of safe memory reclamation often arises in concurrent algorithms tha
 //     ```
 //   ],
 // )
-// 
+//
 // ==== Concurrency aspects
-// 
+//
 // Generally speaking, concurrent accesses to different memory locations are fine while concurrent accesses to the same memory location cause race conditions. However, race conditions do not necessarily cause undefined behavior. To avoid undefined behavior with concurrent accesses to the same memory location, one must use atomic operations. The semantics of C++11 atomics will be discussed in the next section.
-// 
+//
 // === C++11 atomics
-// 
+//
 // An atomic operation is an indivisible operation, that is, it either hasn't started executing or has finished executing @cpp-conc.
-// 
+//
 // Atomic operations can only be performed on atomic types: C++11 introduces the `std::atomic<T>` template type, wrapping around a non-atomic type to allow atomic operations on objects of that type. Additionally, C++11 also introduces the `std::atomic_flag` type that acts like an atomic flag. One special property of `std::atomic_flag` is that any operations on it is guaranteed to be lock-free, while the others depend on the platform and size.
-// 
+//
 // By C++17, `std::atomic_flag` only supports two operations:
-// 
+//
 // #figure(
 //   kind: "table",
 //   supplement: "Table",
@@ -137,11 +138,11 @@ The problem of safe memory reclamation often arises in concurrent algorithms tha
 //     [Atomically sets the flag to `true` and returns its previous value],
 //   ),
 // )
-// 
+//
 // Because of its simplicity, `std::atomic_flag` operations are guaranteed to be lock-free.
-// 
+//
 // Some available operations on other atomic types are summarized in the following table @cpp-conc:
-// 
+//
 // #figure(
 //   kind: "table",
 //   supplement: "Table",
@@ -155,7 +156,7 @@ The problem of safe memory reclamation often arises in concurrent algorithms tha
 //       [*`atomic`` <integral-type>`*],
 //       [*`atomic` `<other-type>`*],
 //     ),
-// 
+//
 //     [`load`], [Y], [Y], [Y], [Y],
 //     [`store`], [Y], [Y], [Y], [Y],
 //     [`exchange`], [Y], [Y], [Y], [Y],
@@ -164,7 +165,7 @@ The problem of safe memory reclamation often arises in concurrent algorithms tha
 //     [Y],
 //     [Y],
 //     [Y],
-// 
+//
 //     [`fetch_add`, `+=`], [], [Y], [Y], [],
 //     [`fetch_sub`, `-=`], [], [Y], [Y], [],
 //     [`fetch_or`, `|=`], [], [], [Y], [],
@@ -173,13 +174,13 @@ The problem of safe memory reclamation often arises in concurrent algorithms tha
 //     [`++`, `--`], [], [Y], [Y], [],
 //   ),
 // )
-// 
+//
 // Each atomic operation can generally accept an argument of type `std::memory_order`, which is used to specify how memory accesses are to be ordered around an atomic operation.
-// 
+//
 // Any atomic operations beside `load` and `store` is called read-modified-write (RMW) operations.
-// 
+//
 // The following is the table of possible `std::memory_order` values:
-// 
+//
 // #figure(
 //   kind: "table",
 //   supplement: "Table",
@@ -192,35 +193,35 @@ The problem of safe memory reclamation often arises in concurrent algorithms tha
 //     [Y],
 //     [Y],
 //     [Y],
-// 
+//
 //     [`memory_order` `_acquire`],
 //     [No reads or writes after this operation in the current thread can be reordered before this operation],
 //     [Y],
 //     [],
 //     [Y],
-// 
+//
 //     [`memory_order` `_release`],
 //     [No reads or writes before this operation in the current thread can be reordered after this operation],
 //     [],
 //     [Y],
 //     [Y],
-// 
+//
 //     [`memory_order` `_acq_rel`],
 //     [No reads or writes before this operation in the current thread can be reordered after this operation. No reads or writes after this operation can be reordered before this operation],
 //     [],
 //     [],
 //     [Y],
-// 
+//
 //     [`memory_order` `_seq_cst`],
 //     [A global total order exists on all modifications of atomic variables],
 //     [Y],
 //     [Y],
 //     [Y],
-// 
+//
 //     [`memory_order` `_consume`], [Not recommended], [-], [-], [-],
 //   ),
 // )
-// 
+//
 // In conclusion, atomic operations avoid undefined behavior on concurrent accesses to the same memory location while memory orders help us enforce ordering of operations accross threads, which can be used to reason about the program.
 
 == MPI-3
@@ -251,9 +252,9 @@ In *passive target synchronization*, any RMA communication calls must be within 
 )
 
 // === MPI-3 SHM
-// 
+//
 // Historically, MPI as a message passing framework is often used in combination with other shared-memory frameworks such as OpenMP or pthreads to optimize communication within processes in a node. MPI-3 SHM (shared memory) is a capability introduced in MPI-3 to optimize intra-node communication within MPI RMA windows. This leads to the rise of MPI+MPI approach in distributed programming @zhou. In MPI-3, *shared-memory windows* can be created via `MPI_Win_allocate_shared`. Shared memory windows can be used for both one-sided communication and shared memory access. Besides using MPI-RMA facilities for communication and synchronization in these *shared-memory windows*, other communication and synchronization mechanisms provided by other shared-memory frameworks such as C++11 atomics can also be used. Typically, C++11 atomics allows for much more efficient communication and synchronization compared to MPI-RMA. Therefore, MPI-3 SHM can be used as an optimization for intra-node communication within MPI RMA programs. A general approach in using shared memory windows with tradition MPI RMA is discussed further in @zhou.
-// 
+//
 == Pure MPI approach of porting shared memory algorithms
 
 // === Pure MPI
