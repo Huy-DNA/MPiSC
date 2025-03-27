@@ -151,6 +151,53 @@ queue_data = {
             65.3803,
         ],
     },
+    "SlotqueueV2": {
+        "dequeue_throughput": [
+            24.5842,
+            24.3886,
+            23.5447,
+            18.4806,
+            17.174,
+            16.0234,
+            16.4853,
+        ],
+        "dequeue_latency": [
+            0.406766,
+            0.410027,
+            0.424724,
+            0.541109,
+            0.582274,
+            0.624086,
+            0.606602,
+        ],
+        "enqueue_throughput": [
+            31.7521,
+            55.099,
+            77.695,
+            52.9901,
+            51.4058,
+            52.8412,
+            49.0054,
+        ],
+        "enqueue_latency": [
+            0.31494,
+            0.362983,
+            0.386125,
+            0.754859,
+            0.972652,
+            1.13548,
+            1.42841,
+        ],
+        "total_throughput": [
+            49.1684,
+            48.7773,
+            47.0895,
+            36.9612,
+            34.3482,
+            32.0469,
+            32.9707,
+        ],
+    },
 }
 
 # Metrics to plot
@@ -176,6 +223,7 @@ queue_styles = {
     "SlotQueue": {"color": "blue", "marker": "o"},
     "LTQueue": {"color": "red", "marker": "s"},
     "FastQueue": {"color": "green", "marker": "^"},
+    "SlotqueueV2": {"color": "purple", "marker": "d", "linestyle": "--"},
 }
 
 # Generate merged plots for each metric
@@ -191,7 +239,8 @@ for metric in metrics:
             queue_metrics[metric],
             color=style["color"],
             marker=style["marker"],
-            label=queue_name,
+            linestyle=style.get("linestyle", "-"),
+            label=f"{queue_name}{'*' if queue_name == 'SlotqueueV2' else ''}",
         )
 
     # Set title and labels
@@ -202,7 +251,7 @@ for metric in metrics:
 
     # Add grid and legend
     plt.grid(True)
-    plt.legend()
+    plt.legend(title="Queue Types", loc="best")
 
     # Save the plot
     filename = f"{output_dir}/{metric}_comparison.png"
@@ -210,3 +259,6 @@ for metric in metrics:
     plt.close()  # Close the figure to free up memory
 
 print("All comparative plots have been generated in the 'single-one-queue' folder.")
+print(
+    "Note: SlotqueueV2 is marked with an asterisk (*) in the legend to indicate it is experimental."
+)
