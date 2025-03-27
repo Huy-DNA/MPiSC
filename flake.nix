@@ -18,6 +18,10 @@
           typst
           tinymist
           neovim
+          python312
+          python312Packages.numpy
+          python312Packages.matplotlib
+          uv
         ];
         CMAKE_EXPORT_COMPILE_COMMANDS = 1;
         shellHook = ''
