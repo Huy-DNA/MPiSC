@@ -98,7 +98,7 @@ The problem of safe memory reclamation often arises in concurrent algorithms tha
 // An example: In the below struct, `a` is a memory location, `b` and `c` is another and `d` is the last.
 //
 // #figure(
-//   kind: "raw",
+//   kind: "algorithm",
 //   supplement: "Listing",
 //   caption: "Example memory locations for a user-defined struct",
 //   [
@@ -291,7 +291,7 @@ The reason we choose this is 3-fold:
 An example of our pure MPI approach with `MPI_Win_lock_all`/`MPI_Win_unlock_all`, inspired by @dinan, is illustrated in the following:
 
 #figure(
-  kind: "raw",
+  kind: "algorithm",
   supplement: "Listing",
   caption: "An example snippet showcasing our synchronization approach in MPI RMA",
   [

@@ -1,7 +1,5 @@
 #outline(indent: 1em)
 #pagebreak()
-#outline(title: "List of Listings", target: figure.where(kind: "raw"))
-#pagebreak()
 #outline(title: "List of Tables", target: figure.where(kind: "table"))
 #pagebreak()
 #outline(title: "List of Images", target: figure.where(kind: image))
