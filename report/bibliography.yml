@@ -203,9 +203,19 @@ bclx:
   journal:
     value: "Journal of Parallel and Distributed Computing"
   volume: 173
-  page-ranges: 48-60
+  page-range: 48-60
   date: 2023
   serial-number:
     issn: 0743-7315
     doi: https://doi.org/10.1016/j.jpdc.2022.11.006
   author: ["Thanh-Dang Diep", "Phuong Hoai Ha", "Karl Fürlinger"]
+
+wrlqueue:
+  type: article
+  author: ["Yang, Qidi", "Tang, Lei", "Guo, Yanrong", "Kuang, Nailiang", "Zhong, Sheng", "Luo, Hangzai"]
+  title: "WRLqueue: A Lock-Free Queue For Embedded Real-Time System"
+  date: 2022
+  page-range: 1255-1260
+  serial-number:
+    doi: 10.1109/HPCC-DSS-SmartCity-DependSys57074.2022.00197
+
