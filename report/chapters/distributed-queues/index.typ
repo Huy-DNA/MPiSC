@@ -1,4 +1,4 @@
-= Distributed queues <distributed-queues>
+= Distributed MPSCs <distributed-queues>
 
 #import "@preview/lovelace:0.3.0": *
 #import "@preview/lemmify:0.1.7": *
@@ -50,7 +50,7 @@ Based on the MPSC algorithms we have surveyed in @related-works[], we propose tw
 
 In this section, we present our proposed distributed MPSCs in detail. Any other discussions about theoretical aspects of these algorithms such as linearizability, progress guarantee, time complexity are deferred to @theoretical-aspects[].
 
-== A simple distributed bounded SPSC
+== A basis distributed SPSC
 
 The two algorithms we propose here both utilize a distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
 
