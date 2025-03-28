@@ -132,4 +132,181 @@ The procedures are given as follows.
 
 == Modified LTQueue without LL/SC
 
+The structure of our modified LTQueue is shown as in @modified-ltqueue-tree.
+
+#place(
+  center + top,
+  float: true,
+  scope: "parent",
+  [#figure(
+      kind: "image",
+      supplement: "Image",
+      image("/static/images/modified-ltqueue.png"),
+      caption: [
+        Modified LTQueue's structure
+      ],
+    ) <modified-ltqueue-tree>
+  ],
+)
+
+At the bottom *enqueuer nodes* (represented by the type `enqueuer_t`), besides the local SPSC, the minimum-timestamp among the elements in the SPSC is also stored.
+
+The *internal nodes* store a rank of an enqueuer. This rank corresponds to the enqueuer with the minimum timestamp among the ranks stored in the node's children.
+
+Note that if a local SPSC is empty, the minimum-timestamp of the corresponding enqueuer node is set to `MAX` and the corresponding leaf node's rank is set to a `DUMMY` rank.
+
+Placement-wise:
+- The *enqueuer nodes* and thus, the local SPSCs, are hosted at the corresponding *enqueuer*.
+- All the *internal nodes* are hosted at the *dequeuer*.
+- The distributed counter, which the enqueuers use to timestamp their enqueued value, is hosted at the *dequeuer*.
+
+#pseudocode-list(line-numbering: none)[
+  + *Types*
+    + `data_t` = The type of the data to be stored in LTQueue
+    + `spsc_t` = The type of the local SPSC
+    + `rank_t` = The rank of an enqueuer
+      + *struct*
+        + `value`: `uint32_t`
+        + `version`: `uint32_t`
+      + *end*
+    + `timestamp_t` =
+      + *struct*
+        + `value`: `uint32_t`
+        + `version`: `uint32_t`
+      + *end*
+    + `enqueuer_t` =
+      + *struct*
+        + `spsc`: `spsc_t`
+        + `min-timestamp`: `timestamp_t`
+      + *end*
+    + `node_t` = The node type of the tree constructed by LTQueue
+      + *struct*
+        + `rank`: `rank_t`
+      + *end*
+]
+
+#pseudocode-list(line-numbering: none)[
+  + *Shared variables*
+    + `counter`: `uint64_t`
+    + `root`: *pointer to* `node_t`
+    + `enqueuers`: *array* `[1..n]` *of* `enqueuer_t`
+]
+
+#pseudocode-list(line-numbering: none)[
+  + *Initialization*
+    + `counter = 0`
+    + Construct the tree structure and set `root` to the root node
+    + Initialize every node in the tree to contain `DUMMY` rank and version `0`
+    + Initialize every enqueuer's `timestamp` to `MAX` and version `0`
+]
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    booktabs: true,
+    numbered-title: [`enqueue(rank: int, value: data_t)`],
+  )[
+    + `count = FAA(counter)                                                   `
+    + `timestamp = (count, rank)`
+    + `spsc_enqueue(enqueuers[rank].spsc, (value, timestamp))`
+    + `propagate(rank)`
+  ],
+) <ltqueue-enqueue>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 4,
+    booktabs: true,
+    numbered-title: [`dequeue()` *returns* `data_t`],
+  )[
+    + `[rank, version] = root->rank                                              `
+    + *if* `(rank == DUMMY)` *return* $bot$
+    + `ret = spsc_dequeue(enqueuers[rank].spsc)`
+    + `propagate(rank)`
+    + *return* `ret.val`
+  ],
+) <ltqueue-dequeue>
+
+We omit the description of procedures `parent`, `leafNode`, `children`, leaving how the tree is constructed and children-parent relationship is determined to the implementor. The tree structure used by LTQueue is read-only so a wait-free implementation of these procedures is trivial.
+
+After each `enqueue` or `dequeue`, the timestamp-propation procedures are called to propagate the newly-enqueued timestamp from the enqueuer node up to the root node.
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 9,
+    booktabs: true,
+    numbered-title: [`propagate(rank: uint32_t)`],
+  )[
+    + *if* $not$`refreshTimestamp(rank)                                          `
+      + `refreshTimestamp(rank)`
+    + *if* $not$`refreshLeaf(rank)`
+      + `refreshLeaf(rank)`
+    + `currentNode = leafNode(rank)`
+    + *repeat*
+      + `currentNode = parent(currentNode)`
+      + *if* $not$`refresh(currentNode)`
+        + `refresh(currentNode)`
+    + *until* `currentNode == root`
+  ],
+) <ltqueue-propagate>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 19,
+    booktabs: true,
+    numbered-title: [`refresh(currentNode:` *pointer* to `node_t)`],
+  )[
+    + `[old-rank, old-version] = currentNode->rank                              `
+    + `min-rank = DUMMY`
+    + `min-timestamp = MAX`
+    + *for* `childNode` in `children(currentNode)`
+      + `[child-rank, ...] = childNode->rank`
+      + *if* `(child-rank == DUMMY)` *continue*
+      + `child-timestamp = enqueuers[child-rank].min-timestamp`
+      + *if* `(child-timestamp < min-timestamp)`
+        + `min-timestamp = child-timestamp`
+        + `min-rank = child-rank`
+    + `CAS(&currentNode->rank, [old-rank, old-version], [min-rank, old-version + 1])`
+  ],
+) <ltqueue-refresh>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 30,
+    booktabs: true,
+    numbered-title: [`refreshTimestamp(rank: uint32_t)`],
+  )[
+    + `[old-timestamp, old-version] = enqueuers[rank].timestamp`
+    + `front = spsc_readFront(enqueuers[rank].spsc)`
+    + *if* `(front == `$bot$`)`
+      + `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [MAX, old-version + 1])`
+    + *else*
+      + `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [front.timestamp, old-version + 1])`
+  ],
+) <ltqueue-refresh-timestamp>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 36,
+    booktabs: true,
+    numbered-title: [`refreshLeaf(rank: uint32_t)`],
+  )[
+    + `leafNode = leafNode(spsc)                      `
+    + `[old-rank, old-version] = leafNode->rank`
+    + `[timestamp, ...] = enqueuers[rank].timestamp`
+    + `CAS(&leafNode->rank, [old-rank, old-version], [timestamp == MAX ? DUMMY : rank, old-version + 1])`
+  ],
+) <ltqueue-refresh-leaf>
+
 == Optimized LTQueue for distributed context
