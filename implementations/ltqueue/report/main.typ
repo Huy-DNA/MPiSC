@@ -490,7 +490,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
     + `leafNode = leafNode(spsc)                      `
     + `[old-rank, old-version] = leafNode->rank`
     + `[timestamp, ...] = enqueuers[rank].timestamp`
-    + `CAS(&leafNode->rank, [old-rank, old-version], [timestamp == MAX ? DUMMY : rank, old-version + 1])`
+    + *return* `CAS(&leafNode->rank, [old-rank, old-version], [timestamp == MAX ? DUMMY : rank, old-version + 1])`
   ],
 ) <ltqueue-refresh-leaf>
 
