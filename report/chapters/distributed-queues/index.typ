@@ -91,11 +91,11 @@ Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
   #pseudocode-list(line-numbering: none)[
     + *Shared variables*
       + `First`: `remote<uint64_t>`
-        + The index of the last undequeued entry
+        + The index of the last undequeued entry. Hosted at the enqueuer.
       + `Last`: `remote<uint64_t>`
-        + The index of the last unenqueued entry
+        + The index of the last unenqueued entry. Hosted at the enqueuer.
       + `Data`: `remote<data_t*>`
-        + An array of `data_t` of some known capacity
+        + An array of `data_t` of some known capacity. Hosted at the enqueuer.
   ]
 
   #colbreak()
@@ -103,15 +103,15 @@ Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer-local variables*
       + `Capacity`: A read-only value indicating the capacity of the SPSC
-      + `First_buf`: The cached value of `First` from the last read
-      + `Last_buf`: The cached value of `Last` from the last read
+      + `First_buf`: The cached value of `First`
+      + `Last_buf`: The cached value of `Last`
   ]
 
   #pseudocode-list(line-numbering: none)[
     + *Dequeuer-local variables*
       + `Capacity`: A read-only value indicating the capacity of the SPSC
-      + `First_buf`: The cached value of `First` from the last read
-      + `Last_buf`: The cached value of `Last` from the last read
+      + `First_buf`: The cached value of `First`
+      + `Last_buf`: The cached value of `Last`
   ]
 ]
 
