@@ -30,7 +30,7 @@
 #v(.5fr)
 
 #set text(weight: "bold", size: 16pt)
-#upper(t.at("title"))
+STUDYING AND DEVELOPING #linebreak() NONBLOCKING DISTRIBUTED MPSC QUEUES
 
 #set text(weight: "regular", size: 15pt)
 Major: Computer Science
