@@ -318,7 +318,6 @@ Similar to the fact that each process in our program is assigned a rank, each en
 
 This procedure is rather straightforward: Each enqueuer is assigned an order in the range `[0, size - 2]`, with `size` being the number of processes and the total ordering among the enqueuers based on their ranks is the same as the total ordering among the enqueuers based on their orders.
 
-#pagebreak()
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
@@ -340,6 +339,8 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
         + The number of enqueuers.
   ]
 ]
+
+#pagebreak()
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
