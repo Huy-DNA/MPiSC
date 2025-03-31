@@ -44,6 +44,8 @@ Based on the MPSC algorithms we have surveyed in @related-works[], we propose tw
     [$O(log n)$ R + $O(log n)$ A],
     [constant R + constant A],
 
+    [ABA solution], [Unique timestamp], [No harmful ABA problem],
+    [Memory reclamation], [Custom scheme], [Custom scheme],
     [Number of elements], [Unbounded], [Unbounded],
   ),
 ) <summary-of-distributed-mpscs>
@@ -230,20 +232,6 @@ Placement-wise:
   ],
 ) <ltqueue-dequeue>
 
-#place(
-  center + top,
-  float: true,
-  scope: "parent",
-  [#figure(
-      kind: "image",
-      supplement: "Image",
-      image("/static/images/modified-ltqueue.png"),
-      caption: [
-        Modified LTQueue's structure
-      ],
-    ) <modified-ltqueue-tree>
-  ],
-)
 We omit the description of procedures `parent`, `leafNode`, `children`, leaving how the tree is constructed and children-parent relationship is determined to the implementor. The tree structure used by LTQueue is read-only so a wait-free implementation of these procedures is trivial.
 
 After each `enqueue` or `dequeue`, the timestamp-propation procedures are called to propagate the newly-enqueued timestamp from the enqueuer node up to the root node.
