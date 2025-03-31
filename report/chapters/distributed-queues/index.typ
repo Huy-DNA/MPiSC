@@ -380,8 +380,6 @@ We first present the tree-structure utility procedures that are shared by both t
 
 `parent` returns the index of the parent tree node given the node with index `index`. These indices are based on the shared `Nodes` array. Based on how we organize the `Nodes` array, the index of the parent tree node of `index` is `(index - 1) / 2`.
 
-Similarly, `children` returns all indices of the child tree nodes given the node with index `index`. These indices are based on the shared `Nodes` array. Based on how we organize the `Nodes` array, these indices can be either `index * 2 + 1` or `index * 2 + 2`.
-
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
@@ -402,6 +400,8 @@ Similarly, `children` returns all indices of the child tree nodes given the node
     + *return* `res`
   ],
 ) <ltqueue-children>
+
+Similarly, `children` returns all indices of the child tree nodes given the node with index `index`. These indices are based on the shared `Nodes` array. Based on how we organize the `Nodes` array, these indices can be either `index * 2 + 1` or `index * 2 + 2`.
 
 #figure(
   kind: "algorithm",
@@ -646,7 +646,6 @@ node_t {rank_t {min_rank, old_version + 1}})`
     + *return* `compare_and_swap_sync(Nodes, leaf_node_index,
 node_t {rank_t {old-rank, old-version}},
 node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
-
   ],
 ) <ltqueue-dequeue-refresh-leaf>
 
