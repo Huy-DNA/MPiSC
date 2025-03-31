@@ -228,7 +228,11 @@ The procedures of the dequeuer are given as follows.
 `spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
 
 
-== Modified LTQueue without LL/SC
+== Modified LTQueue without LL/SC <naive-LTQueue>
+
+This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSCs, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
+
+=== Structure
 
 The structure of our modified LTQueue is shown as in @modified-ltqueue-tree.
 
@@ -259,6 +263,8 @@ Placement-wise:
 - The *enqueuer nodes* are hosted at the corresponding *enqueuer*.
 - All the *tree nodes* are hosted at the *dequeuer*.
 - The distributed counter, which the enqueuers use to timestamp their enqueued value, is hosted at the *dequeuer*.
+
+=== Pseudocode
 
 Below is the types utilized in our version of LTQueue.
 
@@ -319,6 +325,8 @@ Similar to the fact that each process in our program is assigned a rank, each en
 This procedure is rather straightforward: Each enqueuer is assigned an order in the range `[0, size - 2]`, with `size` being the number of processes and the total ordering among the enqueuers based on their ranks is the same as the total ordering among the enqueuers based on their orders.
 
 
+#pagebreak()
+
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer-local variables*
@@ -340,8 +348,6 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
       + `Spscs`: *array* of `spsc_t` with `Enqueuer_count` entries.
   ]
 ]
-
-#pagebreak()
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
@@ -669,3 +675,9 @@ node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
 The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with appropriate changes to accommodate the dequeuer.
 
 == Optimized LTQueue for distributed context
+
+=== Motivation
+
+=== Structure
+
+=== Pseudocode
