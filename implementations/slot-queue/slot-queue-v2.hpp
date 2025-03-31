@@ -141,9 +141,12 @@ private:
         return false;
       }
       aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
+      if (this->_first_buf >= this->_last_buf) {
+        return false;
+      }
 
       data_t data;
-      aread_async(&data, this->_first_buf % this->_capacity, this->_self_rank,
+      aread_sync(&data, this->_first_buf % this->_capacity, this->_self_rank,
                   this->_data_win);
 
       *output_timestamp = data.timestamp;
@@ -397,14 +400,17 @@ private:
     if (first_top.index == second_top.index) {
       this->_first_scan.pop();
       this->_second_scan.pop();
-      return first_top.index >= this->_self_rank ? first_top.index + 1 : first_top.index;
+      return first_top.index >= this->_self_rank ? first_top.index + 1
+                                                 : first_top.index;
     }
     if (second_top.timestamp < first_top.timestamp) {
       this->_second_scan.pop();
-      return second_top.index >= this->_self_rank ? second_top.index + 1 : second_top.index;
+      return second_top.index >= this->_self_rank ? second_top.index + 1
+                                                  : second_top.index;
     }
     this->_first_scan.pop();
-    return first_top.index >= this->_self_rank ? first_top.index + 1 : first_top.index;
+    return first_top.index >= this->_self_rank ? first_top.index + 1
+                                               : first_top.index;
   }
 
   bool _refreshDequeue(MPI_Aint rank) {
