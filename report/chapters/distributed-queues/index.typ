@@ -228,11 +228,11 @@ The structure of our modified LTQueue is shown as in @modified-ltqueue-tree.
 
 We differentiate between 2 types of nodes: *enqueuer nodes* (represented as the rectangular boxes at the bottom of @modified-ltqueue-tree) and normal *tree nodes* (represented as the circular boxes in @modified-ltqueue-tree).
 
-Each enqueuer node corresponds to an enqueuer. Each time the local SPSC is enqueued with a value, the enqueuer timestamps the value using a distributed counter shared by all enqueuers. An enqueuer node stores the SPSC local to the corresponding enqueuer and a `min-timestamp` value which is the minimum timestamp inside the local SPSC.
+Each enqueuer node corresponds to an enqueuer. Each time the local SPSC is enqueued with a value, the enqueuer timestamps the value using a distributed counter shared by all enqueuers. An enqueuer node stores the SPSC local to the corresponding enqueuer and a `min_timestamp` value which is the minimum timestamp inside the local SPSC.
 
 Each tree node stores the rank of an enqueuer process. This rank corresponds to the enqueuer node with the minimum timestamp among the node's children's ranks. The tree node that's attached to an enqueuer node is called a *leaf node*, otherwise, it's called an *internal node*.
 
-Note that if a local SPSC is empty, the `min-timestamp` variable of the corresponding enqueuer node is set to `MAX` and the corresponding leaf node's rank is set to a `DUMMY` rank.
+Note that if a local SPSC is empty, the `min_timestamp` variable of the corresponding enqueuer node is set to `MAX` and the corresponding leaf node's rank is set to a `DUMMY` rank.
 
 #place(
   center + top,
@@ -254,153 +254,236 @@ Placement-wise:
 - All the *tree nodes* are hosted at the *dequeuer*.
 - The distributed counter, which the enqueuers use to timestamp their enqueued value, is hosted at the *dequeuer*.
 
-#pseudocode-list(line-numbering: none)[
-  + *Types*
-    + `data_t` = The type of the data to be stored in LTQueue
-    + `spsc_t` = The type of the local SPSC
-    + `rank_t` = The rank of an enqueuer
-      + *struct*
-        + `value`: `uint32_t`
-        + `version`: `uint32_t`
-      + *end*
-    + `timestamp_t` =
-      + *struct*
-        + `value`: `uint32_t`
-        + `version`: `uint32_t`
-      + *end*
-    + `enqueuer_t` =
-      + *struct*
-        + `spsc`: `spsc_t`
-        + `min-timestamp`: `timestamp_t`
-      + *end*
-    + `node_t` = The node type of the tree constructed by LTQueue
-      + *struct*
-        + `rank`: `rank_t`
-      + *end*
+Below is the types utilized in our version of LTQueue.
+
+#columns(2)[
+  #pseudocode-list(line-numbering: none)[
+    + *Types*
+      + `data_t` = The type of the data to be stored
+      + `spsc_t` = The type of the SPSC
+      + `rank_t` = The type of the rank of an enqueuer process tagged with a unique timestamp (version) to avoid ABA problem
+        + *struct*
+          + `value`: `uint32_t`
+          + `version`: `uint32_t`
+        + *end*
+      + `timestamp_t` = The type of the timestamp tagged with a unique timestamp (version) to avoid ABA problem
+        + *struct*
+          + `value`: `uint32_t`
+          + `version`: `uint32_t`
+        + *end*
+  ]
+  #colbreak()
+  #pseudocode-list(line-numbering: none)[
+    + *Types (cont)*
+      + `enqueuer_t` = The type of an enqueuer node
+        + *struct*
+          + `spsc`: `spsc_t`
+          + `min_timestamp`: `timestamp_t`
+        + *end*
+      + `node_t` = The type of a tree node
+        + *struct*
+          + `rank`: `rank_t`
+        + *end*
+  ]
 ]
+
+The shared variables in our LTQueue version are as followed.
+
+Note that we have described a very specific and simple way to organize the tree nodes in LTQueue in a min-heap-like array structure hosted on the sole dequeuer. We will resume our description of the related tree-structure procedures `parent()` (@ltqueue-parent), `children()` (@ltqueue-children), `leafNode()` (@ltqueue-leafNode) with this representation in mind. However, our algorithm doesn't strictly require this representation and can be subtituted with other more-optimized representations & distributed placements, as long as the similar tree-structure procedures are supported.
 
 #pseudocode-list(line-numbering: none)[
   + *Shared variables*
-    + `counter`: `uint64_t`
-    + `root`: *pointer to* `node_t`
-    + `enqueuers`: *array* `[1..n]` *of* `enqueuer_t`
+    + `Counter`: `remote<uint64_t>`
+      + A distributed counter shared by the enqueuers. Hosted at the dequeuer.
+    + `Nodes`: `remote<node_t>`
+      + An array storing all the tree nodes present in the LTQueue shared by all processes.
+      + Hosted at the dequeuer.
+      + This array is organized in a similar manner as a min-heap: At index `0` is the root node. For every index $i gt 0$, $floor((i - 1) / 2)$ is the index of the parent of node $i$. For every index $i gt 0$, $2i + 1$ and $2i + 2$ are the indices of the children of node $i$.
 ]
 
-#pseudocode-list(line-numbering: none)[
-  + *Initialization*
-    + `counter = 0`
-    + Construct the tree structure and set `root` to the root node
-    + Initialize every node in the tree to contain `DUMMY` rank and version `0`
-    + Initialize every enqueuer's `timestamp` to `MAX` and version `0`
+#columns(2)[
+  #pseudocode-list(line-numbering: none)[
+    + *Enqueuer-local variables*
+      + `Enqueuer_count`: `uint64_t`
+        + The number of enqueuers.
+      + `Self_rank`: `uint32_t`
+        + The rank of the current enqueuer process.
+      + `Self_order`: `uint32_t`
+        + The rank of the current enqueuer process when disregarding the rank of the dequeuer.
+      + `Dequeuer_rank`: `uint32_t`
+        + The rank of the dequeuer process.
+      + `Self_node`: `remote<enqueuer_t>`
+        + Shared by the dequeuer and this enqueuer.
+  ]
+
+  #colbreak()
+
+  #pseudocode-list(line-numbering: none)[
+    + *Dequeuer-local variables*
+      + `Enqueuer_count`: `uint64_t`
+        + The number of enqueuers.
+      + `Self_rank`: `uint32_t`
+        + The rank of the current dequeuer process.
+      + `Enqueuers`: *array* of `remote<enqueuer_t>`
+        + An entry at index $i$ corresponds to the `Self_node` value at the enqueuer with `Self_order` of $i$.
+  ]
 ]
+
+#pagebreak()
+
+#columns(2)[
+  #pseudocode-list(line-numbering: none)[
+    + *Enqueuer initialization*
+      + Initialize `Enqueuer_count`, `Self_rank` and `Dequeuer_rank`.
+      + Initialize `Self_node.spsc` to the initial state.
+      + Initialize `Self_node.min_timestamp` to `timestamp_t {MAX_TIMESTAMP, 0}`.
+  ]
+
+  #colbreak()
+
+  #pseudocode-list(line-numbering: none)[
+    + *Dequeuer initialization*
+      + Initialize `Enqueuer_count`, `Self_rank` and `Dequeuer_rank`.
+      + Initialize `Counter` to `0`.
+      + Initialize `Nodes` to an array with `Enqueuer_count * 2` entries. Each entry is initialized to `node_t {DUMMY_RANK}`.
+      + Initialize `Enqueuers`, synchronizing each entry with the corresponding enqueuer.
+  ]
+]
+
+We first present the tree-structure utility procedures that are shared by both the enqueuer and the dequeuer:
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
+    line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`enqueue(rank: int, value: data_t)`],
-  )[
-    + `count = FAA(counter)                                                   `
-    + `timestamp = (count, rank)`
-    + `spsc_enqueue(enqueuers[rank].spsc, (value, timestamp))`
-    + `propagate(rank)`
-  ],
+    numbered-title: [`uint32_t parent(uint32_t index)`],
+  )[ ],
+) <ltqueue-parent>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i,
+    booktabs: true,
+    numbered-title: [`vector<uint32_t> children(uint32_t index)`],
+  )[ ],
+) <ltqueue-children>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i,
+    booktabs: true,
+    numbered-title: [`uint32_t leafNode(uint32_t index)`],
+  )[ ],
+) <ltqueue-leafNode>
+
+The followings are the enqueuer procedures:
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i,
+    booktabs: true,
+    numbered-title: [`bool enqueue(uint32_t rank, data_t& value)`],
+  )[ ],
 ) <ltqueue-enqueue>
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 4,
+    line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`dequeue()` *returns* `data_t`],
-  )[
-    + `[rank, version] = root->rank                                              `
-    + *if* `(rank == DUMMY)` *return* $bot$
-    + `ret = spsc_dequeue(enqueuers[rank].spsc)`
-    + `propagate(rank)`
-    + *return* `ret.val`
-  ],
+    numbered-title: [`void propagate`#sub(`e`)`(uint32_t rank)`],
+  )[ ],
+) <ltqueue-enqueue-propagate>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i,
+    booktabs: true,
+    numbered-title: [`bool refresh`#sub(`e`)`(node_t* currentNode)`],
+  )[ ],
+) <ltqueue-enqueue-refresh>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i,
+    booktabs: true,
+    numbered-title: [`bool refreshTimestamp`#sub(`e`)`(uint32_t rank)`],
+  )[ ],
+) <ltqueue-enqueue-refresh-timestamp>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i,
+    booktabs: true,
+    numbered-title: [`bool refreshLeaf`#sub(`e`)`(uint32_t rank)`],
+  )[ ],
+) <ltqueue-enqueue-refresh-leaf>
+
+The followings are the dequeuer procedures:
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i,
+    booktabs: true,
+    numbered-title: [`bool dequeue(data_t& output)`],
+  )[ ],
 ) <ltqueue-dequeue>
 
-We omit the description of procedures `parent`, `leafNode`, `children`, leaving how the tree is constructed and children-parent relationship is determined to the implementor. The tree structure used by LTQueue is read-only so a wait-free implementation of these procedures is trivial.
-
-After each `enqueue` or `dequeue`, the timestamp-propation procedures are called to propagate the newly-enqueued timestamp from the enqueuer node up to the root node.
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i,
+    booktabs: true,
+    numbered-title: [`void propagate`#sub(`d`)`(uint32_t rank)`],
+  )[ ],
+) <ltqueue-dequeue-propagate>
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 9,
+    line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`propagate(rank: uint32_t)`],
-  )[
-    + *if* $not$`refreshTimestamp(rank)                                          `
-      + `refreshTimestamp(rank)`
-    + *if* $not$`refreshLeaf(rank)`
-      + `refreshLeaf(rank)`
-    + `currentNode = leafNode(rank)`
-    + *repeat*
-      + `currentNode = parent(currentNode)`
-      + *if* $not$`refresh(currentNode)`
-        + `refresh(currentNode)`
-    + *until* `currentNode == root`
-  ],
-) <ltqueue-propagate>
+    numbered-title: [`bool refresh`#sub(`d`)`(node_t* currentNode)`],
+  )[ ],
+) <ltqueue-dequeue-refresh>
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 19,
+    line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`refresh(currentNode:` *pointer* to `node_t)`],
-  )[
-    + `[old-rank, old-version] = currentNode->rank                              `
-    + `min-rank = DUMMY`
-    + `min-timestamp = MAX`
-    + *for* `childNode` in `children(currentNode)`
-      + `[child-rank, ...] = childNode->rank`
-      + *if* `(child-rank == DUMMY)` *continue*
-      + `child-timestamp = enqueuers[child-rank].min-timestamp`
-      + *if* `(child-timestamp < min-timestamp)`
-        + `min-timestamp = child-timestamp`
-        + `min-rank = child-rank`
-    + `CAS(&currentNode->rank, [old-rank, old-version], [min-rank, old-version + 1])`
-  ],
-) <ltqueue-refresh>
+    numbered-title: [`bool refreshTimestamp`#sub(`d`)`(uint32_t rank)`],
+  )[ ],
+) <ltqueue-dequeue-refresh-timestamp>
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 30,
+    line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`refreshTimestamp(rank: uint32_t)`],
-  )[
-    + `[old-timestamp, old-version] = enqueuers[rank].timestamp`
-    + `front = spsc_readFront(enqueuers[rank].spsc)`
-    + *if* `(front == `$bot$`)`
-      + `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [MAX, old-version + 1])`
-    + *else*
-      + `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [front.timestamp, old-version + 1])`
-  ],
-) <ltqueue-refresh-timestamp>
-
-#figure(
-  kind: "algorithm",
-  supplement: [Procedure],
-  pseudocode-list(
-    line-numbering: i => i + 36,
-    booktabs: true,
-    numbered-title: [`refreshLeaf(rank: uint32_t)`],
-  )[
-    + `leafNode = leafNode(spsc)                      `
-    + `[old-rank, old-version] = leafNode->rank`
-    + `[timestamp, ...] = enqueuers[rank].timestamp`
-    + `CAS(&leafNode->rank, [old-rank, old-version], [timestamp == MAX ? DUMMY : rank, old-version + 1])`
-  ],
-) <ltqueue-refresh-leaf>
+    numbered-title: [`bool refreshLeaf`#sub(`d`)`(uint32_t rank)`],
+  )[ ],
+) <ltqueue-dequeue-refresh-leaf>
 
 == Optimized LTQueue for distributed context
