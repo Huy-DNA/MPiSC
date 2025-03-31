@@ -26,25 +26,25 @@ Based on the MPSC algorithms we have surveyed in @related-works[], we propose tw
   supplement: "Table",
   caption: [Characteristic summary of our proposed distributed MPSCs. $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*],
   table(
-    columns: (2fr, 1fr, 1fr),
+    columns: (1.3fr, 1fr, 1fr),
     table.header(
       [*MPSC*],
-      [*LTQueue without LL/SC*],
-      [*Optimized distributed LTQueue*],
+      [*LTQueueV1*],
+      [*LTQueueV2*],
     ),
 
     [Correctness], [Linearizable], [Linearizable],
     [Progress guarantee of dequeue], [Wait-free], [Wait-free],
     [Progress guarantee of enqueue], [Wait-free], [Wait-free],
-    [Time complexity of dequeue],
+    [Worst-case time complexity of dequeue],
     [$O(log n)$ R + $O(log n)$ A],
     [constant R + $O(n)$ A],
 
-    [Time complexity of enqueue],
+    [Worst-case time complexity of enqueue],
     [$O(log n)$ R + $O(log n)$ A],
     [constant R + constant A],
 
-    [ABA solution], [Unique timestamp], [No harmful ABA problem],
+    [ABA solution], [Unique timestamp], [No harmful #linebreak() ABA problem],
     [Memory reclamation], [Custom scheme], [Custom scheme],
     [Number of elements], [Unbounded], [Unbounded],
   ),
