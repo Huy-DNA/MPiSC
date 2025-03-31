@@ -310,7 +310,7 @@ Similar to the fact that each process in our program is assigned a rank, each en
   pseudocode-list(
     line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`uint32_t enqueuer_order(uint32_t enqueuer_rank)`],
+    numbered-title: [`uint32_t enqueuerOrder(uint32_t enqueuer_rank)`],
   )[
     + *return* `enqueuer_rank > Dequeuer_rank ? enqueuer_rank - 1 : enqueuer_rank`
   ],
@@ -411,7 +411,7 @@ Similarly, `children` returns all indices of the child tree nodes given the node
     booktabs: true,
     numbered-title: [`uint32_t leafNodeIndex(uint32_t enqueuer_rank)`],
   )[
-    + *return* `Tree_size + enqueuer_order(enqueuer_rank)                         `
+    + *return* `Tree_size + enqueuerOrder(enqueuer_rank)                         `
   ],
 ) <ltqueue-leaf-node-index>
 
@@ -463,7 +463,9 @@ The followings are the enqueuer procedures:
     booktabs: true,
     numbered-title: [`bool refreshTimestamp`#sub(`e`)`()`],
   )[
-    + `{old-timestamp, old-version} = Min_timestamp                                 `
+    + `min_timestamp = timestamp_t {}`
+    + `aread_sync(Min_timestamp, &min_timestamp)`
+    + `{old-timestamp, old-version} = min_timestamp                                 `
     + `front = (data_t {}, timestamp_t {})`
     + `is_empty = spsc_readFront(Spsc, &front)`
     + *if* `(is_empty)`
@@ -481,7 +483,7 @@ timestamp_t {front.timestamp, old-version + 1})`
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 34,
+    line-numbering: i => i + 36,
     booktabs: true,
     numbered-title: [`bool refreshNode`#sub(`e`)`(uint32_t current_node_index)`],
   )[
@@ -496,7 +498,7 @@ timestamp_t {front.timestamp, old-version + 1})`
       + `{child_rank, child_version} = child_node`
       + *if* `(child_rank == DUMMY_RANK)` *continue*
       + `child_timestamp = timestamp_t {}`
-      + `aread_sync(Timestamps[enqueuer_order(child_rank)], &child_timestamp)`
+      + `aread_sync(Timestamps[enqueuerOrder(child_rank)], &child_timestamp)`
       + *if* `(child_timestamp < min_timestamp)`
         + `min_timestamp = child_timestamp`
         + `min_rank = child_rank`
@@ -510,7 +512,7 @@ node_t {rank_t {min_rank, old_version + 1}})`
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 50,
+    line-numbering: i => i + 52,
     booktabs: true,
     numbered-title: [`bool refreshLeaf`#sub(`e`)`()`],
   )[
@@ -533,7 +535,7 @@ The followings are the dequeuer procedures:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 58,
+    line-numbering: i => i + 60,
     booktabs: true,
     numbered-title: [`bool dequeue(data_t* output)`],
   )[
@@ -542,7 +544,7 @@ The followings are the dequeuer procedures:
     + `{rank, version} = root_node.rank`
     + *if* `(rank == DUMMY)` *return* `false`
     + `output_with_timestamp = (data_t {}, timestamp_t {})`
-    + *if* `(!spsc_dequeue(&Spscs[enqueuer_order(rank)]),
+    + *if* `(!spsc_dequeue(&Spscs[enqueuerOrder(rank)]),
     &output_with_timestamp))`
       + *return* `false`
     + `*output = output_with_timestamp.data`
@@ -555,7 +557,7 @@ The followings are the dequeuer procedures:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 68,
+    line-numbering: i => i + 70,
     booktabs: true,
     numbered-title: [`void propagate`#sub(`d`)`(uint32_t enqueuer_rank)`],
   )[
@@ -576,10 +578,25 @@ The followings are the dequeuer procedures:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 80,
     booktabs: true,
-    numbered-title: [`bool refreshTimestamp`#sub(`d`)`(uint32_t rank)`],
-  )[ ],
+    numbered-title: [`bool refreshTimestamp`#sub(`d`)`(uint32_t enqueuer_rank)`],
+  )[
+    + `enqueuer_order = enqueuerOrder(enqueuer_rank)`
+    + `min_timestamp = timestamp_t {}`
+    + `aread_sync(Timestamps, enqueuer_order, &min_timestamp)`
+    + `{old-timestamp, old-version} = min_timestamp                                 `
+    + `front = (data_t {}, timestamp_t {})`
+    + `is_empty = spsc_readFront(&Spscs[enqueuer_order], &front)`
+    + *if* `(is_empty)`
+      + *return* `compare_and_swap_sync(Timestamps, enqueuer_order,
+timestamp_t {old-timestamp, old-version},
+timestamp_t {MAX_TIMESTAMP, old-version + 1})`
+    + *else*
+      + *return* `compare_and_swap_sync(Timestamps, enqueuer_order,
+timestamp_t {old-timestamp, old-version},
+timestamp_t {front.timestamp, old-version + 1})`
+  ],
 ) <ltqueue-dequeue-refresh-timestamp>
 
 #figure(
