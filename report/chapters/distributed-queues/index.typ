@@ -417,7 +417,7 @@ Similarly, `children` returns all indices of the child tree nodes given the node
 
 `leafNodeIndex` returns the index of the leaf node that's logically attached to the enqueuer node with rank `enqueuer_rank` as in @modified-ltqueue-tree.
 
-The followings are the enqueuer procedures:
+The followings are the enqueuer procedures.
 
 #figure(
   kind: "algorithm",
@@ -433,7 +433,7 @@ The followings are the enqueuer procedures:
   ],
 ) <ltqueue-enqueue>
 
-To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed counter `Counter` (line 14). From the count, we create a `timestamp_t` value by tagging it with the version `0`.
+To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed counter `Counter` (line 14). Then, we enqueue the data tagged with the timestamp into the local SPSC (line 15). Finally, `enqueue` propagates the changes by invoking `propagate`#sub(`e`)`()` (line 16).
 
 #figure(
   kind: "algorithm",
@@ -455,6 +455,8 @@ To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed cou
     + *until* `current_node_index == 0`
   ],
 ) <ltqueue-enqueue-propagate>
+
+The `propagate`#sub(`e`) procedure is responsible for propagating SPSC updates up to the root node as a way to notify other processes of the newly enqueued item. It is split into 3 phases: Refreshing of `Min_timestamp` in the enqueuer node (line 18-19), refreshing of the enqueuer's leaf node (line 20-21), refreshing of internal nodes (line 23-27). On line 20-27, we refresh every tree node that lies between the enqueuer node and the root node.
 
 #figure(
   kind: "algorithm",
@@ -479,6 +481,8 @@ timestamp_t {old-timestamp, old-version},
 timestamp_t {front.timestamp, old-version + 1})`
   ],
 ) <ltqueue-enqueue-refresh-timestamp>
+
+The `refreshTimestamp`#sub(`e`) procedure is responsible for updating the `Min_timestamp` of the enqueuer node. It simply looks at the front of the local SPSC (line 310 and CAS `Min_timestamp` accordingly (line 33-36).
 
 #figure(
   kind: "algorithm",
@@ -509,6 +513,8 @@ node_t {rank_t {min_rank, old_version + 1}})`
   ],
 ) <ltqueue-enqueue-refresh-node>
 
+The `refreshNode`#sub(`e`) procedure is responsible for updating the ranks of the internal nodes affected by the enqueue. It loops over the children of the current internal nodes (line 42). For each child node, we read the rank stored in it (line 44), if the rank is not `DUMMY_RANK`, we proceed to read the value of `Min_timestamp` of the enqueuer node with the corresponding rank (line 48). At the end of the loop, we obtain the rank stored inside one of the child nodes that has the minimum timestamp stored in its enqueuer node (line 50-51). We then try to CAS the rank inside the current internal node to this rank.
+
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
@@ -530,7 +536,9 @@ node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
   ],
 ) <ltqueue-enqueue-refresh-leaf>
 
-The followings are the dequeuer procedures:
+The `refreshLeaf`#sub(`e`) procedure is responsible for updating the rank of the leaf node affected by the enqueue. It simply reads the value of `Min_timestamp` of the enqueuer node it's logically attached to (line 58) and CAS the leaf node's rank accordingly (line 60).
+
+The followings are the dequeuer procedures.
 
 #figure(
   kind: "algorithm",
@@ -554,6 +562,8 @@ The followings are the dequeuer procedures:
   ],
 ) <ltqueue-dequeue>
 
+To dequeue a value, `dequeue` reads the rank stored inside the root node (line 62). If the rank is `DUMMY_RANK`, the MPSC is treated as empty and failure is signaled (line 64). Otherwise, we invoke `spsc_dequeue` on the SPSC of the enqueuer with the obtained rank (line 66). We then extract out the real data and set it to `output` (line 68). We finally propagate the dequeue from the enqueuer node that corresponds to the obtained rank (line 69) and signal success (line 70).
+
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
@@ -574,6 +584,8 @@ The followings are the dequeuer procedures:
     + *until* `current_node_index == 0`
   ],
 ) <ltqueue-dequeue-propagate>
+
+The `propagate`#sub(`d`) procedure is similar to `propagate`#sub(`e`), with appropriate changes to accommodate the dequeuer.
 
 #figure(
   kind: "algorithm",
@@ -599,6 +611,8 @@ timestamp_t {old-timestamp, old-version},
 timestamp_t {front.timestamp, old-version + 1})`
   ],
 ) <ltqueue-dequeue-refresh-timestamp>
+
+The `refreshTimestamp`#sub(`d`) procedure is similar to `refreshTimestamp`#sub(`e`), with appropriate changes to accommodate the dequeuer.
 
 #figure(
   kind: "algorithm",
@@ -629,6 +643,8 @@ node_t {rank_t {min_rank, old_version + 1}})`
   ],
 ) <ltqueue-dequeue-refresh-node>
 
+The `refreshNode`#sub(`d`) procedure is similar to `refreshNode`#sub(`e`), with appropriate changes to accommodate the dequeuer.
+
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
@@ -649,5 +665,7 @@ node_t {rank_t {old-rank, old-version}},
 node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
   ],
 ) <ltqueue-dequeue-refresh-leaf>
+
+The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with appropriate changes to accommodate the dequeuer.
 
 == Optimized LTQueue for distributed context
