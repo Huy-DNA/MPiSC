@@ -684,11 +684,15 @@ Therefore, to be more suitable for distributed context, we propose a new algorit
 
 === Structure
 
-Each enqueue will have a local SPSC as in LTQueue @ltqueue that supports `dequeue`, `enqueue` and `readFront`. There's a global queue whose entries store the minimum timestamp of the corresponding enqueuer's local SPSC.
+The structure of LTQueueV2 is shown as in @slotqueue-structure.
+
+Each enqueuer hosts a distributed SPSC as in LTQueueV1 (@naive-LTQueue).
+
+Additionally, the dequeuer hosts an array whose entries each corresponds with an enqueuer. Each entry stores the minimum timestamp of the local SPSC of the corresponding enqueuer.
 
 #figure(
   image("/static/images/slotqueue.png"),
-  caption: [Basic structure of slot queue],
-)
+  caption: [Basic structure of LTQueueV2],
+) <slotqueue-structure>
 
 === Pseudocode
