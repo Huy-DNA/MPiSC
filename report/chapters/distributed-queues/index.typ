@@ -52,6 +52,8 @@ Based on the MPSC algorithms we have surveyed in @related-works[], we propose tw
 
 In this section, we present our proposed distributed MPSCs in detail. Any other discussions about theoretical aspects of these algorithms such as linearizability, progress guarantee, time complexity are deferred to @theoretical-aspects[].
 
+In our description, we assume that each process in our program is assigned a unique number as an identifier, which is termed as its *rank*. The numbers are taken from the range of `[0, size - 1]`, with `size` being the number of processes in our program.
+
 == Distributed primitives in pseudocode
 
 Although we use MPI-3 RMA to implement these algorithms, the algorithm specifications themselves are not inherently tied to MPI-3 RMA interfaces. For clarity and convenience in specification, we define the following distributed primitives used in our pseudocode.
@@ -224,8 +226,16 @@ The procedures of the dequeuer are given as follows.
 
 The structure of our modified LTQueue is shown as in @modified-ltqueue-tree.
 
+We differentiate between 2 types of nodes: *enqueuer nodes* (represented as the rectangular boxes at the bottom of @modified-ltqueue-tree) and normal *tree nodes* (represented as the circular boxes in @modified-ltqueue-tree).
+
+Each enqueuer node corresponds to an enqueuer. Each time the local SPSC is enqueued with a value, the enqueuer timestamps the value using a distributed counter shared by all enqueuers. An enqueuer node stores the SPSC local to the corresponding enqueuer and a `min-timestamp` value which is the minimum timestamp inside the local SPSC.
+
+Each tree node stores the rank of an enqueuer process. This rank corresponds to the enqueuer node with the minimum timestamp among the node's children's ranks. The tree node that's attached to an enqueuer node is called a *leaf node*, otherwise, it's called an *internal node*.
+
+Note that if a local SPSC is empty, the `min-timestamp` variable of the corresponding enqueuer node is set to `MAX` and the corresponding leaf node's rank is set to a `DUMMY` rank.
+
 #place(
-  center + bottom,
+  center + top,
   float: true,
   scope: "parent",
   [#figure(
@@ -239,15 +249,9 @@ The structure of our modified LTQueue is shown as in @modified-ltqueue-tree.
   ],
 )
 
-At the bottom *enqueuer nodes* (represented by the type `enqueuer_t`), besides the local SPSC, the minimum-timestamp among the elements in the SPSC is also stored.
-
-The *internal nodes* store a rank of an enqueuer. This rank corresponds to the enqueuer with the minimum timestamp among the ranks stored in the node's children.
-
-Note that if a local SPSC is empty, the minimum-timestamp of the corresponding enqueuer node is set to `MAX` and the corresponding leaf node's rank is set to a `DUMMY` rank.
-
 Placement-wise:
-- The *enqueuer nodes* and thus, the local SPSCs, are hosted at the corresponding *enqueuer*.
-- All the *internal nodes* are hosted at the *dequeuer*.
+- The *enqueuer nodes* are hosted at the corresponding *enqueuer*.
+- All the *tree nodes* are hosted at the *dequeuer*.
 - The distributed counter, which the enqueuers use to timestamp their enqueued value, is hosted at the *dequeuer*.
 
 #pseudocode-list(line-numbering: none)[
