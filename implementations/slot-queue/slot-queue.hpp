@@ -142,7 +142,7 @@ private:
       aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
 
       data_t data;
-      aread_async(&data, this->_first_buf % this->_capacity, this->_self_rank,
+      aread_sync(&data, this->_first_buf % this->_capacity, this->_self_rank,
                   this->_data_win);
 
       *output_timestamp = data.timestamp;
