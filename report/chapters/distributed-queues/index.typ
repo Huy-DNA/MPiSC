@@ -78,7 +78,7 @@ Although we use MPI-3 RMA to implement these algorithms, the algorithm specifica
 
 `void flush(remote<T> src)`: Ensure that all read and write operations on the distributed variable `src` (or its associated array) issued before this function call are fully completed by the time the function returns.
 
-== A basis distributed SPSC
+== A basis distributed SPSC <distributed-spsc>
 
 The two algorithms we propose here both utilize a distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
 
@@ -260,7 +260,7 @@ Below is the types utilized in our version of LTQueue.
   #pseudocode-list(line-numbering: none)[
     + *Types*
       + `data_t` = The type of the data to be stored
-      + `spsc_t` = The type of the SPSC
+      + `spsc_t` = The type of the SPSC, this is assumed to be the distributed SPSC in @distributed-spsc
       + `rank_t` = The type of the rank of an enqueuer process tagged with a unique timestamp (version) to avoid ABA problem
         + *struct*
           + `value`: `uint32_t`
