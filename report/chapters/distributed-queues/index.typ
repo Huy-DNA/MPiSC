@@ -431,7 +431,7 @@ The followings are the enqueuer procedures:
     + `count = FAA(Counter)                                                 `
     + `timestamp = timestamp_t {count, Self_rank}`
     + `spsc_enqueue(Self_node.spsc, (value, timestamp))`
-    + `propagate`#sub(`e`)`(Self_rank)`
+    + `propagate`#sub(`e`)`()`
   ],
 ) <ltqueue-enqueue>
 
@@ -439,20 +439,43 @@ The followings are the enqueuer procedures:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 17,
     booktabs: true,
     numbered-title: [`void propagate`#sub(`e`)`()`],
-  )[ ],
+  )[
+    + *if* `(!refreshTimestamp`#sub(`e`)`())                                                `
+      + `refreshTimestamp`#sub(`e`)`()`
+    + *if* `(!refreshLeaf`#sub(`e`)`())`
+      + `refreshLeaf`#sub(`e`)`()`
+    + `current_node = leafNode(rank)`
+    + *repeat*
+      + `current_node = parent(current_node)`
+      + *if* `(!refresh`#sub(`e`)`(current_node))`
+        + `refresh`#sub(`e`)`(current_node)`
+    + *until* `current_node == 0`
+  ],
 ) <ltqueue-enqueue-propagate>
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 27,
     booktabs: true,
-    numbered-title: [`bool refreshTimestamp`#sub(`e`)`(uint32_t rank)`],
-  )[ ],
+    numbered-title: [`bool refreshTimestamp`#sub(`e`)`()`],
+  )[
+    + `{old-timestamp, old-version} = Self_node.min_timestamp              `
+    + `front = (data_t {}, timestamp_t {})`
+    + `is_empty = spsc_readFront(Self_node.spsc, &front)`
+    + *if* `(is_empty)`
+      + *return* `compare_and_swap_sync(&Self_node.min_timestamp,
+timestamp_t {old-timestamp, old-version},
+timestamp_t {MAX_TIMESTAMP, old-version + 1})`
+    + *else*
+      + *return* `compare_and_swap_sync(&Self_node.min_timestamp,
+timestamp_t {old-timestamp, old-version},
+timestamp_t {front.timestamp, old-version + 1})`
+  ],
 ) <ltqueue-enqueue-refresh-timestamp>
 
 #figure(
