@@ -158,17 +158,30 @@ The procedures are given as follows.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 9,
     booktabs: true,
-    numbered-title: [`spsc_dequeue()` *returns* `data_t`],
-  )[ ],
+    numbered-title: [`spsc_dequeue(output)` *returns* `data_t`],
+  )[
+    + `new_first = First_buf + 1`
+    + *if* `(new_first > Last_buf)                                            `
+      + `aread_sync(Last, &Last_buf)`
+      + *if* `(new_first > Last_buf)`
+        + *return* `false`
+    + `aread_sync(Data, First_buf % Capacity, output)`
+    + `awrite_sync(First, &new_first)`
+    + `First_buf = new_first`
+    + *return* `true`
+
+  ],
 ) <spsc-dequeue>
+
+`spsc_dequeue` first computes the new `First` value (line 10). If the queue is empty as indicating by the difference the new `First` value and `Last-buf` (line 11), there can still be the possibility that some elements have been enqueued but `Last-buf` hasn't been synced with `Last` yet, therefore, we first refresh the value of `Last-buf` by fetching from `Last` (line 12). If the queue is still empty (line 13), we signal failure (line 14). Otherwise, we proceed to read the top value at `First_buf % Capacity` (line 15) into `output`, increment `First` (line 16) - effectively dequeue the element, update the value of `First_buf` (line 17) and signal success (line 18).
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 18,
     booktabs: true,
     numbered-title: [`spsc_readFront` *returns* `data_t`],
   )[ ],
