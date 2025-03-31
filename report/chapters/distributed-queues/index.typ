@@ -298,7 +298,7 @@ Note that we have described a very specific and simple way to organize the tree 
       + This array is organized in a similar manner as a min-heap: At index `0` is the root node. For every index $i gt 0$, $floor((i - 1) / 2)$ is the index of the parent of node $i$. For every index $i gt 0$, $2i + 1$ and $2i + 2$ are the indices of the children of node $i$.
     + `Dequeuer_rank`: `uint32_t`
       + The rank of the dequeuer process.
-    + `Enqueuers`: A read-only *array* `[0..size - 2]` of `remote<timestamp_t>`, with `size` being the number of processes.
+    + `Timestamps`: A read-only *array* `[0..size - 2]` of `remote<timestamp_t>`, with `size` being the number of processes.
       + The entry at index $i$ corresponds to the `Min_timestamp` distributed variable at the enqueuer with an order of $i$.
 ]
 
@@ -337,6 +337,7 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
     + *Dequeuer-local variables*
       + `Enqueuer_count`: `uint64_t`
         + The number of enqueuers.
+      + `Spscs`: *array* of `spsc_t` with `Enqueuer_count` entries.
   ]
 ]
 
@@ -358,7 +359,8 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
       + Initialize `Counter` to `0`.
       + Initialize `Tree_size` to `Enqueuer_count * 2`.
       + Initialize `Nodes` to an array with `Tree_size` entries. Each entry is initialized to `node_t {DUMMY_RANK}`.
-      + Initialize `Enqueuers`, synchronizing each entry with the corresponding enqueuer.
+      + Initialize `Spscs`, synchronizing each entry with the corresponding enqueuer.
+      + Initialize `Timestamps`, synchronizing each entry with the corresponding enqueuer.
   ]
 ]
 
@@ -427,7 +429,7 @@ The followings are the enqueuer procedures:
   )[
     + `count = FAA(Counter)                                                 `
     + `timestamp = timestamp_t {count, Self_rank}`
-    + `spsc_enqueue(Spsc, (value, timestamp))`
+    + `spsc_enqueue(&Spsc, (value, timestamp))`
     + `propagate`#sub(`e`)`()`
   ],
 ) <ltqueue-enqueue>
@@ -494,7 +496,7 @@ timestamp_t {front.timestamp, old-version + 1})`
       + `{child_rank, child_version} = child_node`
       + *if* `(child_rank == DUMMY_RANK)` *continue*
       + `child_timestamp = timestamp_t {}`
-      + `aread_sync(Enqueuers[child_rank], &child_timestamp)`
+      + `aread_sync(Timestamps[enqueuer_order(child_rank)], &child_timestamp)`
       + *if* `(child_timestamp < min_timestamp)`
         + `min_timestamp = child_timestamp`
         + `min_rank = child_rank`
@@ -531,10 +533,22 @@ The followings are the dequeuer procedures:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 58,
     booktabs: true,
-    numbered-title: [`bool dequeue(data_t output)`],
-  )[ ],
+    numbered-title: [`bool dequeue(data_t* output)`],
+  )[
+    + `root_node = node_t {}                                                     `
+    + `aread_sync(Nodes, 0, &root_node)`
+    + `{rank, version} = root_node.rank`
+    + *if* `(rank == DUMMY)` *return* `false`
+    + `output_with_timestamp = (data_t {}, timestamp_t {})`
+    + *if* `(!spsc_dequeue(&Spscs[enqueuer_order(rank)]),
+    &output_with_timestamp))`
+      + *return* `false`
+    + `*output = output_with_timestamp.data`
+    + `propagate`#sub(`d`)`(rank)`
+    + *return* `true`
+  ],
 ) <ltqueue-dequeue>
 
 #figure(
