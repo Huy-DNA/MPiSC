@@ -18,8 +18,8 @@
 #show: definition-rules
 
 Based on the MPSC algorithms we have surveyed in @related-works[], we propose two wait-free distributed MPSC algorithms:
-- One is a direct modification of LTQueue @ltqueue without any usage of LL/SC.
-- One is inspired by the timestamp-refreshing idea of LTQueue @ltqueue and repeated-rescan of Jiffy @jiffy. Although it still bears some resemblance to LTQueue, we believe it to be more optimized for distributed context.
+- LTQueuev1 (@naive-LTQueue) is a direct modification of LTQueue @ltqueue without any usage of LL/SC.
+- LTQueueV2 (@slotqueue) is inspired by the timestamp-refreshing idea of LTQueue @ltqueue and repeated-rescan of Jiffy @jiffy. Although it still bears some resemblance to LTQueue, we believe it to be more optimized for distributed context.
 
 #figure(
   kind: "table",
@@ -228,7 +228,7 @@ The procedures of the dequeuer are given as follows.
 `spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
 
 
-== Modified LTQueue without LL/SC <naive-LTQueue>
+== LTQueueV1 - Modified LTQueue without LL/SC <naive-LTQueue>
 
 This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSCs, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
 
@@ -674,7 +674,7 @@ node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
 
 The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with appropriate changes to accommodate the dequeuer.
 
-== Optimized LTQueue for distributed context
+== LTQueueV2 - Optimized LTQueue for distributed context <slotqueue>
 
 === Motivation
 
@@ -684,5 +684,11 @@ Therefore, to be more suitable for distributed context, we propose a new algorit
 
 === Structure
 
+Each enqueue will have a local SPSC as in LTQueue @ltqueue that supports `dequeue`, `enqueue` and `readFront`. There's a global queue whose entries store the minimum timestamp of the corresponding enqueuer's local SPSC.
+
+#figure(
+  image("/static/images/slotqueue.png"),
+  caption: [Basic structure of slot queue],
+)
 
 === Pseudocode
