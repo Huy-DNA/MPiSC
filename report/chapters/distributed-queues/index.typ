@@ -289,7 +289,7 @@ Below is the types utilized in our version of LTQueue.
 
 The shared variables in our LTQueue version are as followed.
 
-Note that we have described a very specific and simple way to organize the tree nodes in LTQueue in a min-heap-like array structure hosted on the sole dequeuer. We will resume our description of the related tree-structure procedures `parent()` (@ltqueue-parent), `children()` (@ltqueue-children), `leaf_node_index()` (@ltqueue-leaf-node-index) with this representation in mind. However, our algorithm doesn't strictly require this representation and can be subtituted with other more-optimized representations & distributed placements, as long as the similar tree-structure procedures are supported.
+Note that we have described a very specific and simple way to organize the tree nodes in LTQueue in a min-heap-like array structure hosted on the sole dequeuer. We will resume our description of the related tree-structure procedures `parent()` (@ltqueue-parent), `children()` (@ltqueue-children), `leafNodeIndex()` (@ltqueue-leaf-node-index) with this representation in mind. However, our algorithm doesn't strictly require this representation and can be subtituted with other more-optimized representations & distributed placements, as long as the similar tree-structure procedures are supported.
 
 #pseudocode-list(line-numbering: none)[
   + *Shared variables*
@@ -410,13 +410,13 @@ Similarly, `children` returns all indices of the child tree nodes given the node
   pseudocode-list(
     line-numbering: i => i + 12,
     booktabs: true,
-    numbered-title: [`uint32_t leaf_node_index(uint32_t enqueuer_rank)`],
+    numbered-title: [`uint32_t leafNodeIndex(uint32_t enqueuer_rank)`],
   )[
     + *return* `Tree_size + enqueuer_order(enqueuer_rank)                         `
   ],
 ) <ltqueue-leaf-node-index>
 
-`leaf_node_index` returns the index of the leaf node that's logically attached to the enqueuer node with rank `enqueuer_rank` as in @modified-ltqueue-tree.
+`leafNodeIndex` returns the index of the leaf node that's logically attached to the enqueuer node with rank `enqueuer_rank` as in @modified-ltqueue-tree.
 
 The followings are the enqueuer procedures:
 
@@ -451,9 +451,9 @@ The followings are the enqueuer procedures:
   pseudocode-list(
     line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`bool refresh`#sub(`e`)`(node_t* currentNode)`],
+    numbered-title: [`bool refreshTimestamp`#sub(`e`)`(uint32_t rank)`],
   )[ ],
-) <ltqueue-enqueue-refresh>
+) <ltqueue-enqueue-refresh-timestamp>
 
 #figure(
   kind: "algorithm",
@@ -461,9 +461,9 @@ The followings are the enqueuer procedures:
   pseudocode-list(
     line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`bool refreshTimestamp`#sub(`e`)`(uint32_t rank)`],
+    numbered-title: [`bool refreshNode`#sub(`e`)`(node_t* currentNode)`],
   )[ ],
-) <ltqueue-enqueue-refresh-timestamp>
+) <ltqueue-enqueue-refresh-node>
 
 #figure(
   kind: "algorithm",
@@ -503,9 +503,9 @@ The followings are the dequeuer procedures:
   pseudocode-list(
     line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`bool refresh`#sub(`d`)`(node_t* currentNode)`],
+    numbered-title: [`bool refreshTimestamp`#sub(`d`)`(uint32_t rank)`],
   )[ ],
-) <ltqueue-dequeue-refresh>
+) <ltqueue-dequeue-refresh-timestamp>
 
 #figure(
   kind: "algorithm",
@@ -513,9 +513,9 @@ The followings are the dequeuer procedures:
   pseudocode-list(
     line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`bool refreshTimestamp`#sub(`d`)`(uint32_t rank)`],
+    numbered-title: [`bool refreshNode`#sub(`d`)`(node_t* currentNode)`],
   )[ ],
-) <ltqueue-dequeue-refresh-timestamp>
+) <ltqueue-dequeue-refresh-node>
 
 #figure(
   kind: "algorithm",
