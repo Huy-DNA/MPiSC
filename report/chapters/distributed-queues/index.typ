@@ -446,7 +446,7 @@ The followings are the enqueuer procedures:
       + `refreshTimestamp`#sub(`e`)`()`
     + *if* `(!refreshLeaf`#sub(`e`)`())`
       + `refreshLeaf`#sub(`e`)`()`
-    + `current_node_index = leafNode(rank)`
+    + `current_node_index = leafNodeIndex(Self_rank)`
     + *repeat*
       + `current_node_index = parent(current_node_index)`
       + *if* `(!refresh`#sub(`e`)`(current_node_index))`
@@ -555,10 +555,21 @@ The followings are the dequeuer procedures:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 68,
     booktabs: true,
-    numbered-title: [`void propagate`#sub(`d`)`(uint32_t rank)`],
-  )[ ],
+    numbered-title: [`void propagate`#sub(`d`)`(uint32_t enqueuer_rank)`],
+  )[
+    + *if* `(!refreshTimestamp`#sub(`d`)`(enqueuer_rank))                                              `
+      + `refreshTimestamp`#sub(`d`)`(enqueuer_rank)`
+    + *if* `(!refreshLeaf`#sub(`d`)`(enqueuer_rank))`
+      + `refreshLeaf`#sub(`d`)`(enqueuer_rank)`
+    + `current_node_index = leafNodeIndex(enqueuer_rank)`
+    + *repeat*
+      + `current_node_index = parent(current_node_index)`
+      + *if* `(!refresh`#sub(`d`)`(current_node_index))`
+        + `refresh`#sub(`d`)`(current_node_index)`
+    + *until* `current_node_index == 0`
+  ],
 ) <ltqueue-dequeue-propagate>
 
 #figure(
