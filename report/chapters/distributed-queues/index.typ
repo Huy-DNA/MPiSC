@@ -131,7 +131,7 @@ Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
   ]
 ]
 
-The procedures are given as follows.
+The procedures of the enqueuer are given as follows.
 
 #figure(
   kind: "algorithm",
@@ -160,6 +160,28 @@ The procedures are given as follows.
   pseudocode-list(
     line-numbering: i => i + 9,
     booktabs: true,
+    numbered-title: [`spsc_readFront`#sub(`e`)`(output)` *returns* `bool`],
+  )[
+    + *if* `(First_buf >= Last_buf)                                           `
+      + *return* `false`
+    + `aread_sync(First, &First_buf)`
+    + *if* `(First_buf >= Last_buf)                                           `
+      + *return* `false`
+    + `aread_sync(Data, First_buf % Capacity, output)`
+    + *return* `true`
+  ],
+) <spsc-enqueue-readFront>
+
+`spsc_readFront`#sub(`e`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 10). Note that if this check fails, we signal failure immediately (line 11) without refetching either `First` or `Last`. This suffices because `Last` cannot be out-of-sync with `Last_buf` as we're the enqueuer and `First` can only increase since the last refresh of `First_buf`, therefore, if we refresh `First` and `Last`, the condition on line 10 would return `false` anyways. If the SPSC is not empty, we refresh `First` and re-perform the empty check (line 12-14). If the SPSC is again not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 15) and signal success (line 16).
+
+The procedures of the dequeuer are given as follows.
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 14,
+    booktabs: true,
     numbered-title: [`spsc_dequeue(output)` *returns* `data_t`],
   )[
     + `new_first = First_buf + 1`
@@ -175,24 +197,35 @@ The procedures are given as follows.
   ],
 ) <spsc-dequeue>
 
-`spsc_dequeue` first computes the new `First` value (line 10). If the queue is empty as indicating by the difference the new `First` value and `Last-buf` (line 11), there can still be the possibility that some elements have been enqueued but `Last-buf` hasn't been synced with `Last` yet, therefore, we first refresh the value of `Last-buf` by fetching from `Last` (line 12). If the queue is still empty (line 13), we signal failure (line 14). Otherwise, we proceed to read the top value at `First_buf % Capacity` (line 15) into `output`, increment `First` (line 16) - effectively dequeue the element, update the value of `First_buf` (line 17) and signal success (line 18).
+`spsc_dequeue` first computes the new `First` value (line 15). If the queue is empty as indicating by the difference the new `First` value and `Last-buf` (line 16), there can still be the possibility that some elements have been enqueued but `Last-buf` hasn't been synced with `Last` yet, therefore, we first refresh the value of `Last-buf` by fetching from `Last` (line 17). If the queue is still empty (line 18), we signal failure (line 19). Otherwise, we proceed to read the top value at `First_buf % Capacity` (line 20) into `output`, increment `First` (line 21) - effectively dequeue the element, update the value of `First_buf` (line 22) and signal success (line 23).
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 18,
+    line-numbering: i => i + 23,
     booktabs: true,
-    numbered-title: [`spsc_readFront` *returns* `data_t`],
-  )[ ],
-) <spsc-readFront>
+    numbered-title: [`spsc_readFront`#sub(`d`)`(output)` *returns* `bool`],
+  )[
+    + *if* `(First_buf >= Last_buf)                                               `
+      + `aread_sync(Last, &Last_buf)`
+      + *if* `(First_buf >= Last_buf)`
+        + *return* `false`
+    + `aread_sync(Data, First_buf % Capacity, output)`
+    + *return* `true`
+
+  ],
+) <spsc-dequeue-readFront>
+
+`spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
+
 
 == Modified LTQueue without LL/SC
 
 The structure of our modified LTQueue is shown as in @modified-ltqueue-tree.
 
 #place(
-  center + top,
+  center + bottom,
   float: true,
   scope: "parent",
   [#figure(
