@@ -140,7 +140,7 @@ The procedures of the enqueuer are given as follows.
   supplement: [Procedure],
   pseudocode-list(
     booktabs: true,
-    numbered-title: [`spsc_enqueue(v: data_t)` *returns* `bool`],
+    numbered-title: [`bool spsc_enqueue(data_t& v)`],
   )[
     + `new_last = Last_buf + 1`
     + *if* `(new_last - First_buf > Capacity)                                            `
@@ -162,7 +162,7 @@ The procedures of the enqueuer are given as follows.
   pseudocode-list(
     line-numbering: i => i + 9,
     booktabs: true,
-    numbered-title: [`spsc_readFront`#sub(`e`)`(output)` *returns* `bool`],
+    numbered-title: [`bool spsc_readFront`#sub(`e`)`(data_t& output)`],
   )[
     + *if* `(First_buf >= Last_buf)                                           `
       + *return* `false`
@@ -184,7 +184,7 @@ The procedures of the dequeuer are given as follows.
   pseudocode-list(
     line-numbering: i => i + 14,
     booktabs: true,
-    numbered-title: [`spsc_dequeue(output)` *returns* `data_t`],
+    numbered-title: [`bool spsc_dequeue(data_t& output)`],
   )[
     + `new_first = First_buf + 1`
     + *if* `(new_first > Last_buf)                                            `
@@ -207,7 +207,7 @@ The procedures of the dequeuer are given as follows.
   pseudocode-list(
     line-numbering: i => i + 23,
     booktabs: true,
-    numbered-title: [`spsc_readFront`#sub(`d`)`(output)` *returns* `bool`],
+    numbered-title: [`bool spsc_readFront`#sub(`d`)`(data_t& output)`],
   )[
     + *if* `(First_buf >= Last_buf)                                               `
       + `aread_sync(Last, &Last_buf)`
