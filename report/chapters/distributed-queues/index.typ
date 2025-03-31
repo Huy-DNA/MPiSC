@@ -542,7 +542,7 @@ The followings are the dequeuer procedures:
     + `root_node = node_t {}                                                     `
     + `aread_sync(Nodes, 0, &root_node)`
     + `{rank, version} = root_node.rank`
-    + *if* `(rank == DUMMY)` *return* `false`
+    + *if* `(rank == DUMMY_RANK)` *return* `false`
     + `output_with_timestamp = (data_t {}, timestamp_t {})`
     + *if* `(!spsc_dequeue(&Spscs[enqueuerOrder(rank)]),
     &output_with_timestamp))`
@@ -603,20 +603,51 @@ timestamp_t {front.timestamp, old-version + 1})`
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 90,
     booktabs: true,
     numbered-title: [`bool refreshNode`#sub(`d`)`(uint32_t current_node_index)`],
-  )[ ],
+  )[
+    + `current_node = node_t {}                                                      `
+    + `aread_sync(Nodes, current_node_index, &current_node)`
+    + `{old-rank, old-version} = current_node.rank`
+    + `min_rank = DUMMY_RANK`
+    + `min_timestamp = MAX_TIMESTAMP`
+    + *for* `child_node_index` in `children(current_node)`
+      + `child_node = node_t {}`
+      + `aread_sync(Nodes, child_node_index, &child_node)`
+      + `{child_rank, child_version} = child_node`
+      + *if* `(child_rank == DUMMY_RANK)` *continue*
+      + `child_timestamp = timestamp_t {}`
+      + `aread_sync(Timestamps[enqueuerOrder(child_rank)], &child_timestamp)`
+      + *if* `(child_timestamp < min_timestamp)`
+        + `min_timestamp = child_timestamp`
+        + `min_rank = child_rank`
+    + *return* `compare_and_swap_sync(Nodes, current_node_index,
+node_t {rank_t {old_rank, old_version}},
+node_t {rank_t {min_rank, old_version + 1}})`
+  ],
 ) <ltqueue-dequeue-refresh-node>
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 106,
     booktabs: true,
-    numbered-title: [`bool refreshLeaf`#sub(`d`)`(uint32_t rank)`],
-  )[ ],
+    numbered-title: [`bool refreshLeaf`#sub(`d`)`(uint32_t enqueuer_rank)`],
+  )[
+    + `leaf_node_index = leafNodeIndex(enqueuer_rank)             `
+    + `leaf_node = node_t {}`
+    + `aread_sync(Nodes, leaf_node_index, &leaf_node)`
+    + `{old_rank, old_version} = leaf_node.rank`
+    + `min_timestamp = timestamp_t {}`
+    + `aread_sync(Timestamps, enqueuerOrder(enqueuer_rank), &min_timestamp)`
+    + `timestamp = min_timestamp.timestamp`
+    + *return* `compare_and_swap_sync(Nodes, leaf_node_index,
+node_t {rank_t {old-rank, old-version}},
+node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
+
+  ],
 ) <ltqueue-dequeue-refresh-leaf>
 
 == Optimized LTQueue for distributed context
