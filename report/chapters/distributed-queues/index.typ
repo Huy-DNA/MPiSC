@@ -498,9 +498,8 @@ timestamp_t {front.timestamp, old-version + 1})`
         + `min_timestamp = child_timestamp`
         + `min_rank = child_rank`
     + *return* `compare_and_swap_sync(Nodes, current_node_index,
-node_t {rank {old_rank, old_version}},
-node_t {rank {min_rank, old_version + 1}})`
-
+node_t {rank_t {old_rank, old_version}},
+node_t {rank_t {min_rank, old_version + 1}})`
   ],
 ) <ltqueue-enqueue-refresh-node>
 
@@ -508,10 +507,21 @@ node_t {rank {min_rank, old_version + 1}})`
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 50,
     booktabs: true,
-    numbered-title: [`bool refreshLeaf`#sub(`e`)`(uint32_t rank)`],
-  )[ ],
+    numbered-title: [`bool refreshLeaf`#sub(`e`)`()`],
+  )[
+    + `leaf_node_index = leafNodeIndex(Self_rank)             `
+    + `leaf_node = node_t {}`
+    + `aread_sync(Nodes, leaf_node_index, &leaf_node)`
+    + `{old_rank, old_version} = leaf_node.rank`
+    + `min_timestamp = timestamp_t {}`
+    + `aread_sync(Min_timestamp, &min_timestamp)`
+    + `timestamp = min_timestamp.timestamp`
+    + *return* `compare_and_swap_sync(Nodes, leaf_node_index,
+node_t {rank_t {old-rank, old-version}},
+node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
+  ],
 ) <ltqueue-enqueue-refresh-leaf>
 
 The followings are the dequeuer procedures:
