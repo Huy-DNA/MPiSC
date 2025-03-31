@@ -52,13 +52,35 @@ Based on the MPSC algorithms we have surveyed in @related-works[], we propose tw
 
 In this section, we present our proposed distributed MPSCs in detail. Any other discussions about theoretical aspects of these algorithms such as linearizability, progress guarantee, time complexity are deferred to @theoretical-aspects[].
 
+== Distributed primitives in pseudocode
+
+Although we use MPI-3 RMA to implement these algorithms, the algorithm specifications themselves are not inherently tied to MPI-3 RMA interfaces. For clarity and convenience in specification, we define the following distributed primitives used in our pseudocode.
+
+`remote<T>`: A distributed shared variable of type T. The process that physically stores the variable in its local memory is referred to as the *host*. This represents data that can be accessed or modified remotely by other processes.
+
+`void aread_sync(remote<T> src, T* dest)`: Issue a synchronous read of the distributed variable `src` and stores its value into the local memory location pointed to by `dest`. The read is guaranteed to be completed when the function returns.
+
+`void aread_sync(remote<T*> src, int index, T* dest)`: Issue a synchronous read of the element at position `index` within the distributed array `src` (where `src` is a pointer to a remotely hosted array of type `T`) and stores the value into the local memory location pointed to by `dest`. The read is guaranteed to be completed when the function returns.
+
+`void awrite_sync(remote<T> dest, T* src)`: Issue a synchronous write of the value at the local memory location pointed to by `src` into the distributed variable `dest`. The write is guaranteed to be completed when the function returns.
+
+`void awrite_sync(remote<T*> dest, int index, T* src)`: Issue a synchronous write of the value at the local memory location pointed to by `src` into the element at position `index` within the distributed array `dest` (where `dest` is a pointer to a remotely hosted array of type `T`). The write is guaranteed to be completed when the function returns.
+
+`void aread_async(remote<T> src, T* dest)`: Issue an asynchronous read of the distributed variable `src` and initiate the transfer of its value into the local memory location pointed to by `dest`. The operation may not be completed when the function returns.
+
+`void aread_async(remote<T*> src, int index, T* dest)`: Issue an asynchronous read of the element at position `index` within the distributed array `src` (where `src` is a pointer to a remotely hosted array of type `T`) and initiate the transfer of its value into the local memory location pointed to by `dest`. The operation may not be completed when the function returns.
+
+`void awrite_async(remote<T> dest, T* src)`: Issue an asynchronous write of the value at the local memory location pointed to by `src` into the distributed variable `dest`. The operation may not be completed when the function returns.
+
+`void awrite_async(remote<T*> dest, int index, T* src)`: Issue an asynchronous write of the value at the local memory location pointed to by `src` into the element at position `index` within the distributed array `dest` (where `dest` is a pointer to a remotely hosted array of type `T`). The operation may not be completed when the function returns.
+
+`void flush(remote<T> src)`: Ensure that all read and write operations on the distributed variable `src` (or its associated array) issued before this function call are fully completed by the time the function returns.
+
 == A basis distributed SPSC
 
 The two algorithms we propose here both utilize a distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
 
 Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
-
-#pagebreak()
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
@@ -72,7 +94,7 @@ Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
         + The index of the last undequeued entry
       + `Last`: `remote<uint64_t>`
         + The index of the last unenqueued entry
-      + `Data`: `remote<uint64_t*>`
+      + `Data`: `remote<data_t*>`
         + An array of `data_t` of some known capacity
   ]
 
@@ -123,7 +145,7 @@ The procedures are given as follows.
       + `aread_sync(First, &First_buf)`
       + *if* `(new_last - First_buf > Capacity)`
         + *return* `false`
-    + `awrite_sync(Data + Last_buf % Capacity, &v)`
+    + `awrite_sync(Data, Last_buf % Capacity, &v)`
     + `awrite_sync(Last, &new_last)`
     + `Last_buf = new_last`
     + *return* `true`
@@ -139,8 +161,7 @@ The procedures are given as follows.
     line-numbering: i => i,
     booktabs: true,
     numbered-title: [`spsc_dequeue()` *returns* `data_t`],
-  )[
-  ],
+  )[ ],
 ) <spsc-dequeue>
 
 #figure(
@@ -150,8 +171,7 @@ The procedures are given as follows.
     line-numbering: i => i,
     booktabs: true,
     numbered-title: [`spsc_readFront` *returns* `data_t`],
-  )[
-  ],
+  )[ ],
 ) <spsc-readFront>
 
 == Modified LTQueue without LL/SC
