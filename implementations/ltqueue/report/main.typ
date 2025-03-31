@@ -458,7 +458,7 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
       + *if* `(child-timestamp < min-timestamp)`
         + `min-timestamp = child-timestamp`
         + `min-rank = child-rank`
-    + `CAS(&currentNode->rank, [old-rank, old-version], [min-rank, old-version + 1])`
+    + *return* `CAS(&currentNode->rank, [old-rank, old-version], [min-rank, old-version + 1])`
   ],
 ) <ltqueue-refresh>
 
