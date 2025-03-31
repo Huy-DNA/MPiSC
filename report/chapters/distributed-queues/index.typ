@@ -56,33 +56,56 @@ In this section, we present our proposed distributed MPSCs in detail. Any other 
 
 The two algorithms we propose here both utilize a distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
 
+Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
+
 #pagebreak()
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
     + *Types*
       + `data_t` = The type of data stored
-      + `spsc_t` = The type of the local SPSC
-        + *record*
-          + `First`: `int`
-          + `Last`: `int`
-          + `Capacity`: `int`
-          + `Data`: an array of `data_t` of capacity `Capacity`
-        + *end*
+  ]
+
+  #pseudocode-list(line-numbering: none)[
+    + *Shared variables*
+      + `First`: `remote<uint64_t>`
+        + The index of the last undequeued entry
+      + `Last`: `remote<uint64_t>`
+        + The index of the last unenqueued entry
+      + `Data`: `remote<uint64_t*>`
+        + An array of `data_t` of some known capacity
   ]
 
   #colbreak()
 
   #pseudocode-list(line-numbering: none)[
-    + *Shared variables*
-      + `First`: index of the first undequeued entry
-      + `Last`: index of the first unenqueued entry
+    + *Enqueuer-local variables*
+      + `Capacity`: A read-only value indicating the capacity of the SPSC
+      + `First_buf`: The cached value of `First` from the last read
+      + `Last_buf`: The cached value of `Last` from the last read
   ]
 
   #pseudocode-list(line-numbering: none)[
-    + *Initialization*
-      + `First = Last = 0`
-      + Set `Capacity` and allocate array.
+    + *Dequeuer-local variables*
+      + `Capacity`: A read-only value indicating the capacity of the SPSC
+      + `First_buf`: The cached value of `First` from the last read
+      + `Last_buf`: The cached value of `Last` from the last read
+  ]
+]
+
+#columns(2)[
+  #pseudocode-list(line-numbering: none)[
+    + *Enqueuer initialization*
+      + Initialize `First` and `Last` to `0`
+      + Initialize `Capacity`
+      + Allocate array in `Data`
+      + `First_buf = Last_buf = 0`
+  ]
+  #colbreak()
+  #pseudocode-list(line-numbering: none)[
+    + *Dequeuer initialization*
+      + Initialize `Capacity`
+      + `First_buf = Last_buf = 0`
   ]
 ]
 
@@ -95,26 +118,28 @@ The procedures are given as follows.
     booktabs: true,
     numbered-title: [`spsc_enqueue(v: data_t)` *returns* `bool`],
   )[
-    + *if* `(Last + 1 == First)                                                        `
-      + *return* `false`
-    + `Data[Last] = v`
-    + `Last = (Last + 1) % Capacity`
+    + `new_last = Last_buf + 1`
+    + *if* `(new_last - First_buf > Capacity)                                            `
+      + `aread_sync(First, &First_buf)`
+      + *if* `(new_last - First_buf > Capacity)`
+        + *return* `false`
+    + `awrite_sync(Data + Last_buf % Capacity, &v)`
+    + `awrite_sync(Last, &new_last)`
+    + `Last_buf = new_last`
     + *return* `true`
   ],
 ) <spsc-enqueue>
+
+`spsc_enqueue` first computes the new `Last` value (line 1). If the queue is full as indicating by the difference the new `Last` value and `First-buf` (line 2), there can still be the possibility that some elements have been dequeued but `First-buf` hasn't been synced with `First` yet, therefore, we first refresh the value of `First-buf` by fetching from `First` (line 3). If the queue is still full (line 4), we signal failure (line 5). Otherwise, we proceed to write the enqueued value to the entry at `Last_buf % Capacity` (line 6), increment `Last` (line 7), update the value of `Last_buf` (line 8) and signal success (line 9).
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 5,
+    line-numbering: i => i,
     booktabs: true,
     numbered-title: [`spsc_dequeue()` *returns* `data_t`],
   )[
-    + *if* `(First == Last)` *return* $bot$ `                                            `
-    + `res = Data[First]`
-    + `First = (First + 1) % Capacity`
-    + *return* `res`
   ],
 ) <spsc-dequeue>
 
@@ -122,13 +147,10 @@ The procedures are given as follows.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 9,
+    line-numbering: i => i,
     booktabs: true,
     numbered-title: [`spsc_readFront` *returns* `data_t`],
   )[
-    + *if* `(First == Last)                                                    `
-      + *return* $bot$
-    + *return* `Data[First]`
   ],
 ) <spsc-readFront>
 
