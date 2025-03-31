@@ -289,17 +289,39 @@ Below is the types utilized in our version of LTQueue.
 
 The shared variables in our LTQueue version are as followed.
 
-Note that we have described a very specific and simple way to organize the tree nodes in LTQueue in a min-heap-like array structure hosted on the sole dequeuer. We will resume our description of the related tree-structure procedures `parent()` (@ltqueue-parent), `children()` (@ltqueue-children), `leafNode()` (@ltqueue-leafNode) with this representation in mind. However, our algorithm doesn't strictly require this representation and can be subtituted with other more-optimized representations & distributed placements, as long as the similar tree-structure procedures are supported.
+Note that we have described a very specific and simple way to organize the tree nodes in LTQueue in a min-heap-like array structure hosted on the sole dequeuer. We will resume our description of the related tree-structure procedures `parent()` (@ltqueue-parent), `children()` (@ltqueue-children), `leaf_node_index()` (@ltqueue-leaf-node-index) with this representation in mind. However, our algorithm doesn't strictly require this representation and can be subtituted with other more-optimized representations & distributed placements, as long as the similar tree-structure procedures are supported.
 
 #pseudocode-list(line-numbering: none)[
   + *Shared variables*
     + `Counter`: `remote<uint64_t>`
       + A distributed counter shared by the enqueuers. Hosted at the dequeuer.
+    + `Tree_size`: `uint64_t`
+      + A read-only variable storing the number of tree nodes present in the LTQueue.
     + `Nodes`: `remote<node_t>`
-      + An array storing all the tree nodes present in the LTQueue shared by all processes.
+      + An array with `Tree_size` entries storing all the tree nodes present in the LTQueue shared by all processes.
       + Hosted at the dequeuer.
       + This array is organized in a similar manner as a min-heap: At index `0` is the root node. For every index $i gt 0$, $floor((i - 1) / 2)$ is the index of the parent of node $i$. For every index $i gt 0$, $2i + 1$ and $2i + 2$ are the indices of the children of node $i$.
+    + `Dequeuer_rank`: `uint32_t`
+      + The rank of the dequeuer process.
 ]
+
+Similar to the fact that each process in our program is assigned a rank, each enqueuer process in our program is assigned an *order*. The following procedure computes an enqueuer's order based on its rank:
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i,
+    booktabs: true,
+    numbered-title: [`uint32_t enqueuer_order(uint32_t enqueuer_rank)`],
+  )[
+    + *return* `enqueuer_rank > Dequeuer_rank ? enqueuer_rank - 1 : enqueuer_rank`
+  ],
+) <ltqueue-enqueuer-order>
+
+This procedure is rather straightforward: Each enqueuer is assigned an order in the range `[0, size - 2]`, with `size` being the number of processes and the total ordering among the enqueuers based on their ranks is the same as the total ordering among the enqueuers based on their orders.
+
+#pagebreak()
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
@@ -308,10 +330,6 @@ Note that we have described a very specific and simple way to organize the tree 
         + The number of enqueuers.
       + `Self_rank`: `uint32_t`
         + The rank of the current enqueuer process.
-      + `Self_order`: `uint32_t`
-        + The rank of the current enqueuer process when disregarding the rank of the dequeuer.
-      + `Dequeuer_rank`: `uint32_t`
-        + The rank of the dequeuer process.
       + `Self_node`: `remote<enqueuer_t>`
         + Shared by the dequeuer and this enqueuer.
   ]
@@ -322,14 +340,10 @@ Note that we have described a very specific and simple way to organize the tree 
     + *Dequeuer-local variables*
       + `Enqueuer_count`: `uint64_t`
         + The number of enqueuers.
-      + `Self_rank`: `uint32_t`
-        + The rank of the current dequeuer process.
-      + `Enqueuers`: *array* of `remote<enqueuer_t>`
-        + An entry at index $i$ corresponds to the `Self_node` value at the enqueuer with `Self_order` of $i$.
+      + `Enqueuers`: *array* `[0..size - 2]` of `remote<enqueuer_t>`, with `size` being the number of processes
+        + An entry at index $i$ corresponds to the `Self_node` value at the enqueuer with an order of $i$.
   ]
 ]
-
-#pagebreak()
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
@@ -345,7 +359,8 @@ Note that we have described a very specific and simple way to organize the tree 
     + *Dequeuer initialization*
       + Initialize `Enqueuer_count`, `Self_rank` and `Dequeuer_rank`.
       + Initialize `Counter` to `0`.
-      + Initialize `Nodes` to an array with `Enqueuer_count * 2` entries. Each entry is initialized to `node_t {DUMMY_RANK}`.
+      + Initialize `Tree_size` to `Enqueuer_count * 2`.
+      + Initialize `Nodes` to an array with `Tree_size` entries. Each entry is initialized to `node_t {DUMMY_RANK}`.
       + Initialize `Enqueuers`, synchronizing each entry with the corresponding enqueuer.
   ]
 ]
@@ -356,31 +371,52 @@ We first present the tree-structure utility procedures that are shared by both t
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 1,
     booktabs: true,
     numbered-title: [`uint32_t parent(uint32_t index)`],
-  )[ ],
+  )[
+    + *return* `(index - 1) / 2                                                   `
+  ],
 ) <ltqueue-parent>
+
+`parent` returns the index of the parent tree node given the node with index `index`. These indices are based on the shared `Nodes` array. Based on how we organize the `Nodes` array, the index of the parent tree node of `index` is `(index - 1) / 2`.
+
+Similarly, `children` returns all indices of the child tree nodes given the node with index `index`. These indices are based on the shared `Nodes` array. Based on how we organize the `Nodes` array, these indices can be either `index * 2 + 1` or `index * 2 + 2`.
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 2,
     booktabs: true,
     numbered-title: [`vector<uint32_t> children(uint32_t index)`],
-  )[ ],
+  )[
+    + `left_child = index * 2 + 1                                                  `
+    + `right_child = left_child + 1`
+    + `res = vector<uint32_t>()`
+    + *if* `(left_child >= Tree_size)`
+      + *return* `res`
+    + `res.push(left_child)`
+    + *if* `(right_child >= Tree_size)`
+      + *return* `res`
+    + `res.push(right_child)`
+    + *return* `res`
+  ],
 ) <ltqueue-children>
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 12,
     booktabs: true,
-    numbered-title: [`uint32_t leafNode(uint32_t index)`],
-  )[ ],
-) <ltqueue-leafNode>
+    numbered-title: [`uint32_t leaf_node_index(uint32_t enqueuer_rank)`],
+  )[
+    + *return* `Tree_size + enqueuer_order(enqueuer_rank)                         `
+  ],
+) <ltqueue-leaf-node-index>
+
+`leaf_node_index` returns the index of the leaf node that's logically attached to the enqueuer node with rank `enqueuer_rank` as in @modified-ltqueue-tree.
 
 The followings are the enqueuer procedures:
 
