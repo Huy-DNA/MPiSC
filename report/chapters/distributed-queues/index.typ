@@ -262,35 +262,24 @@ Placement-wise:
 
 Below is the types utilized in our version of LTQueue.
 
-#columns(2)[
-  #pseudocode-list(line-numbering: none)[
-    + *Types*
-      + `data_t` = The type of the data to be stored
-      + `spsc_t` = The type of the SPSC, this is assumed to be the distributed SPSC in @distributed-spsc
-      + `rank_t` = The type of the rank of an enqueuer process tagged with a unique timestamp (version) to avoid ABA problem
-        + *struct*
-          + `value`: `uint32_t`
-          + `version`: `uint32_t`
-        + *end*
-      + `timestamp_t` = The type of the timestamp tagged with a unique timestamp (version) to avoid ABA problem
-        + *struct*
-          + `value`: `uint32_t`
-          + `version`: `uint32_t`
-        + *end*
-  ]
-  #colbreak()
-  #pseudocode-list(line-numbering: none)[
-    + *Types (cont)*
-      + `enqueuer_t` = The type of an enqueuer node
-        + *struct*
-          + `spsc`: `spsc_t`
-          + `min_timestamp`: `timestamp_t`
-        + *end*
-      + `node_t` = The type of a tree node
-        + *struct*
-          + `rank`: `rank_t`
-        + *end*
-  ]
+#pseudocode-list(line-numbering: none)[
+  + *Types*
+    + `data_t` = The type of the data to be stored
+    + `spsc_t` = The type of the SPSC, this is assumed to be the distributed SPSC in @distributed-spsc
+    + `rank_t` = The type of the rank of an enqueuer process tagged with a unique timestamp (version) to avoid ABA problem
+      + *struct*
+        + `value`: `uint32_t`
+        + `version`: `uint32_t`
+      + *end*
+    + `timestamp_t` = The type of the timestamp tagged with a unique timestamp (version) to avoid ABA problem
+      + *struct*
+        + `value`: `uint32_t`
+        + `version`: `uint32_t`
+      + *end*
+    + `node_t` = The type of a tree node
+      + *struct*
+        + `rank`: `rank_t`
+      + *end*
 ]
 
 The shared variables in our LTQueue version are as followed.
@@ -309,6 +298,8 @@ Note that we have described a very specific and simple way to organize the tree 
       + This array is organized in a similar manner as a min-heap: At index `0` is the root node. For every index $i gt 0$, $floor((i - 1) / 2)$ is the index of the parent of node $i$. For every index $i gt 0$, $2i + 1$ and $2i + 2$ are the indices of the children of node $i$.
     + `Dequeuer_rank`: `uint32_t`
       + The rank of the dequeuer process.
+    + `Enqueuers`: A read-only *array* `[0..size - 2]` of `remote<timestamp_t>`, with `size` being the number of processes.
+      + The entry at index $i$ corresponds to the `Min_timestamp` distributed variable at the enqueuer with an order of $i$.
 ]
 
 Similar to the fact that each process in our program is assigned a rank, each enqueuer process in our program is assigned an *order*. The following procedure computes an enqueuer's order based on its rank:
@@ -336,8 +327,9 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
         + The number of enqueuers.
       + `Self_rank`: `uint32_t`
         + The rank of the current enqueuer process.
-      + `Self_node`: `remote<enqueuer_t>`
-        + Shared by the dequeuer and this enqueuer.
+      + `Min_timestamp`: `remote<timestamp_t>`
+      + `Spsc`: `spsc_t`
+        + This SPSC is shared with the dequeuer.
   ]
 
   #colbreak()
@@ -346,8 +338,6 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
     + *Dequeuer-local variables*
       + `Enqueuer_count`: `uint64_t`
         + The number of enqueuers.
-      + `Enqueuers`: *array* `[0..size - 2]` of `remote<enqueuer_t>`, with `size` being the number of processes
-        + An entry at index $i$ corresponds to the `Self_node` value at the enqueuer with an order of $i$.
   ]
 ]
 
@@ -355,8 +345,8 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer initialization*
       + Initialize `Enqueuer_count`, `Self_rank` and `Dequeuer_rank`.
-      + Initialize `Self_node.spsc` to the initial state.
-      + Initialize `Self_node.min_timestamp` to `timestamp_t {MAX_TIMESTAMP, 0}`.
+      + Initialize `Spsc` to the initial state.
+      + Initialize `Min_timestamp` to `timestamp_t {MAX_TIMESTAMP, 0}`.
   ]
 
   #colbreak()
@@ -436,7 +426,7 @@ The followings are the enqueuer procedures:
   )[
     + `count = FAA(Counter)                                                 `
     + `timestamp = timestamp_t {count, Self_rank}`
-    + `spsc_enqueue(Self_node.spsc, (value, timestamp))`
+    + `spsc_enqueue(Spsc, (value, timestamp))`
     + `propagate`#sub(`e`)`()`
   ],
 ) <ltqueue-enqueue>
@@ -453,12 +443,12 @@ The followings are the enqueuer procedures:
       + `refreshTimestamp`#sub(`e`)`()`
     + *if* `(!refreshLeaf`#sub(`e`)`())`
       + `refreshLeaf`#sub(`e`)`()`
-    + `current_node = leafNode(rank)`
+    + `current_node_index = leafNode(rank)`
     + *repeat*
-      + `current_node = parent(current_node)`
-      + *if* `(!refresh`#sub(`e`)`(current_node))`
-        + `refresh`#sub(`e`)`(current_node)`
-    + *until* `current_node == 0`
+      + `current_node_index = parent(current_node_index)`
+      + *if* `(!refresh`#sub(`e`)`(current_node_index))`
+        + `refresh`#sub(`e`)`(current_node_index)`
+    + *until* `current_node_index == 0`
   ],
 ) <ltqueue-enqueue-propagate>
 
@@ -470,15 +460,15 @@ The followings are the enqueuer procedures:
     booktabs: true,
     numbered-title: [`bool refreshTimestamp`#sub(`e`)`()`],
   )[
-    + `{old-timestamp, old-version} = Self_node.min_timestamp              `
+    + `{old-timestamp, old-version} = Min_timestamp                                 `
     + `front = (data_t {}, timestamp_t {})`
-    + `is_empty = spsc_readFront(Self_node.spsc, &front)`
+    + `is_empty = spsc_readFront(Spsc, &front)`
     + *if* `(is_empty)`
-      + *return* `compare_and_swap_sync(&Self_node.min_timestamp,
+      + *return* `compare_and_swap_sync(Min_timestamp,
 timestamp_t {old-timestamp, old-version},
 timestamp_t {MAX_TIMESTAMP, old-version + 1})`
     + *else*
-      + *return* `compare_and_swap_sync(&Self_node.min_timestamp,
+      + *return* `compare_and_swap_sync(Min_timestamp,
 timestamp_t {old-timestamp, old-version},
 timestamp_t {front.timestamp, old-version + 1})`
   ],
@@ -488,10 +478,30 @@ timestamp_t {front.timestamp, old-version + 1})`
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 34,
     booktabs: true,
-    numbered-title: [`bool refreshNode`#sub(`e`)`(node_t* currentNode)`],
-  )[ ],
+    numbered-title: [`bool refreshNode`#sub(`e`)`(uint32_t current_node_index)`],
+  )[
+    + `current_node = node_t {}                                                      `
+    + `aread_sync(Nodes, current_node_index, &current_node)`
+    + `{old-rank, old-version} = current_node.rank`
+    + `min_rank = DUMMY_RANK`
+    + `min_timestamp = MAX_TIMESTAMP`
+    + *for* `child_node_index` in `children(current_node)`
+      + `child_node = node_t {}`
+      + `aread_sync(Nodes, child_node_index, &child_node)`
+      + `{child_rank, child_version} = child_node`
+      + *if* `(child_rank == DUMMY_RANK)` *continue*
+      + `child_timestamp = timestamp_t {}`
+      + `aread_sync(Enqueuers[child_rank], &child_timestamp)`
+      + *if* `(child_timestamp < min_timestamp)`
+        + `min_timestamp = child_timestamp`
+        + `min_rank = child_rank`
+    + *return* `compare_and_swap_sync(Nodes, current_node_index,
+node_t {rank {old_rank, old_version}},
+node_t {rank {min_rank, old_version + 1}})`
+
+  ],
 ) <ltqueue-enqueue-refresh-node>
 
 #figure(
@@ -542,7 +552,7 @@ The followings are the dequeuer procedures:
   pseudocode-list(
     line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`bool refreshNode`#sub(`d`)`(node_t* currentNode)`],
+    numbered-title: [`bool refreshNode`#sub(`d`)`(uint32_t current_node_index)`],
   )[ ],
 ) <ltqueue-dequeue-refresh-node>
 
