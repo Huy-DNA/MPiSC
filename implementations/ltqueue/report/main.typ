@@ -473,9 +473,9 @@ We omit the description of procedures `parent`, `leafNode`, `children`, leaving 
     + `[old-timestamp, old-version] = enqueuers[rank].timestamp`
     + `front = spsc_readFront(enqueuers[rank].spsc)`
     + *if* `(front == `$bot$`)`
-      + `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [MAX, old-version + 1])`
+      + *return* `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [MAX, old-version + 1])`
     + *else*
-      + `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [front.timestamp, old-version + 1])`
+      + *return* `CAS(&enqueuers[rank].timestamp, [old-timestamp, old-version], [front.timestamp, old-version + 1])`
   ],
 ) <ltqueue-refresh-timestamp>
 
