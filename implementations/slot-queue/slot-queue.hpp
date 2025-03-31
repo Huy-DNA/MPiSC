@@ -140,10 +140,13 @@ private:
         return false;
       }
       aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
+      if (this->_first_buf >= this->_last_buf) {
+        return false;
+      }
 
       data_t data;
       aread_sync(&data, this->_first_buf % this->_capacity, this->_self_rank,
-                  this->_data_win);
+                 this->_data_win);
 
       *output_timestamp = data.timestamp;
       return true;
