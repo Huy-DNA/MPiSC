@@ -678,6 +678,11 @@ The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with 
 
 === Motivation
 
+Even though the straightforward LTQueue algorithm we have ported in @naive-LTQueue pretty much preserve the original algorithm's characteristics, that is wait-freedom and time complexity of $Theta(log n)$ for both `enqueue` and `dequeue` operations (which we will prove in @theoretical-aspects[]), we have to be aware that this is $Theta(log n)$ remote operations, which is potentially expensive and a bottleneck in the algorithm.
+
+Therefore, to be more suitable for distributed context, we propose a new algorithm that's inspired by LTQueue, in which both `enqueue` and `dequeue` only perform a constant number of remote operations, at the cost of `dequeue` having to perform $Theta(n)$ local operations, where $n$ is the number of enqueuers. Because remote operations are much more expensive, this might be a worthy tradeoff.
+
 === Structure
+
 
 === Pseudocode
