@@ -140,7 +140,7 @@ The procedures of the enqueuer are given as follows.
   supplement: [Procedure],
   pseudocode-list(
     booktabs: true,
-    numbered-title: [`bool spsc_enqueue(data_t& v)`],
+    numbered-title: [`bool spsc_enqueue(data_t v)`],
   )[
     + `new_last = Last_buf + 1`
     + *if* `(new_last - First_buf > Capacity)                                            `
@@ -162,7 +162,7 @@ The procedures of the enqueuer are given as follows.
   pseudocode-list(
     line-numbering: i => i + 9,
     booktabs: true,
-    numbered-title: [`bool spsc_readFront`#sub(`e`)`(data_t& output)`],
+    numbered-title: [`bool spsc_readFront`#sub(`e`)`(data_t* output)`],
   )[
     + *if* `(First_buf >= Last_buf)                                           `
       + *return* `false`
@@ -184,7 +184,7 @@ The procedures of the dequeuer are given as follows.
   pseudocode-list(
     line-numbering: i => i + 14,
     booktabs: true,
-    numbered-title: [`bool spsc_dequeue(data_t& output)`],
+    numbered-title: [`bool spsc_dequeue(data_t* output)`],
   )[
     + `new_first = First_buf + 1`
     + *if* `(new_first > Last_buf)                                            `
@@ -207,7 +207,7 @@ The procedures of the dequeuer are given as follows.
   pseudocode-list(
     line-numbering: i => i + 23,
     booktabs: true,
-    numbered-title: [`bool spsc_readFront`#sub(`d`)`(data_t& output)`],
+    numbered-title: [`bool spsc_readFront`#sub(`d`)`(data_t* output)`],
   )[
     + *if* `(First_buf >= Last_buf)                                               `
       + `aread_sync(Last, &Last_buf)`
@@ -424,10 +424,15 @@ The followings are the enqueuer procedures:
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i,
+    line-numbering: i => i + 13,
     booktabs: true,
-    numbered-title: [`bool enqueue(uint32_t rank, data_t& value)`],
-  )[ ],
+    numbered-title: [`bool enqueue(data_t value)`],
+  )[
+    + `count = FAA(Counter)                                                 `
+    + `timestamp = timestamp_t {count, Self_rank}`
+    + `spsc_enqueue(Self_node.spsc, (value, timestamp))`
+    + `propagate`#sub(`e`)`(Self_rank)`
+  ],
 ) <ltqueue-enqueue>
 
 #figure(
@@ -436,7 +441,7 @@ The followings are the enqueuer procedures:
   pseudocode-list(
     line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`void propagate`#sub(`e`)`(uint32_t rank)`],
+    numbered-title: [`void propagate`#sub(`e`)`()`],
   )[ ],
 ) <ltqueue-enqueue-propagate>
 
@@ -478,7 +483,7 @@ The followings are the dequeuer procedures:
   pseudocode-list(
     line-numbering: i => i,
     booktabs: true,
-    numbered-title: [`bool dequeue(data_t& output)`],
+    numbered-title: [`bool dequeue(data_t output)`],
   )[ ],
 ) <ltqueue-dequeue>
 
