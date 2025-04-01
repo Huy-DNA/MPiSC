@@ -164,7 +164,7 @@ We prove that our simple distributed SPSC is linearizable.
 
   A valid sequential execution of SPSC method calls would possess the following characteristics.
 
-  _An enqueue can only be matched by one dequeue_: Each time an `spsc_dequeue` is executed, it advances the `Last` index. Because only one dequeue can happen at a time, it's guaranteed that each index is only dequeued once. Therefore, an enqueue can only be dequeued at most once.
+  _An enqueue can only be matched by one dequeue_: Each time an `spsc_dequeue` is executed, it advances the `First` index. Because only one dequeue can happen at a time, it's guaranteed that each dequeue proceeds with one unique `First` index. Two dequeues can only dequeue out the same entry in the SPSC's array if their `First` indices are congurent modulo `Capacity`. However, by then, this entry must have been overwritten. Therefore, an enqueue can only be dequeued at most once.
 
   _A dequeue can only be matched by one enqueue_: This is trivial, as based on how @spsc-dequeue is defined, a dequeue can only dequeue out at most one value.
 
