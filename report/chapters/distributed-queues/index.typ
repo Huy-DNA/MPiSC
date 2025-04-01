@@ -746,7 +746,7 @@ Reversely, `enqueuerRank` computes an enqueuer's rank given its order.
     booktabs: true,
     numbered-title: [`uint64_t enqueuerRank(uint64_t enqueuer_order)`],
   )[
-    + *return* `enqueuer_order >= Dequeuer_rank ? enqueuer_order + 1 : enqueuer_order`
+    + *return* `enqueuer_order >= Dequeuer_rank ? enqueuer_order + 1 : enqueuer_order                                                       `
   ],
 ) <slotqueue-enqueuer-rank>
 
@@ -792,6 +792,8 @@ The enqueuer operations are given as follows.
   ],
 ) <slotqueue-enqueue>
 
+To enqueue a value, `enqueue` first obtains a timestamp by FAA-ing the distributed counter (line 3). It then tries to enqueue the value tagged with the timestamp (line 4). At line 5-6, the enqueuer tries to refresh its slot's timestamp.
+
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
@@ -813,6 +815,8 @@ The enqueuer operations are given as follows.
     new-timestamp)`
   ],
 ) <slotqueue-refresh-enqueue>
+
+`refreshEnqueue`'s responsibility is to refresh the timestamp stores in the enqueuer's slot to potentially notify the dequeuer of its newly-enqueued element. It first reads its slot's old timestamp (line 10) and the current front element in the SPSC (line 12). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, the front element's timestamp (line 13). Note that `refreshEnqueue` immediately succeeds if the new timestamp is different from the timestamp `ts` of the element it enqueues (line 15). Otherwise, it tries to CAS its slot's timestamp with the new timestamp (line 16).
 
 The dequeuer operations are given as follows.
 
@@ -836,6 +840,8 @@ The dequeuer operations are given as follows.
     + *return* `true`
   ],
 ) <slotqueue-dequeue>
+
+To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot currently stores the minimum timestamp (line 17). If the obtained rank is `DUMMY_RANK`, failure is signaled (line 18-19). Otherwise, it tries to dequeue the SPSC of the corresponding enqueuer (line 21). It then tries to refresh the enqueuer's slot's timestamp to potentially notify the enqueuer of the dequeue (line 24-25). It then signals success (line 26).
 
 #figure(
   kind: "algorithm",
@@ -863,6 +869,8 @@ The dequeuer operations are given as follows.
   ],
 ) <slotqueue-read-minimum-rank>
 
+`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (line 27). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (line 28-33). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (line 36-41).
+
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
@@ -876,9 +884,11 @@ The dequeuer operations are given as follows.
     + `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
     + `front = (data_t {}, timestamp_t {})`
     + `success = spsc_readFront(Spscs[enqueuer_order], &front)`
-    + `new-timestamp = success ? MAX_TIMESTAMP : front.timestamp`
+    + `new-timestamp = success ? front.timestamp : MAX_TIMESTAMP`
     + *return* `compare_and_swap_sync(Slots, enqueuer_order,
     old-timestamp,
     new-timestamp)`
   ],
 ) <slotqueue-refresh-dequeue>
+
+`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (line 44) and the front element (line 46). If the SPSC is empty, the new timestamp is set to `MAX_TImESTAMP`, otherwise, it's the front element's timestamp (line 47). It finally tries to CAS the slot with the new timestamp (line 48).
