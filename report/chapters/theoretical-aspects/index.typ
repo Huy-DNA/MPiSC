@@ -107,6 +107,8 @@ We prove that our simple distributed SPSC is linearizable.
 
 === Memory reclamation
 
+=== Performance model
+
 == Theoretical proofs of LTQueueV2
 
 === ABA problem
@@ -117,3 +119,4 @@ We prove that our simple distributed SPSC is linearizable.
 
 === Memory reclamation
 
+=== Performance model
