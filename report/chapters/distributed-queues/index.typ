@@ -736,6 +736,20 @@ Similar to the idea of assigning an order to each enqueuer in LTQueueV1, the fol
 
 Again, each enqueuer is assigned an order in the range `[0, size - 2]`, with `size` being the number of processes and the total ordering among the enqueuers based on their ranks is the same as the total ordering among the enqueuers based on their orders.
 
+Reversely, `enqueuerRank` computes an enqueuer's rank given its order.
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 1,
+    booktabs: true,
+    numbered-title: [`uint64_t enqueuerRank(uint64_t enqueuer_order)`],
+  )[
+    + *return* `enqueuer_order >= Dequeuer_rank ? enqueuer_order + 1 : enqueuer_order`
+  ],
+) <slotqueue-enqueuer-rank>
+
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer-local variables*
@@ -766,16 +780,15 @@ The enqueuer operations are given as follows.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
+    line-numbering: i => i + 2,
     booktabs: true,
-    numbered-title: [`enqueue(rank: int, v: data_t)` *returns* `bool`],
+    numbered-title: [`bool enqueue(data_t v)`],
   )[
-    + `timestamp = FAA(counter)                       `
-    + `value = (v, timestamp)`
-    + `res = spsc_enqueue(spscs[rank], value)`
-    + *if* `(!res)` *return* `false`
-    + *if* `(!refreshEnqueue(rank, timestamp))`
-      + `refreshEnqueue(rank, timestamp)`
-    + *return* `res`
+    + `timestamp = fetch_and_add_sync(Counter)                                     `
+    + *if* `(!spsc_enqueue(&Spsc, (v, timestamp)))` *return* `false`
+    + *if* `(!refreshEnqueue(timestamp))`
+      + `refreshEnqueue(timestamp)`
+    + *return* `true`
   ],
 ) <slotqueue-enqueue>
 
@@ -785,14 +798,19 @@ The enqueuer operations are given as follows.
   pseudocode-list(
     line-numbering: i => i + 7,
     booktabs: true,
-    numbered-title: [`refreshEnqueue(rank: int, ts: timestamp_t)` *returns* `bool`],
+    numbered-title: [`bool refreshEnqueue(timestamp_t ts)`],
   )[
-    + `old-timestamp = slots[rank]               `
-    + `front = spsc_readFront(spscs[rank])`
-    + `new-timestamp = front == `$bot$` ? MAX : front.timestamp`
+    + `enqueuer_order = enqueueOrder(Self_rank)                                     `
+    + `old_timestamp = timestamp_t {}`
+    + `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
+    + `front = (data_t {}, timestamp_t {})`
+    + `success = spsc_readFront(Spsc, &front)`
+    + `new-timestamp = success ? front.timestamp : MAX_TIMESTAMP`
     + *if* `(new-timestamp != ts)`
       + *return* `true`
-    + *return* `CAS(&slots[rank], old-timestamp, new-timestamp)`
+    + *return* `compare_and_swap_sync(Slots, enqueuer_order,
+    old-timestamp,
+    new-timestamp)`
   ],
 ) <slotqueue-refresh-enqueue>
 
@@ -802,18 +820,20 @@ The dequeuer operations are given as follows.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 13,
+    line-numbering: i => i + 16,
     booktabs: true,
-    numbered-title: [`dequeue()` *returns* `data_t`],
+    numbered-title: [`bool dequeue(data_t* output)`],
   )[
-    + `rank = readMinimumRank()                       `
-    + *if* `(rank == DUMMY || slots[rank] == MAX)`
-      + *return* $bot$
-    + `res = spsc_dequeue(spscs[rank])`
-    + *if* `(res ==` $bot$`)` *return* $bot$
+    + `rank = readMinimumRank()                                                    `
+    + *if* `(rank == DUMMY_RANK)`
+      + *return* `false`
+    + `output_with_timestamp = (data_t {}, timestamp_t {})`
+    + *if* `(!spsc_dequeue(Spsc, &output_with_timestamp))`
+      + *return* `false`
+    + `*output = output_with_timestamp.data`
     + *if* `(!refreshDequeue(rank))`
       + `refreshDequeue(rank)`
-    + *return* `res`
+    + *return* `true`
   ],
 ) <slotqueue-dequeue>
 
@@ -821,24 +841,25 @@ The dequeuer operations are given as follows.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 21,
+    line-numbering: i => i + 26,
     booktabs: true,
-    numbered-title: [`readMinimumRank()` *returns* `int`],
+    numbered-title: [`uint64_t readMinimumRank()`],
   )[
-    + `rank = length(slots)                         `
-    + `min-timestamp = MAX`
-    + *for* `index` *in* `0..length(slots)`
-      + `timestamp = slots[index]`
-      + *if* `(min-timestamp < timestamp)`
-        + `rank = index`
-        + `min-timestamp = timestamp`
-    + `old-rank = rank`
-    + *for* `index` *in* `0..old-rank`
-      + `timestamp = slots[index]`
-      + *if* `(min-timestamp < timestamp)`
-        + `rank = index`
-        + `min-timestamp = timestamp`
-    + *return* `rank == length(slots) ? DUMMY : rank`
+    + `buffered_slots = timestamp_t[Enqueuer_count] {}                       `
+    + *for* `index` *in* `0..Enqueuer_count`
+      + `aread_async(Slots, index, &bufferred_slots[index])`
+    + `flush(Slots)`
+    + *for* `index` *in* `0..Enqueuer_count`
+      + `aread_async(Slots, index, &bufferred_slots[index])`
+    + `flush(Slots)`
+    + `rank = DUMMY_RANK`
+    + `min_timestamp = MAX_TIMESTAMP`
+    + *for* `index` *in* `0..Enqueuer_count`
+      + `timestamp = buffered_slots[index]`
+      + *if* `(min_timestamp < timestamp)`
+        + `rank = enqueuerRank(index)`
+        + `min_timestamp = timestamp`
+    + *return* `rank`
   ],
 ) <slotqueue-read-minimum-rank>
 
@@ -846,13 +867,18 @@ The dequeuer operations are given as follows.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 35,
+    line-numbering: i => i + 41,
     booktabs: true,
     numbered-title: [`refreshDequeue(rank: int)` *returns* `bool`],
   )[
-    + `old-timestamp = slots[rank]`
-    + `front = spsc_readFront(spscs[rank])`
-    + `new-timestamp = front == `$bot$` ? MAX : front.timestamp`
-    + *return* `CAS(&slots[rank], old-timestamp, new-timestamp)`
+    + `enqueuer_order = enqueuerOrder(rank)                                `
+    + `old_timestamp = timestamp_t {}`
+    + `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
+    + `front = (data_t {}, timestamp_t {})`
+    + `success = spsc_readFront(Spscs[enqueuer_order], &front)`
+    + `new-timestamp = success ? MAX_TIMESTAMP : front.timestamp`
+    + *return* `compare_and_swap_sync(Slots, enqueuer_order,
+    old-timestamp,
+    new-timestamp)`
   ],
 ) <slotqueue-refresh-dequeue>
