@@ -29,7 +29,7 @@ In this section, we introduce some terminology that we will use throughout our p
 
 #definition[In an SPSC/MPSC, a `dequeue` operation $d$ is said to be *unmatched* if no `enqueue` operation *matches* it, in other word, $d$ returns `false`.]
 
-== Formalisms
+== Formalization
 
 In this section, we formalize the notion of correct concurrent algorithms and harmless ABA problem. We will base our proofs on these formalisms to prove their correctness.
 
@@ -114,6 +114,26 @@ An MPSC supports 2 methods:
 
 === ABA-safety
 
+Not every ABA problem is unsafe. We formalize in this section which ABA problem is safe and which is not.
+
+#definition[A *modification instruction* on a variable `v` is an atomic instruction that may change the value of `v` e.g. a store or a CAS.]
+
+#definition[A *successful modification instruction* on a variable `v` is an atomic instruction that changes the value of `v` e.g. a store or a successful CAS.]
+
+#definition[A *CAS-sequence* on a variable `v` is a sequence of instructions of a method $m$ such that:
+  - The first instruction is a load $v_0 = $`load(`$v$`)`.
+  - The last instruction is a `CAS(&`$v$`,`$v_0$`,`$v_1$`)`.
+  - There's no modification instruction on `v` between the first and the last instruction.
+]
+
+#definition[A *successful CAS-sequence* on a variable `v` is a *CAS-sequence* on `v` that ends with a successful CAS.]
+
+#definition[Consider a method $m$ on a concurrent object $S$. $m$ is said to be *ABA-safe* if and only if for any history of method calls produced from $S$, we can reorder any successful CAS-sequences inside an invocation of $m$ in the following fashion:
+  - If a successful CAS-sequence is part of an invocation of $m$, after reordering, it must still be part of that invocation.
+  - If a successful CAS-sequence by an invocation of $m$ precedes another by that invocation, after reordering, this ordering is still respected.
+  - Any successful CAS-sequence by an invocation of $m$ after reordering must not overlap with a successful modification instruction on the same variable.
+  - After reordering, all method calls' response events on the concurrent object $S$ stay the same.
+]
 
 == Theoretical proofs of the distributed SPSC
 

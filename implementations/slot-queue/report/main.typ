@@ -339,7 +339,7 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 
 #definition[Consider a method $m$ on a concurrent object $S$. $m$ is said to be *ABA-safe* if and only if for any history of method calls produced from $S$, we can reorder any successful CAS-sequences by an invocation of $m$ in the following fashion:
   - If a successful CAS-sequence is part of an invocation of $m$, after reordering, it must still be part of that invocation.
-  - If a successful CAS-sequence by an invocation of $m$ precedes another in a method invocation, after reordering, this ordering is still respected.
+  - If a successful CAS-sequence by an invocation of $m$ precedes another in that same invocation, after reordering, this ordering is still respected.
   - Any successful CAS-sequence by an invocation of $m$ after reordering must not overlap with a successful modification instruction on the same variable.
   - After reordering, all method calls' response events on the concurrent object $S$ stay the same.
 ]
