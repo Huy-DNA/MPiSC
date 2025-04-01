@@ -19,6 +19,25 @@
 
 This section discusses the correctness and progress guarantee properties of the distributed MPSC algorithms introduced in @distributed-queues[]. We also provide a theoretical performance model of these algorithms to predict how well they scale to multiple nodes.
 
+== Terminology
+
+In this section, we introduce some terminology that we will use throughout our proofs.
+
+#definition[In an SPSC/MPSC, an `enqueue` operation $e$ is said to *match* a `dequeue` operation $d$ if $d$ returns the value that $e$ enqueues. Similarly, $d$ is said to *match* $e$. In this case, both $e$ and $d$ are said to be *matched*.]
+
+#definition[In an SPSC/MPSC, an `enqueue` operation $e$ is said to be *unmatched* if no `dequeue` operation *matches* it.]
+
+#definition[In an SPSC/MPSC, a `dequeue` operation $d$ is said to be *unmatched* if no `enqueue` operation *matches* it, in other word, $d$ returns `false`.]
+
+== Formalisms
+
+In this section, we formalize the notion of correct concurrent algorithms and harmless ABA problem. We will base our proofs on these formalisms to prove their correctness.
+
+=== Linearizability
+
+=== ABA-safety
+
+
 == Theoretical proofs of the distributed SPSC
 
 In this section, we focus on the correctness and progress guarantee of the simple distributed SPSC established in @distributed-spsc.
