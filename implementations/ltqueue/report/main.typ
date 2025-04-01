@@ -553,7 +553,7 @@ An MPSC supports 2 *methods*:
 
 An MPSC has the same *sequential specification* as a FIFO:
 - `dequeue` returns values in the same order as they was `enqueue`d.
-- An `enqueue` can only by `dequeue`d once.
+- An `enqueue` can only be `dequeue`d once.
 - An item can only be `dequeue`d after it's `enqueue`d.
 - If the queue is empty, `dequeue` returns nothing.
 
