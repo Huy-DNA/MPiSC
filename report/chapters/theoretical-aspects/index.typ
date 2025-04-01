@@ -193,9 +193,19 @@ We prove that our simple distributed SPSC is linearizable.
 
 === Progress guarantee
 
+Our simple distributed SPSC is wait-free:
+- `spsc_dequeue` (@spsc-dequeue) does not execute any loops or wait for any other method calls.
+- `spsc_enqueue` (@spsc-enqueue) does not execute any loops or wait for any other method calls.
+- `spsc_readFront`#sub(`e`) (@spsc-enqueue-readFront) does not execute any loops or wait for any other method calls.
+- `spsc_readFront`#sub(`d`) (@spsc-dequeue-readFront) does not execute any loops or wait for any other method calls.
+
 === ABA problem
 
+There's no CAS instruction in our simple distributed SPSC, so there's no potential for ABA problem.
+
 === Memory reclamation
+
+There's no dynamic memory allocation and deallocation in our simple distributed SPSC, so it is memory-safe.
 
 == Theoretical proofs of LTQueueV1
 
