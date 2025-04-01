@@ -242,7 +242,7 @@ Each enqueuer node corresponds to an enqueuer. Each time the local SPSC is enque
 
 Each tree node stores the rank of an enqueuer process. This rank corresponds to the enqueuer node with the minimum timestamp among the node's children's ranks. The tree node that's attached to an enqueuer node is called a *leaf node*, otherwise, it's called an *internal node*.
 
-Note that if a local SPSC is empty, the `min_timestamp` variable of the corresponding enqueuer node is set to `MAX` and the corresponding leaf node's rank is set to a `DUMMY` rank.
+Note that if a local SPSC is empty, the `min_timestamp` variable of the corresponding enqueuer node is set to `MAX_TIMESTAMP` and the corresponding leaf node's rank is set to `DUMMY_RANK`.
 
 #place(
   center + top,
@@ -891,4 +891,4 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
   ],
 ) <slotqueue-refresh-dequeue>
 
-`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (line 44) and the front element (line 46). If the SPSC is empty, the new timestamp is set to `MAX_TImESTAMP`, otherwise, it's the front element's timestamp (line 47). It finally tries to CAS the slot with the new timestamp (line 48).
+`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (line 44) and the front element (line 46). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, it's the front element's timestamp (line 47). It finally tries to CAS the slot with the new timestamp (line 48).
