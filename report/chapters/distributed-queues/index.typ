@@ -266,7 +266,7 @@ Placement-wise:
 
 === Pseudocode
 
-Below is the types utilized in our version of LTQueue.
+Below is the types utilized in LTQueueV1.
 
 #pseudocode-list(line-numbering: none)[
   + *Types*
@@ -303,7 +303,7 @@ Note that we have described a very specific and simple way to organize the tree 
       + Hosted at the dequeuer.
       + This array is organized in a similar manner as a min-heap: At index `0` is the root node. For every index $i gt 0$, $floor((i - 1) / 2)$ is the index of the parent of node $i$. For every index $i gt 0$, $2i + 1$ and $2i + 2$ are the indices of the children of node $i$.
     + `Dequeuer_rank`: `uint32_t`
-      + The rank of the dequeuer process.
+      + The rank of the dequeuer process. This is read-only.
     + `Timestamps`: A read-only *array* `[0..size - 2]` of `remote<timestamp_t>`, with `size` being the number of processes.
       + The entry at index $i$ corresponds to the `Min_timestamp` distributed variable at the enqueuer with an order of $i$.
 ]
@@ -324,7 +324,6 @@ Similar to the fact that each process in our program is assigned a rank, each en
 
 This procedure is rather straightforward: Each enqueuer is assigned an order in the range `[0, size - 2]`, with `size` being the number of processes and the total ordering among the enqueuers based on their ranks is the same as the total ordering among the enqueuers based on their orders.
 
-
 #pagebreak()
 
 #columns(2)[
@@ -336,7 +335,7 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
         + The rank of the current enqueuer process.
       + `Min_timestamp`: `remote<timestamp_t>`
       + `Spsc`: `spsc_t`
-        + This SPSC is shared with the dequeuer.
+        + This SPSC is synchronized with the dequeuer.
   ]
 
   #colbreak()
@@ -346,8 +345,11 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
       + `Enqueuer_count`: `uint64_t`
         + The number of enqueuers.
       + `Spscs`: *array* of `spsc_t` with `Enqueuer_count` entries.
+        + The entry at index $i$ corresponds to the `Spsc` at the enqueuer with an order of $i$.
   ]
 ]
+
+
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
@@ -696,3 +698,161 @@ Additionally, the dequeuer hosts an array whose entries each corresponds with an
 ) <slotqueue-structure>
 
 === Pseudocode
+
+We first introduce the types and shared variables utilized in LTQueueV2.
+
+#pseudocode-list(line-numbering: none)[
+  + *Types*
+    + `data_t` = The type of data stored
+    + `timestamp_t` = `uint64_t`
+    + `spsc_t` = The type of the SPSC each enqueuer uses, this is assumed to be the distributed SPSC in @distributed-spsc
+]
+
+#pseudocode-list(line-numbering: none)[
+  + *Shared variables*
+    + `Slots`: `remote<timestamp_t*>`
+      + An array of `timestamp_t` with the number of entries equal to the number of enqueuers.
+      + Hosted at the dequeuer.
+    + `Counter`: `remote<uint64_t>`
+      + A distributed counter.
+      + Hosted at the dequeuer.
+    + `Dequeuer_rank`: `uint32_t`
+      + The rank of the dequeuer process. This is read-only.
+]
+
+Similar to the idea of assigning an order to each enqueuer in LTQueueV1, the following procedure computes an enqueuer's order based on its rank:
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i,
+    booktabs: true,
+    numbered-title: [`uint64_t enqueuerOrder(uint64_t enqueuer_rank)`],
+  )[
+    + *return* `enqueuer_rank > Dequeuer_rank ? enqueuer_rank - 1 : enqueuer_rank`
+  ],
+) <slotqueue-enqueuer-order>
+
+Again, each enqueuer is assigned an order in the range `[0, size - 2]`, with `size` being the number of processes and the total ordering among the enqueuers based on their ranks is the same as the total ordering among the enqueuers based on their orders.
+
+#columns(2)[
+  #pseudocode-list(line-numbering: none)[
+    + *Enqueuer-local variables*
+      + `Dequeuer_rank`: `uint64_t`
+      + `Enqueuer_count`: `uint64_t`
+        + The number of enqueuers.
+      + `Self_rank`: `uint32_t`
+        + The rank of the current enqueuer process.
+      + `Spsc`: `spsc_t`
+        + This SPSC is synchronized with the dequeuer.
+  ]
+
+  #colbreak()
+
+  #pseudocode-list(line-numbering: none)[
+    + *Dequeuer-local variables*
+      + `Dequeuer_rank`: `uint64_t`
+      + `Enqueuer_count`: `uint64_t`
+        + The number of enqueuers.
+      + `Spscs`: *array* of `spsc_t` with `Enqueuer_count` entries.
+        + The entry at index $i$ corresponds to the `Spsc` at the enqueuer with an order of $i$.
+  ]
+]
+
+The enqueuer operations are given as follows.
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    booktabs: true,
+    numbered-title: [`enqueue(rank: int, v: data_t)` *returns* `bool`],
+  )[
+    + `timestamp = FAA(counter)                       `
+    + `value = (v, timestamp)`
+    + `res = spsc_enqueue(spscs[rank], value)`
+    + *if* `(!res)` *return* `false`
+    + *if* `(!refreshEnqueue(rank, timestamp))`
+      + `refreshEnqueue(rank, timestamp)`
+    + *return* `res`
+  ],
+) <slotqueue-enqueue>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 7,
+    booktabs: true,
+    numbered-title: [`refreshEnqueue(rank: int, ts: timestamp_t)` *returns* `bool`],
+  )[
+    + `old-timestamp = slots[rank]               `
+    + `front = spsc_readFront(spscs[rank])`
+    + `new-timestamp = front == `$bot$` ? MAX : front.timestamp`
+    + *if* `(new-timestamp != ts)`
+      + *return* `true`
+    + *return* `CAS(&slots[rank], old-timestamp, new-timestamp)`
+  ],
+) <slotqueue-refresh-enqueue>
+
+The dequeuer operations are given as follows.
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 13,
+    booktabs: true,
+    numbered-title: [`dequeue()` *returns* `data_t`],
+  )[
+    + `rank = readMinimumRank()                       `
+    + *if* `(rank == DUMMY || slots[rank] == MAX)`
+      + *return* $bot$
+    + `res = spsc_dequeue(spscs[rank])`
+    + *if* `(res ==` $bot$`)` *return* $bot$
+    + *if* `(!refreshDequeue(rank))`
+      + `refreshDequeue(rank)`
+    + *return* `res`
+  ],
+) <slotqueue-dequeue>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 21,
+    booktabs: true,
+    numbered-title: [`readMinimumRank()` *returns* `int`],
+  )[
+    + `rank = length(slots)                         `
+    + `min-timestamp = MAX`
+    + *for* `index` *in* `0..length(slots)`
+      + `timestamp = slots[index]`
+      + *if* `(min-timestamp < timestamp)`
+        + `rank = index`
+        + `min-timestamp = timestamp`
+    + `old-rank = rank`
+    + *for* `index` *in* `0..old-rank`
+      + `timestamp = slots[index]`
+      + *if* `(min-timestamp < timestamp)`
+        + `rank = index`
+        + `min-timestamp = timestamp`
+    + *return* `rank == length(slots) ? DUMMY : rank`
+  ],
+) <slotqueue-read-minimum-rank>
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 35,
+    booktabs: true,
+    numbered-title: [`refreshDequeue(rank: int)` *returns* `bool`],
+  )[
+    + `old-timestamp = slots[rank]`
+    + `front = spsc_readFront(spscs[rank])`
+    + `new-timestamp = front == `$bot$` ? MAX : front.timestamp`
+    + *return* `CAS(&slots[rank], old-timestamp, new-timestamp)`
+  ],
+) <slotqueue-refresh-dequeue>
