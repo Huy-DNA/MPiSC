@@ -686,7 +686,7 @@ Therefore, to be more suitable for distributed context, we propose a new algorit
 
 The structure of LTQueueV2 is shown as in @slotqueue-structure.
 
-Each enqueuer hosts a distributed SPSC as in LTQueueV1 (@naive-LTQueue).
+Each enqueuer hosts a distributed SPSC as in LTQueueV1 (@naive-LTQueue). The enqueuer when enqueues a value to its local SPSC will timestamp the value using a distributed counter hosted at the dequeuer.
 
 Additionally, the dequeuer hosts an array whose entries each corresponds with an enqueuer. Each entry stores the minimum timestamp of the local SPSC of the corresponding enqueuer.
 
