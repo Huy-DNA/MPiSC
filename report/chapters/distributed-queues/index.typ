@@ -807,12 +807,12 @@ To enqueue a value, `enqueue` first obtains a timestamp by FAA-ing the distribut
     + `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
     + `front = (data_t {}, timestamp_t {})`
     + `success = spsc_readFront(Spsc, &front)`
-    + `new-timestamp = success ? front.timestamp : MAX_TIMESTAMP`
-    + *if* `(new-timestamp != ts)`
+    + `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
+    + *if* `(new_timestamp != ts)`
       + *return* `true`
     + *return* `compare_and_swap_sync(Slots, enqueuer_order,
-    old-timestamp,
-    new-timestamp)`
+    old_timestamp,
+    new_timestamp)`
   ],
 ) <slotqueue-refresh-enqueue>
 
@@ -884,10 +884,10 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
     + `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
     + `front = (data_t {}, timestamp_t {})`
     + `success = spsc_readFront(Spscs[enqueuer_order], &front)`
-    + `new-timestamp = success ? front.timestamp : MAX_TIMESTAMP`
+    + `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
     + *return* `compare_and_swap_sync(Slots, enqueuer_order,
-    old-timestamp,
-    new-timestamp)`
+    old_timestamp,
+    new_timestamp)`
   ],
 ) <slotqueue-refresh-dequeue>
 

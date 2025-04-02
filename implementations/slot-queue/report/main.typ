@@ -436,7 +436,7 @@ We can now turn to our interested problem in this section.
 
   Due to @slotqueue-one-enqueuer-one-dequeuer-lemma, there can only be at most one `enqueue` at one point in time within $e$.
 
-  If there's no *successful slot-modification instruction* on slot `s` by an `dequeue` $d$ within $e$'s *successful CAS-sequence*, then this `enqueue` is ABA-safe.
+  If there's no *successful slot-modification instruction* on slot `s` by a dequeue $d$ within $e$'s *successful CAS-sequence*, then this `enqueue` is ABA-safe.
 
   Suppose the `dequeue` $d$ executes the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*. Denote $t_d$ to be the value that $d$ sets `s`.
 
