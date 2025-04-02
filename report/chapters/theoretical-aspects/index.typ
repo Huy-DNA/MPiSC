@@ -462,6 +462,112 @@ We immediately obtain the following result.
   By induction, we obtain the theorem.
 ]
 
+#theorem[In LTQueueV1, if an enqueue $e$ precedes another dequeue $d$, then either:
+  - $d$ isn't matched.
+  - $d$ matches $e$.
+  - $e$ matches $d'$ and $d'$ precedes $d$.
+  - $d$ matches $e'$ and $e'$ precedes $e$.
+  - $d$ matches $e'$ and $e'$ overlaps with $e$.
+] <ltqueue-enqueue-dequeue-theorem>
+
+#proof[
+  If $d$ doesn't match anything, the theorem holds. If $d$ matches $e$, the theorem also holds. Suppose $d$ matches $e'$, $e' eq.not e$.
+
+  If $e$ matches $d'$ and $d'$ precedes $d$, the theorem also holds. Suppose $e$ matches $d'$ such that $d$ precedes $d'$ or is unmatched. $(1)$
+
+  Suppose $e$ obtains a timestamp of $c$ and $e'$ obtains a timestamp of $c'$.
+
+  Because $e$ precedes $d$ and because an MPSC does not allow multiple dequeues, from the start of $d$ at $t_0$ until after line 4 of dequeue (@ltqueue-dequeue) at $t_1$, $e$ has finished and there's no dequeue running that has _actually performed `spsc_dequeue`_. Also by $t_0$ and $t_1$, $e$ is still unmatched due to $(1)$.
+
+  Applying @ltqueue-unmatched-enqueue-corollary, $m i n \- s p s c \- t s(r a n k(r o o t, t_x), t_y) lt.eq c$ for $t_x, t_y in [t_0, t_1]$. Therefore, $d$ reads out a rank $r$ such that $m i n \- s p s c \- t s(r, t) lt.eq c$ for $t in [t_0, t_1]$. Consequently, $d$ dequeues out a value with a timestamp not greater than $c$. Because $d$ matches $e'$, $c' lt.eq c$. However, $e' eq.not e$ so $c' lt c$.
+
+  This means that $e$ cannot precede $e'$, because if so, $c lt c'$.
+
+  Therefore, $e'$ precedes $e$ or overlaps with $e$.
+]
+
+#lemma[
+  In LTQueueV1, if $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
+] <ltqueue-matching-dequeue-enqueue-lemma>
+
+#proof[
+  If $d$ precedes $e$, none of the local SPSCs can contain an item with the timestamp of $e$. Therefore, $d$ cannot return an item with a timestamp of $e$. Thus $d$ cannot match $e$.
+
+  Therefore, $e$ either precedes or overlaps with $d$.
+]
+
+#theorem[In LTQueueV1, If a dequeue $d$ precedes another enqueue $e$, then either:
+  - $d$ isn't matched.
+  - $d$ matches $e'$ such that $e'$ precedes or overlaps with $e$ and $e' eq.not e$.
+] <ltqueue-dequeue-enqueue-theorem>
+
+#proof[
+  If $d$ isn't matched, the theorem holds.
+
+  Suppose $d$ matches $e'$. Applying @ltqueue-matching-dequeue-enqueue-lemma, $e'$ must precede or overlap with $d$. In other words, $d$ cannot precede $e'$.
+
+  If $e$ precedes or is $e'$, then $d$ must precede $e'$, which is contradictory.
+
+  Therefore, $e'$ must precede $e$ or overlap with $e$.
+]
+
+#theorem[In LTQueueV1, if an enqueue $e_0$ precedes another enqueue $e_1$, then either:
+  - Both $e_0$ and $e_1$ aren't matched.
+  - $e_0$ is matched but $e_1$ is not matched.
+  - $e_0$ matches $d_0$ and $e_1$ matches $d_1$ such that $d_0$ precedes $d_1$.
+] <ltqueue-enqueue-enqueue-theorem>
+
+#proof[
+  If both $e_0$ and $e_1$ aren't matched, the theorem holds.
+
+  Suppose $e_1$ matches $d_1$. By @ltqueue-matching-dequeue-enqueue-lemma, either $e_1$ precedes or overlaps with $d_1$.
+
+  If $e_0$ precedes $d_1$, applying @ltqueue-enqueue-dequeue-theorem for $d_1$ and $e_0$:
+  - $d_1$ isn't matched, contradictory.
+  - $d_1$ matches $e_0$, contradictory.
+  - $e_0$ matches $d_0$ and $d_0$ precedes $d_1$, the theorem holds.
+  - $d_1$ matches $e_1$ and $e_1$ precedes $e_0$, contradictory.
+  - $d_1$ matches $e_1$ and $e_1$ overlaps with $e_0$, contradictory.
+
+  If $d_1$ precedes $e_0$, applying @ltqueue-dequeue-enqueue-theorem for $d_1$ and $e_0$:
+  - $d_1$ isn't matched, contradictory.
+  - $d_1$ matches $e_1$ and $e_1$ precedes or overlaps with $e_0$, contradictory.
+
+  Consider that $d_1$ overlaps with $e_0$, then $d_1$ must also overlap with $e_1$. Call $r_1$ the rank of the enqueuer that performs $e_1$. Call $t$ to be the time $d_1$ atomically reads the root's rank on line 4 of dequeue (@ltqueue-dequeue). Because $d_1$ matches $e_1$, $d_1$ must read out $r_1$ at $t_1$.
+
+  If $e_1$ is the first enqueue of rank $r_1$, then $t$ must be after $e_1$ has started, because otherwise, due to @ltqueue-matched-enqueue-theorem, $r_1$ would not be in $r o o t$ before $e_1$.
+
+  If $e_1$ is not the first enqueue of rank $r_1$, then $t$ must also be after $e_1$ has started. Suppose the contrary, $t$ is before $e_1$ has started:
+  - If there's no uncompleted enqueue of rank $r_1$ at $t$ and they are all matched by the time $t$, due to @ltqueue-matched-enqueue-theorem, $r_1$ would not be in $r o o t$ at $t$. Therefore, $d_1$ cannot read out $r_1$, which is contradictory.
+  - If there's some unmatched enqueue of rank $r_1$ at $t$, $d_1$ will match one of these enqueues instead because:
+    - There's only one dequeue at a time, so unmatched enqueues at $t$ remain unmatched until $d_1$ performs an `spsc_dequeue`.
+    - Due to @ltqueue-one-dequeue-one-enqueue-corollary, all the enqueues of rank $r_1$ must finish before another starts. Therefore, there's some unmatched enqueue of rank $r_1$ finishing before $e_1$.
+    - The local SPSC of the enqueuer node of rank $r_1$ is serializable, so $d_1$will favor one of these enqueues over $e_1$.
+
+  Therefore, $t$ must happen after $e_1$ has started. Right at $t$, no dequeue is actually modifying the LTQueue state and $e_0$ has finished. If $e_0$ has been matched at $t$ then the theorem holds. If $e_0$ hasn't been matched at $t$, applying @ltqueue-unmatched-enqueue-theorem, $d_1$ will favor $e_0$ over $e_1$, which is a contradiction.
+
+  We have proved the theorem.
+]
+
+#theorem[In LTQueueV1, if a dequeue $d_0$ precedes another dequeue $d_1$, then either:
+  - $d_0$ isn't matched.
+  - $d_1$ isn't matched.
+  - $d_0$ matches $e_0$ and $d_1$ matches $e_1$ such that $e_0$ precedes or overlaps with $e_1$.
+] <ltqueue-dequeue-dequeue-theorem>
+
+#proof[
+  If $d_0$ isn't matched or $d_1$ isn't matched, the theorem holds.
+
+  Suppose $d_0$ matches $e_0$ and $d_1$ matches $e_1$.
+
+  Suppose the contrary, $e_1$ precedes $e_0$. Applying @ltqueue-enqueue-dequeue-theorem:
+  - Both $e_0$ and $e_1$ aren't matched, which is contradictory.
+  - $e_1$ is matched but $e_0$ is not matched, which contradictory.
+  - $e_1$ matches $d_1$ and $e_0$ matches $d_0$ such that $d_1$ precedes $d_0$, which is contradictory.
+
+  Therefore, the theorem holds.
+]
+
 === Progress guarantee
 
 === Memory reclamation
