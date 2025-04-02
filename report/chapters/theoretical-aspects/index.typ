@@ -8,7 +8,7 @@
 ) = default-theorems("definition", lang: "en")
 #let (
   theorem,
-  theorem,
+  lemma,
   corollary,
   proof,
   rules: theorem-rules,
