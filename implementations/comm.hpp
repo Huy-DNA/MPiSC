@@ -351,3 +351,18 @@ inline void compare_and_swap_sync(const T *old_val, const T *new_val, T *result,
   MPI_Compare_and_swap(new_val, old_val, result, type, target_rank, disp, win);
   MPI_Win_flush(target_rank, win);
 }
+
+// flush
+inline void flush(unsigned int rank, const MPI_Win &win) {
+#ifdef PROFILE
+  CALI_CXX_MARK_FUNCTION;
+#endif
+  MPI_Win_flush(rank, win);
+}
+
+inline void flush_local(unsigned int rank, const MPI_Win &win) {
+#ifdef PROFILE
+  CALI_CXX_MARK_FUNCTION;
+#endif
+  MPI_Win_flush_local(rank, win);
+}

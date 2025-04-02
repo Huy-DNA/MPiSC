@@ -138,7 +138,7 @@ public:
           data.data() + this->_capacity - old_tail % this->_capacity,
           data.size() - this->_capacity + old_tail % this->_capacity, 0,
           this->_host, this->_data_win);
-      MPI_Win_flush(this->_host, this->_data_win);
+      flush(this->_host, this->_data_win);
 
       std::vector<char> set(data.size(), true);
 
@@ -149,7 +149,7 @@ public:
           set.data() + this->_capacity - old_tail % this->_capacity,
           set.size() - this->_capacity + old_tail % this->_capacity, 0,
           this->_host, this->_flag_win);
-      MPI_Win_flush(this->_host, this->_data_win);
+      flush(this->_host, this->_data_win);
     }
     return true;
   }

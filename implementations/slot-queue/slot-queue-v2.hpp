@@ -126,7 +126,7 @@ private:
             data.data() + this->_capacity - this->_last_buf % this->_capacity,
             data.size() - this->_capacity + this->_last_buf % this->_capacity,
             0, this->_self_rank, this->_data_win);
-        MPI_Win_flush(this->_self_rank, this->_data_win);
+        flush(this->_self_rank, this->_data_win);
       }
 
       awrite_sync(&new_last, 0, this->_self_rank, this->_last_win);
@@ -369,7 +369,7 @@ private:
       aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
                   this->_min_timestamp_win);
     }
-    MPI_Win_flush(this->_self_rank, this->_min_timestamp_win);
+    flush(this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       if (_min_timestamp_buf[i] != MAX_TIMESTAMP) {
         this->_first_scan.push({(MPI_Aint)i, _min_timestamp_buf[i]});
@@ -380,7 +380,7 @@ private:
     if (this->_first_scan.size() == 0) {
       return DUMMY_RANK;
     }
-    MPI_Win_flush(this->_self_rank, this->_min_timestamp_win);
+    flush(this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       if (_min_timestamp_buf[i] != MAX_TIMESTAMP) {
         this->_second_scan.push({(MPI_Aint)i, _min_timestamp_buf[i]});
