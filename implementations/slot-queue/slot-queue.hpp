@@ -98,7 +98,6 @@ private:
                   this->_data_win);
       awrite_sync(&new_last, 0, this->_self_rank, this->_last_win);
       this->_last_buf = new_last;
-      auto t2 = std::chrono::high_resolution_clock::now();
 
       return true;
     }
