@@ -696,6 +696,16 @@ The followings are some other definitions that will be used throughout our proof
 
 === ABA problem
 
+Noticeably, we use no scheme to avoid ABA problem in LTQueueV2. In actuality, ABA problem does not adversely affect our algorithm's correctness, except in the extreme case that the 64-bit distributed counter overflows, which is unlikely.
+
+We will prove that LTQueueV2 is ABA-safe, as introduced in @ABA-safety.
+
+Notice that we only use `CAS`es on:
+- Line 16 of `refreshEnqueue` (@slotqueue-refresh-enqueue), which is part of an enqueue.
+- Line 48 of `refreshDequeue` (@slotqueue-refresh-dequeue), which is part of a dequeue.
+
+Both `CAS`es target some slot in the `slots` array.
+
 === Linearizability
 
 === Progress guarantee

@@ -346,11 +346,11 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 
 == Proof of ABA-safety
 
-Notice that we only use `CAS` on:
-- Line 13 of `refreshEnqueue` (@slotqueue-refresh-enqueue), or an `enqueue` in general (@slotqueue-enqueue).
-- Line 42 of `refreshDequeue` (@slotqueue-refresh-dequeue) or a `dequeue` in general (@slotqueue-dequeue).
+Notice that we only use `CAS`es on:
+- Line 13 of `refreshEnqueue` (@slotqueue-refresh-enqueue), which is part of an `enqueue` in general (@slotqueue-enqueue).
+- Line 42 of `refreshDequeue` (@slotqueue-refresh-dequeue), which is part of a `dequeue` in general (@slotqueue-dequeue).
 
-Both `CAS` target some slot in the `slots` array.
+Both `CAS`es target some slot in the `slots` array.
 
 We apply some domain knowledge of our algorithm to the above formalism.
 
