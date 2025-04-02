@@ -112,7 +112,7 @@ An MPSC supports 2 methods:
   - An enqueue that returns `false` will never be matched.
 ] <linearizable-mpsc>
 
-=== ABA-safety
+=== ABA-safety <ABA-safety>
 
 Not every ABA problem is unsafe. We formalize in this section which ABA problem is safe and which is not.
 
@@ -637,7 +637,7 @@ We immediately obtain the following result.
     Therefore, $d$ is unmatched.
   - A dequeue returns `false` when the queue is empty: To put more precisely, for a dequeue $d$, if every successful enqueue $e'$ such that $e' =>$#sub($H'$)$d$ has been matched by $d'$ such that $d' =>$#sub($H'$)$d$, then $d$ would be unmatched and return `false`. Suppose the contrary, $d$ matches $e$. By definition, $e =>$#sub($H'$)$d$. This is a contradiction by our assumption.
   - A dequeue returns `true` and matches an enqueue when the queue is not empty: To put more precisely, for a dequeue $d$, if there exists a successful enqueue $e'$ such that $e' =>$#sub($H'$)$d$ and has not been matched by a dequeue $d'$ such that $d' =>$#sub($H'$)$e'$, then $d$ would be match some $e$ and return `true`. This follows from @ltqueue-unmatched-enqueue-theorem.
-  - An enqueue that returns `true` will be matched if there are enough dequeues after that: Based on how @ltqueue-enqueue is defined, when an enqueue returns `true`, it has successfully execute `spsc_enqueue`. By @ltqueue-unmatched-enqueue-theorem, at some point, it would eventually be matched. 
+  - An enqueue that returns `true` will be matched if there are enough dequeues after that: Based on how @ltqueue-enqueue is defined, when an enqueue returns `true`, it has successfully execute `spsc_enqueue`. By @ltqueue-unmatched-enqueue-theorem, at some point, it would eventually be matched.
   - An enqueue that returns `false` will never be matched: Based on how @ltqueue-enqueue is defined, when an enqueue returns `false`, the state of LTQueue is not changed, except for the distributed counter. Therefore, it could never be matched.
 
   In conclusion, $=>$#sub($H'$) is a way we can order method calls in $H'$ sequentially that conforms to FIFO semantics. Therefore, we can also order method calls in $H$ sequentially that conforms to FIFO semantics as we only append dequeues sequentially to the end of $H$ to obtain $H'$.
@@ -656,6 +656,43 @@ Notice that LTQueueV1 pushes the memory reclamation problem to the underlying SP
 === Performance model
 
 == Theoretical proofs of LTQueueV2
+
+=== Notation
+
+As a refresher, @remind-slotqueue-structure shows the structure of LTQueueV2.
+
+#figure(
+  image("/static/images/slotqueue.png"),
+  caption: [Basic structure of LTQueueV2],
+) <remind-slotqueue-structure>
+
+Each enqueuer hosts an SPSC that can only accessed by itself and the dequeuer. The dequeuer hosts an array of slots, each slot corresponds to an enqueuer, containing its SPSC's minimum timestamp.
+
+We apply some domain knowledge of LTQueueV2 algorithm to the definitions introduced in @ABA-safety.
+
+#definition[A *CAS-sequence* on a slot `s` of an enqueue that affects `s` is the sequence of instructions from line 10 to line 16 of its `refreshEnqueue` (@slotqueue-refresh-enqueue).]
+
+#definition[A *slot-modification instruction* on a slot `s` of an enqueue that affects `s` is line 16 of `refreshEnqueue` (@slotqueue-refresh-enqueue).]
+
+#definition[A *CAS-sequence* on a slot `s` of a dequeue that affects `s` is the sequence of instructions from line 44 to line 48 of its `refreshDequeue` (@slotqueue-refresh-dequeue).]
+
+#definition[A *slot-modification instruction* on a slot `s` of a dequeue that affects `s` is line 48 of `refreshDequeue` (@slotqueue-refresh-dequeue).]
+
+#definition[A *CAS-sequence* of a dequeue/enqueue is said to *observe a slot value of $s_0$* if it loads $s_0$ at line 10 of `refreshEnqueue` or line 44 of `refreshDequeue`.]
+
+The followings are some other definitions that will be used throughout our proof.
+
+#definition[For an enqueue or dequeue $o p$, $r a n k(o p)$ is the rank of the enqueuer whose local SPSC is affected by $o p$.]
+
+#definition[For an enqueuer whose rank is $r$, the value stored in its corresponding slot at time $t$ is denoted as $s l o t(r, t)$.]
+
+#definition[For an enqueuer with rank $r$, the minimum timestamp among the elements between `First` and `Last` in its local SPSC at time $t$ is denoted as $m i n \- s p s c \- t s(r, t)$.]
+
+#definition[For an enqueue, *slot-refresh phase* refer to its execution of line 5-6 of @slotqueue-enqueue.]
+
+#definition[For a dequeue, *slot-refresh phase* refer to its execution of line 24-25 of @slotqueue-dequeue.]
+
+#definition[For a dequeue, *slot-scan phase* refer to its execution of line 27-41 of @slotqueue-read-minimum-rank.]
 
 === ABA problem
 

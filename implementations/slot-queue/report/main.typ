@@ -358,11 +358,11 @@ We apply some domain knowledge of our algorithm to the above formalism.
 
 #definition[A *slot-modification instruction* on a slot `s` of an `enqueue` that corresponds to `s` is line 13 of `refreshEnqueue`.]
 
-#definition[A *CAS-sequence* on a slot `s` of a `dequeue` that corresponds to `s` is the sequence of instructions from line 36 to line 42 of its `refreshDequeue`.]
+#definition[A *CAS-sequence* on a slot `s` of a `dequeue` that corresponds to `s` is the sequence of instructions from line 36 to line 39 of its `refreshDequeue`.]
 
-#definition[A *slot-modification instruction* on a slot `s` of a `dequeue` that corresponds to `s` is line 40 or line 42 of `refreshDequeue`.]
+#definition[A *slot-modification instruction* on a slot `s` of a `dequeue` that corresponds to `s` is line 39 of `refreshDequeue`.]
 
-#definition[A *CAS-sequence* of a `dequeue`/`enqueue` is said to *observes a slot value of $s_0$* if it loads $s_0$ at line 8 of `refreshEnqueue` or line 36 of `refreshDequeue`.]
+#definition[A *CAS-sequence* of a `dequeue`/`enqueue` is said to *observe a slot value of $s_0$* if it loads $s_0$ at line 8 of `refreshEnqueue` or line 36 of `refreshDequeue`.]
 
 We can now turn to our interested problem in this section.
 
