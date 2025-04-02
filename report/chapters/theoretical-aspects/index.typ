@@ -647,7 +647,11 @@ We immediately obtain the following result.
 
 === Progress guarantee
 
+Notice that every loop in LTQueueV1 is bounded, and no methods have to wait for another. Therefore, LTQueueV1 is wait-free.
+
 === Memory reclamation
+
+Notice that LTQueueV1 pushes the memory reclamation problem to the underlying SPSC. Because the underlying SPSC is memory-safe, LTQueueV1 is also memory-safe.
 
 === Performance model
 
