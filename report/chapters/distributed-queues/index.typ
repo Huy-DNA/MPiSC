@@ -253,7 +253,7 @@ Note that if a local SPSC is empty, the `min_timestamp` variable of the correspo
       supplement: "Image",
       image("/static/images/modified-ltqueue.png"),
       caption: [
-        Modified LTQueue's structure
+        LTQueueV1's structure
       ],
     ) <modified-ltqueue-tree>
   ],

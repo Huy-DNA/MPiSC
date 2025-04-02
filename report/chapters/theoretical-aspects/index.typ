@@ -23,11 +23,11 @@ This section discusses the correctness and progress guarantee properties of the 
 
 In this section, we introduce some terminology that we will use throughout our proofs.
 
-#definition[In an SPSC/MPSC, an `enqueue` operation $e$ is said to *match* a `dequeue` operation $d$ if $d$ returns the value that $e$ enqueues. Similarly, $d$ is said to *match* $e$. In this case, both $e$ and $d$ are said to be *matched*.]
+#definition[In an SPSC/MPSC, an enqueue operation $e$ is said to *match* a dequeue operation $d$ if $d$ returns the value that $e$ enqueues. Similarly, $d$ is said to *match* $e$. In this case, both $e$ and $d$ are said to be *matched*.]
 
-#definition[In an SPSC/MPSC, an `enqueue` operation $e$ is said to be *unmatched* if no `dequeue` operation *matches* it.]
+#definition[In an SPSC/MPSC, an enqueue operation $e$ is said to be *unmatched* if no dequeue operation *matches* it.]
 
-#definition[In an SPSC/MPSC, a `dequeue` operation $d$ is said to be *unmatched* if no `enqueue` operation *matches* it, in other word, $d$ returns `false`.]
+#definition[In an SPSC/MPSC, a dequeue operation $d$ is said to be *unmatched* if no enqueue operation *matches* it, in other word, $d$ returns `false`.]
 
 == Formalization
 
@@ -82,7 +82,7 @@ Our SPSC supports 3 methods:
 - `dequeue` which accepts an output parameter and returns a boolean.
 - `readFront` which accepts an output parameter and returns a boolean.
 
-#definition[An SPSC is *linearizable* if and only if any history produced from the SPSC that does not have overlapping `dequeue` method calls and overlapping `enqueue` method calls is _linearizable_ according to the following _sequential specification_:
+#definition[An SPSC is *linearizable* if and only if any history produced from the SPSC that does not have overlapping dequeue method calls and overlapping enqueue method calls is _linearizable_ according to the following _sequential specification_:
   - An enqueue can only be matched by one dequeue.
   - A dequeue can only be matched by one enqueue.
   - The order of item dequeues is the same as the order of item enqueues.
@@ -101,7 +101,7 @@ An MPSC supports 2 methods:
 - `enqueue` which accepts an input parameter and returns a boolean.
 - `dequeue` which accepts an output parameter and returns a boolean.
 
-#definition[An MPSC is *linearizable* if and only if any history produced from the MPSC that does not have overlapping `dequeue` method calls is _linearizable_ according to the following _sequential specification_:
+#definition[An MPSC is *linearizable* if and only if any history produced from the MPSC that does not have overlapping dequeue method calls is _linearizable_ according to the following _sequential specification_:
   - An enqueue can only be matched by one dequeue.
   - A dequeue can only be matched by one enqueue.
   - The order of item dequeues is the same as the order of item enqueues.
@@ -209,7 +209,62 @@ There's no dynamic memory allocation and deallocation in our simple distributed 
 
 == Theoretical proofs of LTQueueV1
 
+=== Notation
+
+The structure of LTQueueV1 is presented again in @remind-modified-ltqueue-tree.
+
+As a reminder, the bottom rectangular nodes are called the *enqueuer nodes* and the circular node are called the *tree nodes*. Tree nodes that are attached to an enqueuer node are called *leaf nodes*, otherwise, they are called *internal nodes*. Each *enqueuer node* is hosted on the enqueuer that corresponds to it. The enqueuer nodes accomodate an instance of our distributed SPSC in @distributed-spsc and a `Min_timestamp` variable representing the minimum timestamp inside the SPSC. Each *tree node* stores a rank of a enqueuer that's attached to the subtree which roots at the *tree node*.
+
+#place(
+  center + top,
+  float: true,
+  scope: "parent",
+  [#figure(
+      kind: "image",
+      supplement: "Image",
+      image("/static/images/modified-ltqueue.png"),
+      caption: [
+        LTQueueV1's structure
+      ],
+    ) <remind-modified-ltqueue-tree>
+  ],
+)
+
+#definition[For a tree node $n$, the rank stored in $n$ at time $t$ is denoted as $r a n k(n, t)$.]
+
+#definition[For an enqueue or a dequeue $op$, the rank of the enqueuer it affects is denoted as $r a n k(op)$.]
+
+#definition[For an enqueuer whose rank is $r$, the `Min_timestamp` value stored in its enqueuer node at time $t$ is denoted as $m i n \- t s(r, t)$. If $r$ is `DUMMY_RANK`, $m i n \- t s(r, t)$ is `MAX_TIMESTAMP`.]
+
+#definition[For an enqueuer with rank $r$, the minimum timestamp among the elements between `First` and `Last` in its SPSC at time $t$ is denoted as $m i n \- s p s c \- t s(r, t)$. If $r$ is dummy, $m i n \- s p s c \- t s(r, t)$ is `MAX`.]
+
+#definition[For an enqueue or a dequeue $op$, the set of nodes that it calls `refreshNode` (@ltqueue-enqueue-refresh-node or @ltqueue-dequeue-refresh-node) or `refreshLeaf` (@ltqueue-enqueue-refresh-leaf or @ltqueue-dequeue-refresh-leaf) on is denoted as $p a t h(op)$.]
+
+#definition[For an enqueue or a dequeue, *timestamp-refresh phase* refer to its execution of line 18-19 in `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) or line 71-72 in `propagate`#sub(`d`) (@ltqueue-dequeue-propagate).]
+
+#definition[For an enqueue $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of:
+  - Line 20-21 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) if $n$ is a leaf node.
+  - Line 25-26 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.]
+
+#definition[For a dequeue $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of:
+  - Line 73-74 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) if $n$ is a leaf node.
+  - Line 78-79 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.]
+
+#definition[`refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 29. `refreshTimestamp`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 34 or line 36.]
+
+#definition[`refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 83. `refreshTimestamp`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 88 or line 90.]
+
+#definition[`refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node) is said to start its *CAS-sequence* if it finishes line 38. `refreshNode`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 52.]
+
+#definition[`refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node) is said to start its *CAS-sequence* if it finishes line 92. `refreshNode`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 106.]
+
+#definition[`refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 55. `refreshLeaf`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 60.]
+
+#definition[`refreshLeaf`#sub(`d`) (@ltqueue-dequeue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 109. `refreshLeaf`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 114.]
+
 === Linearizability
+
+
 
 === Progress guarantee
 
