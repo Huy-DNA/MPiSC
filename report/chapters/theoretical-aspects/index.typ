@@ -574,7 +574,9 @@ We immediately obtain the following result.
   Therefore, the theorem holds.
 ]
 
-#theorem[The LTQueueV1 algorithm is linearizable.]
+#theorem(
+  name: "Linearizability of LTQueueV1",
+)[The LTQueueV1 algorithm is linearizable.]
 
 #proof[
   Suppose some history $H$ produced from the modified LTQueueV1 algorithm.
