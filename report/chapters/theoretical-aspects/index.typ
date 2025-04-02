@@ -649,7 +649,7 @@ We immediately obtain the following result.
 
 === Progress guarantee
 
-Notice that every loop in LTQueueV1 is bounded, and no methods have to wait for another. Therefore, LTQueueV1 is wait-free.
+Notice that every loop in LTQueueV1 is bounded, and no method have to wait for another. Therefore, LTQueueV1 is wait-free.
 
 === Memory reclamation
 
@@ -1020,6 +1020,11 @@ Both `CAS`es target some slot in the `Slots` array.
 
 === Progress guarantee
 
+Notice that every loop in LTQueueV2 is bounded, and no method have to wait for another. Therefore, LTQueueV2 is wait-free.
+
 === Memory reclamation
+
+Notice that LTQueueV2 pushes the memory reclamation problem to the underlying SPSC. Because the underlying SPSC is memory-safe, LTQueueV2 is also memory-safe.
+
 
 === Performance model
