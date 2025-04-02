@@ -420,6 +420,48 @@ We immediately obtain the following result.
   By induction, we have proved the stronger version of the theorem. Therefore, the theorem directly follows.
 ]
 
+#corollary[Suppose $r o o t$ is the root tree node. If an enqueue $e$ obtains a timestamp $c$, finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a dequeue, $m i n \- s p s c \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.] <ltqueue-unmatched-enqueue-corollary>
+
+#proof[
+  Call $t_(s t a r t)$ and $t_(e n d)$ to be the start and end time of $T$.
+
+  Applying @ltqueue-unmatched-enqueue-theorem, we have that $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.
+
+  Fix $t_r$ so that $r a n k(r o o t, t_r) = r$. We have that $m i n \- t s(r, t) lt.eq c$ for any $t in T$.
+
+  $m i n \- t s(r, t)$ can only change due to a successful `refreshTimestamp` on the enqueuer node with rank $r$. Consider the last successful `refreshTimestamp` on the enqueuer node with rank $r$ not after $T$. Suppose that `refreshTimestamp` reads out the minimum timestamp of the local SPSC at $t' lt.eq t_(s t a r t)$.
+
+  Therefore, $m i n \- t s(r, t_(s t a r t)) = m i n \- s p s c \- t s(r, t') lt.eq c$.
+
+  We will prove that after $t'$ until $t_(e n d)$, there's no `spsc_dequeue` on $r$ running.
+
+  Suppose the contrary, then this `spsc_dequeue` must be part of a dequeue. By definition, this dequeue must start and end before $t_(s t a r t)$, else it violates the assumption of $T$. If this `spsc_dequeue` starts after $t'$, then its `refreshTimestamp` must finish after $t'$ and before $t_(s t a r t)$. But this violates the assumption that the last `refreshTimestamp` not after $t_(s t a r t)$ reads out the minimum timestamp at $t'$.
+
+  Therefore, there's no `spsc_dequeue` on $r$ running during $[t', t_(e n d)]$. Therefore, $m i n \- s p s c \- t s(r, t)$ remains constant during $[t', t_(e n d)]$ because it's not `MAX_TIMESTAMP`.
+
+  In conclusion, $m i n \- s p s c \- t s(r, t) lt.eq c$ for $t in[t', t_(e n d)]$.
+
+  We have proved the theorem.
+]
+
+#theorem[Given a rank $r$. If within $[t_0, t_1]$, there's no uncompleted enqueues on rank $r$ and all matching dequeues for any completed enqueues on rank $r$ has finished, then $r a n k(n, t) eq.not r$ for every node $n$ and $t in [t_0, t_1]$.] <ltqueue-matched-enqueue-theorem>
+
+#proof[
+  If $n$ doesn't lie on the path from root to the leaf node that's attached to the enqueuer node with rank $r$, the theorem obviously holds.
+
+  Due to @ltqueue-one-dequeue-one-enqueue-corollary, there can only be one enqueue and one dequeue at a time at an enqueuer node with rank $r$. Therefore, there is a sequential ordering among the enqueues and a sequential ordering within the dequeues. Therefore, it's sensible to talk about the last enqueue before $t_0$ and the last matched dequeue $d$ before $t_0$.
+
+  Since all of these dequeues and enqueues work on the same local SPSC and the SPSC is linearizable, $d$ must match the last enqueue. After this dequeue $d$, the local SPSC is empty.
+
+  When $d$ finishes its *timestamp-refresh phase* at $t_(t s) lt.eq t_0$, due to @ltqueue-refresh-timestamp-theorem, there's at least one successful `refreshTimestamp` call in this phase. Because the last enqueue has been matched, $m i n \- t s(r, t) =$ `MAX_TIMESTAMP` for any $t in [t_(t s), t_1]$.
+
+  Similarly, for a leaf node $n_0$, suppose $d$ finishes its *node-$n_0$-refresh phase* at $t_(r\-0) gt.eq t_(t s)$, then $r a n k(n_0, t) =$ `DUMMY_RANK` for any $t in [t_(r\-0), t_1]$. $(1)$
+
+  For any non-leaf node $n_i in p a t h(d)$, when $d$ finishes its *node-$n_i$-refresh phase* at $t_(r\-i)$, there's at least one successful `refreshNode` call during this phase. Suppose this `refreshNode` call starts and ends at $t_(s t a r t \- i)$ and $t_(e n d\-i)$. Suppose $r a n k(n_(i-1), t) eq.not r$ for $t in [t_(r\-(i-1)), t_1]$. By the way `refreshNode` is defined after this `refreshNode` call, $n_i$ will store some rank other than $r$. Because of $(1)$, after this up until $t_1$, $r$ never has a chance to be visible to a `refreshNode` on node $n_i$ during $[n_(i-1), t]$. In other words, $r a n k(n_i, t) eq.not r$ for $t in [t_(r\-i), t_1]$.
+
+  By induction, we obtain the theorem.
+]
+
 === Progress guarantee
 
 === Memory reclamation

@@ -751,12 +751,12 @@ We immediately obtain the following result.
   We have proved the theorem.
 ]
 
-#theorem[Given a rank $r$. If within $[t_0, t_1]$, there's no uncompleted `enqueue`s on rank $r$ and all matching `dequeue`s for any completed `enqueue`s on rank $r$ has finished, then $r a n k(n, t) eq.not r$ for every node $n$ and $t in [t_0, t_1]$.] <ltqueue-matched-enqueue-theorem>
+#theorem[Given a rank $r$. If within $[t_0, t_1]$, there's no uncompleted `enqueue`s on rank $r$ and all matching dequeues for any completed `enqueue`s on rank $r$ has finished, then $r a n k(n, t) eq.not r$ for every node $n$ and $t in [t_0, t_1]$.] <ltqueue-matched-enqueue-theorem>
 
 #proof[
   If $n$ doesn't lie on the path from root to the leaf node that's attached to the enqueuer node with rank $r$, the theorem obviously holds.
 
-  Due to @ltqueue-one-dequeue-one-enqueue-corollary, there can only one `enqueue` and one `dequeue` at a time at an enqueuer node with rank $r$. Therefore, there is a sequential ordering within the `enqueue`s and a sequential ordering within the `dequeue`s. Therefore, it's sensible to talk about the last `enqueue` before $t_0$ and the last matching `dequeue` $d$ before $t_0$.
+  Due to @ltqueue-one-dequeue-one-enqueue-corollary, there can only be one `enqueue` and one `dequeue` at a time at an enqueuer node with rank $r$. Therefore, there is a sequential ordering among the `enqueue`s and a sequential ordering within the `dequeue`s. Therefore, it's sensible to talk about the last `enqueue` before $t_0$ and the last matching `dequeue` $d$ before $t_0$.
 
   Since all of these `dequeue`s and `enqueue`s work on the same local SPSC and the SPSC is linearizable, $d$ must match the last `enqueue`. After this `dequeue` $d$, the local SPSC is empty.
 
