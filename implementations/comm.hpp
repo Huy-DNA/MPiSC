@@ -206,19 +206,22 @@ inline void fetch_and_add_sync(T *dst, uint64_t increment, int disp,
   if constexpr (sizeof(T) == 8) {
     uint64_t inc = increment;
     MPI_Fetch_and_op(&inc, dst, MPI_UINT64_T, target_rank, disp, MPI_SUM, win);
+    MPI_Win_flush(target_rank, win);
   } else if constexpr (sizeof(T) == 4) {
     uint32_t inc = increment;
     MPI_Fetch_and_op(&inc, dst, MPI_UINT32_T, target_rank, disp, MPI_SUM, win);
+    MPI_Win_flush(target_rank, win);
   } else if constexpr (sizeof(T) == 2) {
     uint16_t inc = increment;
     MPI_Fetch_and_op(&inc, dst, MPI_UINT16_T, target_rank, disp, MPI_SUM, win);
+    MPI_Win_flush(target_rank, win);
   } else if constexpr (sizeof(T) == 1) {
     uint8_t inc = increment;
     MPI_Fetch_and_op(&inc, dst, MPI_UINT8_T, target_rank, disp, MPI_SUM, win);
+    MPI_Win_flush(target_rank, win);
   } else {
     static_assert(false, "Invalid template type");
   }
-  MPI_Win_flush(target_rank, win);
 }
 
 // compare-and-swap
