@@ -108,8 +108,8 @@ An MPSC supports 2 methods:
   - An enqueue can only be matched by a later dequeue.
   - A dequeue returns `false` when the queue is empty.
   - A dequeue returns `true` and matches an enqueue when the queue is not empty
-  - An enqueue returns `false` when the queue is full.
-  - An enqueue would return `true` when the queue is not full and the number of elements should increase by one.
+  - An enqueue that returns `true` will be matched if there are enough dequeues after that.
+  - An enqueue that returns `false` will never be matched.
 ] <linearizable-mpsc>
 
 === ABA-safety
@@ -635,10 +635,10 @@ We immediately obtain the following result.
       - If $e_0$ precedes $d$, by our assumption, it's already matched by another `dequeue`.
       - If $e_0$ overlaps with $d$, by our assumption, $d arrow.double$#sub($H'$)$e_0$ because if $e_0 arrow.double$#sub($H'$)$d$, $e_0$ is already matched by another $d'$. Then, we can only obtain this because $(4)$ applies, but then $d$ does not match $e_0$.
     Therefore, $d$ is unmatched.
-  - A dequeue returns `false` when the queue is empty.
-  - A dequeue returns `true` and matches an enqueue when the queue is not empty.
-  - An enqueue returns `false` when the queue is full.
-  - An enqueue would return `true` when the queue is not full and the number of elements should increase by one.
+  - A dequeue returns `false` when the queue is empty: To put more precisely, for a dequeue $d$, if every successful enqueue $e'$ such that $e' =>$#sub($H'$)$d$ has been matched by $d'$ such that $d' =>$#sub($H'$)$d$, then $d$ would be unmatched and return `false`. Suppose the contrary, $d$ matches $e$. By definition, $e =>$#sub($H'$)$d$. This is a contradiction by our assumption.
+  - A dequeue returns `true` and matches an enqueue when the queue is not empty: To put more precisely, for a dequeue $d$, if there exists a successful enqueue $e'$ such that $e' =>$#sub($H'$)$d$ and has not been matched by a dequeue $d'$ such that $d' =>$#sub($H'$)$e'$, then $d$ would be match some $e$ and return `true`. This follows from @ltqueue-unmatched-enqueue-theorem.
+  - An enqueue that returns `true` will be matched if there are enough dequeues after that: Based on how @ltqueue-enqueue is defined, when an enqueue returns `true`, it has successfully execute `spsc_enqueue`. By @ltqueue-unmatched-enqueue-theorem, at some point, it would eventually be matched. 
+  - An enqueue that returns `false` will never be matched: Based on how @ltqueue-enqueue is defined, when an enqueue returns `false`, the state of LTQueue is not changed, except for the distributed counter. Therefore, it could never be matched.
 
   In conclusion, $=>$#sub($H'$) is a way we can order method calls in $H'$ sequentially that conforms to FIFO semantics. Therefore, we can also order method calls in $H$ sequentially that conforms to FIFO semantics as we only append dequeues sequentially to the end of $H$ to obtain $H'$.
 
