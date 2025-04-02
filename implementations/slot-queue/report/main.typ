@@ -586,7 +586,7 @@ We now look at the more fundamental results.
 ] <slotqueue-enqueue-enqueue-theorem>
 
 #proof[
-  if $e_1$ is not matched, the theorem holds.
+  If $e_1$ is not matched, the theorem holds.
 
   Suppose $e_1$ matches $d_1$. By @slotqueue-matching-dequeue-enqueue-lemma, either $e_1$ precedes or overlaps with $d_1$.
 

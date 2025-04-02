@@ -8,7 +8,7 @@
 ) = default-theorems("definition", lang: "en")
 #let (
   theorem,
-  lemma,
+  theorem,
   corollary,
   proof,
   rules: theorem-rules,
@@ -145,7 +145,7 @@ We prove that our simple distributed SPSC is linearizable.
 
 #theorem(
   name: "Linearizability of the simple distributed SPSC",
-)[The distributed SPSC given in @distributed-spsc is linearizable.] <spsc-linearizability-lemma>
+)[The distributed SPSC given in @distributed-spsc is linearizable.] <spsc-linearizability-theorem>
 
 #proof[
   We claim that the following are the linearization points of our SPSC's methods:
@@ -282,7 +282,7 @@ Notice that at these locations, we increase the associated version tags of the C
 
 #proof[A dequeue indirectly performs a value dequeue through `spsc_dequeue`. Because `spsc_dequeue` can only match one `spsc_enqueue` by another enqueue, the theorem holds.]
 
-#theorem[A dequeue can only match at most one enqueue.] <ltqueue-unique-match-dequeue>
+#theorem[In LTQueueV1, a dequeue can only match at most one enqueue.] <ltqueue-unique-match-dequeue>
 
 #proof[This is trivial as a dequeue can only read out at most one value, so it can only match at most one enqueue.]
 
@@ -492,9 +492,9 @@ We immediately obtain the following result.
   Therefore, $e'$ precedes $e$ or overlaps with $e$.
 ]
 
-#lemma[
+#theorem[
   In LTQueueV1, if $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
-] <ltqueue-matching-dequeue-enqueue-lemma>
+] <ltqueue-matching-dequeue-enqueue-theorem>
 
 #proof[
   If $d$ precedes $e$, none of the local SPSCs can contain an item with the timestamp of $e$. Therefore, $d$ cannot return an item with a timestamp of $e$. Thus $d$ cannot match $e$.
@@ -510,7 +510,7 @@ We immediately obtain the following result.
 #proof[
   If $d$ isn't matched, the theorem holds.
 
-  Suppose $d$ matches $e'$. Applying @ltqueue-matching-dequeue-enqueue-lemma, $e'$ must precede or overlap with $d$. In other words, $d$ cannot precede $e'$.
+  Suppose $d$ matches $e'$. Applying @ltqueue-matching-dequeue-enqueue-theorem, $e'$ must precede or overlap with $d$. In other words, $d$ cannot precede $e'$.
 
   If $e$ precedes or is $e'$, then $d$ must precede $e'$, which is contradictory.
 
@@ -526,7 +526,7 @@ We immediately obtain the following result.
 #proof[
   If both $e_0$ and $e_1$ aren't matched, the theorem holds.
 
-  Suppose $e_1$ matches $d_1$. By @ltqueue-matching-dequeue-enqueue-lemma, either $e_1$ precedes or overlaps with $d_1$.
+  Suppose $e_1$ matches $d_1$. By @ltqueue-matching-dequeue-enqueue-theorem, either $e_1$ precedes or overlaps with $d_1$.
 
   If $e_0$ precedes $d_1$, applying @ltqueue-enqueue-dequeue-theorem for $d_1$ and $e_0$:
   - $d_1$ isn't matched, contradictory.
@@ -620,19 +620,19 @@ We immediately obtain the following result.
     - $X$ matches $d_x$ and $Y$ matches $d_y$ such that $d_x$ precedes $d_y$, then $(3)$ applies and we obtain $X arrow.double$#sub($H'$)$Y$.
     Therefore, in this case, $X arrow.double$#sub($H'$)$Y$ but $Y arrow.double.not$#sub($H'$)$X$.
   - If $Y ->$#sub($H'$)$X$, this case is symmetric to the first case. We obtain $Y arrow.double$#sub($H'$)$X$ but $X arrow.double.not$#sub($H'$)$Y$.
-  - If $X$ overlaps with $Y$, because in $H'$, all `enqueue`s are matched, then, $X$ matches $d_x$ and $d_y$. Because $d_x$ either precedes or succeeds $d_y$, Applying $(3)$, we obtain either $X arrow.double$#sub($H'$)$Y$ or $Y arrow.double$#sub($H'$)$X$ and there's no way to obtain the other.
+  - If $X$ overlaps with $Y$, because in $H'$, all enqueues are matched, then, $X$ matches $d_x$ and $d_y$. Because $d_x$ either precedes or succeeds $d_y$, Applying $(3)$, we obtain either $X arrow.double$#sub($H'$)$Y$ or $Y arrow.double$#sub($H'$)$X$ and there's no way to obtain the other.
   Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(***)$
 
   From $(*)$, $(**)$, $(***)$, we have proved that $=>$#sub($H'$) is a strict total ordering that is consistent with $->$#sub($H'$). In other words, we can order method calls in $H'$ in a sequential manner. We will prove that this sequential order is consistent with FIFO semantics:
   - An enqueue can only be matched by one dequeue: This follows from @ltqueue-unique-match-enqueue.
   - A dequeue can only be matched by one enqueue: This follows from @ltqueue-unique-match-dequeue.
-  - The order of item dequeues is the same as the order of item enqueues: Suppose there are two `enqueue`s $e_1$, $e_2$ such that $e_1 arrow.double$#sub($H'$)$e_2$ and suppose they match $d_1$ and $d_2$. Then we have obtained $e_1 arrow.double$#sub($H'$)$e_2$ either because:
+  - The order of item dequeues is the same as the order of item enqueues: Suppose there are two enqueues $e_1$, $e_2$ such that $e_1 arrow.double$#sub($H'$)$e_2$ and suppose they match $d_1$ and $d_2$. Then we have obtained $e_1 arrow.double$#sub($H'$)$e_2$ either because:
     - $(3)$ applies, in this case $d_1 arrow.double$#sub($H'$)$d_2$ is a condition for it to apply.
     - $(1)$ applies, then $e_1$ precedes $e_2$, by @ltqueue-enqueue-enqueue-theorem, $d_1$ must precede $d_2$, thus $d_1 arrow.double$#sub($H'$)$d_2$.
     Therefore, if $e_1 arrow.double$#sub($H'$)$ e_2$ then $d_1 arrow.double$#sub($H'$)$d_2$.
-  - An enqueue can only be matched by a later dequeue: Suppose there is an `enqueue` $e$ matched by $d$. By $(2)$, obviously $e =>$#sub($H'$)$d$.
-    - If the queue is empty, `dequeue`s return `false`. Suppose a dequeue $d$ such that any $e arrow.double$#sub($H'$)$d$ is all matched by some $d'$ and $d' arrow.double$#sub($H'$)$d$, we will prove that $d$ is unmatched. By @ltqueue-matching-dequeue-enqueue-lemma, $d$ can only match an `enqueue` $e_0$ that precedes or overlaps with $d$.
-      - If $e_0$ precedes $d$, by our assumption, it's already matched by another `dequeue`.
+  - An enqueue can only be matched by a later dequeue: Suppose there is an enqueue $e$ matched by $d$. By $(2)$, obviously $e =>$#sub($H'$)$d$.
+    - If the queue is empty, dequeues return `false`. Suppose a dequeue $d$ such that any $e arrow.double$#sub($H'$)$d$ is all matched by some $d'$ and $d' arrow.double$#sub($H'$)$d$, we will prove that $d$ is unmatched. By @ltqueue-matching-dequeue-enqueue-theorem, $d$ can only match an enqueue $e_0$ that precedes or overlaps with $d$.
+      - If $e_0$ precedes $d$, by our assumption, it's already matched by another dequeue.
       - If $e_0$ overlaps with $d$, by our assumption, $d arrow.double$#sub($H'$)$e_0$ because if $e_0 arrow.double$#sub($H'$)$d$, $e_0$ is already matched by another $d'$. Then, we can only obtain this because $(4)$ applies, but then $d$ does not match $e_0$.
     Therefore, $d$ is unmatched.
   - A dequeue returns `false` when the queue is empty: To put more precisely, for a dequeue $d$, if every successful enqueue $e'$ such that $e' =>$#sub($H'$)$d$ has been matched by $d'$ such that $d' =>$#sub($H'$)$d$, then $d$ would be unmatched and return `false`. Suppose the contrary, $d$ matches $e$. By definition, $e =>$#sub($H'$)$d$. This is a contradiction by our assumption.
@@ -706,38 +706,38 @@ Notice that we only use `CAS`es on:
 
 Both `CAS`es target some slot in the `Slots` array.
 
-#lemma(name: "Concurrent accesses on an SPSC and a slot")[
+#theorem(name: "Concurrent accesses on an SPSC and a slot")[
   Only one dequeuer and one enqueuer can concurrently modify an SPSC and a slot in the `Slots` array.
-] <slotqueue-one-enqueuer-one-dequeuer-lemma>
+] <slotqueue-one-enqueuer-one-dequeuer-theorem>
 
 #proof[
   This is trivial to prove based on the algorithm's definition.
 ]
 
-#lemma(name: "Monotonicity of SPSC timestamps")[
+#theorem(name: "Monotonicity of SPSC timestamps")[
   Each SPSC in LTQueueV2 contains elements with increasing timestamps.
 ] <slotqueue-spsc-timestamp-monotonicity-theorem>
 
 #proof[
-  Each enqueue would `FAA` the distributed counter (line 3 in @slotqueue-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @slotqueue-one-enqueuer-one-dequeuer-lemma, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
+  Each enqueue would `FAA` the distributed counter (line 3 in @slotqueue-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @slotqueue-one-enqueuer-one-dequeuer-theorem, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later enqueues, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
 ]
 
-#lemma[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only changes a slot to a value other than `MAX_TIMESTAMP`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX-lemma>
+#theorem[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only changes a slot to a value other than `MAX_TIMESTAMP`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX-theorem>
 
 #proof[
   For `refreshEnqueue` to change the slot's value, the condition on line 14 must be `false`. Then, `new_timestamp` must equal to `ts`, which is not `MAX_TIMESTAMP`. It's obvious that the `CAS` on line 16 changes the slot to a value other than `MAX_TIMESTAMP`.
 ]
 
 #theorem(
-  name: [ABA safety of `dequeue`],
-)[Assume that the 64-bit distributed counter never overflows, `dequeue` (@slotqueue-dequeue) is ABA-safe.] <slotqueue-aba-safe-dequeue-theorem>
+  name: [ABA safety of dequeue],
+)[Assume that the 64-bit distributed counter never overflows, dequeue (@slotqueue-dequeue) is ABA-safe.] <slotqueue-aba-safe-dequeue-theorem>
 
 #proof[
   Consider a *successful CAS-sequence* on slot `s` by a dequeue $d$.
 
   Denote $t_d$ as the value this CAS-sequence observes.
 
-  Due to @slotqueue-one-enqueuer-one-dequeuer-lemma, there can only be at most one enqueue at one point in time within $d$.
+  Due to @slotqueue-one-enqueuer-one-dequeuer-theorem, there can only be at most one enqueue at one point in time within $d$.
 
   If there's no *successful slot-modification instruction* on slot `s` by an enqueue $e$ within $d$'s *successful CAS-sequence*, then this dequeue is ABA-safe.
 
@@ -747,9 +747,9 @@ Both `CAS`es target some slot in the `Slots` array.
 
   Therefore, $t_e = t_d$.
 
-  Note that $e$ can only set `s` to the timestamp of the item it enqueues. That means, $e$ must have enqueued a value with timestamp $t_d$. However, by definition, $t_d$ is read before $e$ executes the CAS. This means another process (dequeuer/enqueuer) has seen the value $e$ enqueued and CAS `s` for $e$ before $t_d$. By @slotqueue-one-enqueuer-one-dequeuer-lemma, this "another process" must be another dequeuer $d'$ that precedes $d$ because it overlaps with $e$.
+  Note that $e$ can only set `s` to the timestamp of the item it enqueues. That means, $e$ must have enqueued a value with timestamp $t_d$. However, by definition, $t_d$ is read before $e$ executes the CAS. This means another process (dequeuer/enqueuer) has seen the value $e$ enqueued and CAS `s` for $e$ before $t_d$. By @slotqueue-one-enqueuer-one-dequeuer-theorem, this "another process" must be another dequeuer $d'$ that precedes $d$ because it overlaps with $e$.
 
-  Because $d'$ and $d$ cannot overlap, while $e$ overlaps with both $d'$ and $d$, $e$ must be the _first_ enqueue on `s` that overlaps with $d$. Combining with @slotqueue-one-enqueuer-one-dequeuer-lemma and the fact that $e$ executes the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, $e$ must be the only enqueue that executes a *successful slot-modification instruction* on `s` within $d$'s *successful CAS-sequence*.
+  Because $d'$ and $d$ cannot overlap, while $e$ overlaps with both $d'$ and $d$, $e$ must be the _first_ enqueue on `s` that overlaps with $d$. Combining with @slotqueue-one-enqueuer-one-dequeuer-theorem and the fact that $e$ executes the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, $e$ must be the only enqueue that executes a *successful slot-modification instruction* on `s` within $d$'s *successful CAS-sequence*.
 
   During the start of $d$'s successful CAS-sequence till the end of $e$, `spsc_readFront` on the local SPSC must return the same element, because:
   - There's no other dequeue running during this time.
@@ -766,17 +766,17 @@ Both `CAS`es target some slot in the `Slots` array.
 ]
 
 #theorem(
-  name: [ABA safety of `enqueue`],
-)[Assume that the 64-bit distributed counter never overflows, `enqueue` (@slotqueue-enqueue) is ABA-safe.] <slotqueue-aba-safe-enqueue-theorem>
+  name: [ABA safety of enqueue],
+)[Assume that the 64-bit distributed counter never overflows, enqueue (@slotqueue-enqueue) is ABA-safe.] <slotqueue-aba-safe-enqueue-theorem>
 
 #proof[
   Consider a *successful CAS-sequence* on slot `s` by an enqueue $e$.
 
   Denote $t_e$ as the value this CAS-sequence observes.
 
-  Due to @slotqueue-one-enqueuer-one-dequeuer-lemma, there can only be at most one enqueue at one point in time within $e$.
+  Due to @slotqueue-one-enqueuer-one-dequeuer-theorem, there can only be at most one enqueue at one point in time within $e$.
 
-  If there's no *successful slot-modification instruction* on slot `s` by a dequeue $d$ within $e$'s *successful CAS-sequence*, then this `enqueue` is ABA-safe.
+  If there's no *successful slot-modification instruction* on slot `s` by a dequeue $d$ within $e$'s *successful CAS-sequence*, then this enqueue is ABA-safe.
 
   Suppose the dequeue $d$ executes the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*. Denote $t_d$ to be the value that $d$ sets `s`.
 
@@ -784,7 +784,7 @@ Both `CAS`es target some slot in the `Slots` array.
 
   Therefore, $t_d = t_e$.
 
-  If $t_d = t_e = $ `MAX_TIMESTAMP`, this means $e$ observes a value of `MAX_TIMESTAMP` before $d$ even sets `s` to `MAX_TIMESTAMP`. If this `MAX_TIMESTAMP` value is the initialized value of `s`, it's a contradiction, as `s` must be non-`MAX_TIMESTAMP` at some point for a dequeue such as $d$ to run. If this `MAX_TIMESTAMP` value is set by an `enqueue`, it's also a contradiction, as `refreshEnqueue` cannot set a slot to `MAX_TIMESTAMP`. Therefore, this `MAX_TIMESTAMP` value is set by a dequeue $d'$. If $d' != d$ then it's a contradiction, because between $d'$ and $d$, `s` must be set to be a non-`MAX_TIMESTAMP` value before $d$ can be run. Therefore, $d' = d$. But, this means $e$ observes a value set by $d$, which violates our assumption.
+  If $t_d = t_e = $ `MAX_TIMESTAMP`, this means $e$ observes a value of `MAX_TIMESTAMP` before $d$ even sets `s` to `MAX_TIMESTAMP`. If this `MAX_TIMESTAMP` value is the initialized value of `s`, it's a contradiction, as `s` must be non-`MAX_TIMESTAMP` at some point for a dequeue such as $d$ to run. If this `MAX_TIMESTAMP` value is set by an enqueue, it's also a contradiction, as `refreshEnqueue` cannot set a slot to `MAX_TIMESTAMP`. Therefore, this `MAX_TIMESTAMP` value is set by a dequeue $d'$. If $d' != d$ then it's a contradiction, because between $d'$ and $d$, `s` must be set to be a non-`MAX_TIMESTAMP` value before $d$ can be run. Therefore, $d' = d$. But, this means $e$ observes a value set by $d$, which violates our assumption.
 
   Therefore $t_d = t_e = t' != $ `MAX_TIMESTAMP`. $e$ cannot observe the value $t'$ set by $d$ due to our assumption. Suppose $e$ observes the value $t'$ from `s` set by another enqueue/dequeue call other than $d$.
 
@@ -792,13 +792,13 @@ Both `CAS`es target some slot in the `Slots` array.
 
   Therefore, this "another call" is an enqueue $e'$ other than $e$ and $e'$ precedes $e$. We know that an enqueue only sets `s` to the timestamp it obtains.
 
-  Suppose $e'$ does not overlap with $d$. $e'$ can only set `s` to $t'$ if $e'$ sees that the local SPSC has the front element as the element it enqueues. Due to @slotqueue-one-enqueuer-one-dequeuer-lemma, this means $e'$ must observe a local SPSC with only the element it enqueues. Then, when $d$ executes `readFront`, the item $e'$ enqueues must have been dequeued out already, thus, $d$ cannot set `s` to $t'$. This is a contradiction.
+  Suppose $e'$ does not overlap with $d$. $e'$ can only set `s` to $t'$ if $e'$ sees that the local SPSC has the front element as the element it enqueues. Due to @slotqueue-one-enqueuer-one-dequeuer-theorem, this means $e'$ must observe a local SPSC with only the element it enqueues. Then, when $d$ executes `readFront`, the item $e'$ enqueues must have been dequeued out already, thus, $d$ cannot set `s` to $t'$. This is a contradiction.
 
   Therefore, $e'$ overlaps with $d$.
 
   For $e'$ to set `s` to the same value as $d$, $e'$'s `spsc_readFront` must serialize after $d$'s `spsc_dequeue`.
 
-  Because $e'$ and $e$ cannot overlap, while $d$ overlaps with both $e'$ and $e$, $d$ must be the _first_ dequeue on `s` that overlaps with $e$. Combining with @slotqueue-one-enqueuer-one-dequeuer-lemma and the fact that $d$ executes the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*, $d$ must be the only dequeue that executes a *successful slot-modification instruction* within $e$'s *successful CAS-sequence*.
+  Because $e'$ and $e$ cannot overlap, while $d$ overlaps with both $e'$ and $e$, $d$ must be the _first_ dequeue on `s` that overlaps with $e$. Combining with @slotqueue-one-enqueuer-one-dequeuer-theorem and the fact that $d$ executes the _last_ *successful slot-modification instruction* on slot `s` within $e$'s *successful CAS-sequence*, $d$ must be the only dequeue that executes a *successful slot-modification instruction* within $e$'s *successful CAS-sequence*.
 
   During the start of $e$'s successful CAS-sequence till the end of $d$, `spsc_readFront` on the local SPSC must return the same element, because:
   - There's no other enqueue running during this time.
@@ -824,34 +824,196 @@ Both `CAS`es target some slot in the `Slots` array.
 
 === Linearizability
 
-#lemma[If an enqueue $e$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` or `refreshDequeue` on $r a n k(e)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-enqueue-lemma>
+#theorem[In LTQueueV2, an enqueue can only match at most one dequeue.] <slotqueue-unique-match-enqueue>
+
+#proof[A dequeue indirectly performs a value dequeue through `spsc_dequeue`. Because `spsc_dequeue` can only match one `spsc_enqueue` by another enqueue, the theorem holds.]
+
+#theorem[In LTQueueV2, a dequeue can only match at most one enqueue.] <slotqueue-unique-match-dequeue>
+
+#proof[This is trivial as a dequeue can only read out at most one value, so it can only match at most one enqueue.]
+
+#theorem[If an enqueue $e$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` or `refreshDequeue` on $r a n k(e)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-enqueue-theorem>
 
 #proof[
-  If one of the two `refreshEnqueue`s succeeds, then the lemma obviously holds.
+  If one of the two `refreshEnqueue`s succeeds, then the theorem obviously holds.
 
   Consider the case where both fail.
 
   The first `refreshEnqueue` fails because there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the first `refreshEnqueue`'s *CAS-sequence*.
 
-  The second `refreshEnqueue` fails because there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the second `refreshEnqueue`'s *CAS-sequence*. This another `refreshDequeue` must start its *CAS-sequence* after the end of the first successful `refreshDequeue`, due to @slotqueue-one-enqueuer-one-dequeuer-lemma. In other words, this another `refreshDequeue` starts and successfully ends its *CAS-sequence* between $t_0$ and $t_1$.
+  The second `refreshEnqueue` fails because there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the second `refreshEnqueue`'s *CAS-sequence*. This another `refreshDequeue` must start its *CAS-sequence* after the end of the first successful `refreshDequeue`, due to @slotqueue-one-enqueuer-one-dequeuer-theorem. In other words, this another `refreshDequeue` starts and successfully ends its *CAS-sequence* between $t_0$ and $t_1$.
 
   We have proved the theorem.
 ]
 
-#lemma[If a dequeue $d$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` or `refreshDequeue` on $r a n k(d)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-dequeue-lemma>
+#theorem[If a dequeue $d$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` or `refreshDequeue` on $r a n k(d)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-dequeue-theorem>
 
-#proof[This is similar to the above lemma.]
+#proof[This is similar to the above theorem.]
 
-#lemma[
+#theorem[
   Given a rank $r$, if an enqueue $e$ on $r$ that obtains the timestamp $c$ completes at $t_0$ and is still unmatched by $t_1$, then $s l o t (r, t) lt.eq c$ for any $t in [t_0, t_1]$.
-] <slotqueue-unmatched-enqueue-lemma>
+] <slotqueue-unmatched-enqueue-theorem>
 
 #proof[
   Take $t'$ to be the time $e$'s `spsc_enqueue` takes effect.
 
-  By @slotqueue-refresh-enqueue-lemma, there must be a successful refresh call that observes the effect of `spsc_enqueue` happening at $t''$, $t'' in [t', t_0]$.
+  By @slotqueue-refresh-enqueue-theorem, there must be a successful refresh call that observes the effect of `spsc_enqueue` happening at $t''$, $t'' in [t', t_0]$.
 
   By the same reasoning as in @aba-safe-slotqueue-theorem, any successful slot-modification instructions happening after $t''$ must observe the effect of `spsc_enqueue`. However, because $e$ is never matched between $t''$ and $t_1$, the timestamp $c$ is in the local SPSC the whole timespan $[t'', t_1]$. Therefore, any slot-modification instructions during $[t'', t_1]$ must set the slot's value to some value not greater than $c$.
+]
+
+#theorem[In LTQueueV2, if an enqueue $e$ precedes another dequeue $d$, then either:
+  - $d$ isn't matched.
+  - $d$ matches $e$.
+  - $e$ matches $d'$ and $d'$ precedes $d$.
+  - $d$ matches $e'$ and $e'$ precedes $e$.
+  - $d$ matches $e'$ and $e'$ overlaps with $e$.
+] <slotqueue-enqueue-dequeue-theorem>
+
+#proof[
+  If $d$ doesn't match anything, the theorem holds. If $d$ matches $e$, the theorem also holds. Suppose $d$ matches $e'$, $e' eq.not e$.
+
+  If $e$ matches $d'$ and $d'$ precedes $d$, the theorem also holds. Suppose $e$ matches $d'$ such that $d$ precedes $d'$ or is unmatched. $(1)$
+
+  Suppose $e$ obtains a timestamp of $c$ and $e'$ obtains a timestamp of $c'$.
+
+  Due to $(1)$, at the time $d$ starts, $e$ has finished but it is still unmatched. By the way @slotqueue-read-minimum-rank is defined and by @slotqueue-unmatched-enqueue-theorem, $d$ would find a slot that stores a timestamp that is not greater than the one $e$ enqueues. In other word, $c' lt.eq c$. But $c' != c$, then $c' < c$. Therefore, $e$ cannot precede $e'$, otherwise, $c < c'$.
+
+  So, either $e'$ precedes or overlaps with $e$. The theorem holds.
+]
+
+#theorem[
+  In LTQueueV2, if $d$ matches $e$, then either $e$ precedes or overlaps with $d$.
+] <slotqueue-matching-dequeue-enqueue-theorem>
+
+#proof[
+  If $d$ precedes $e$, none of the local SPSCs can contain an item with the timestamp of $e$. Therefore, $d$ cannot return an item with a timestamp of $e$. Thus $d$ cannot match $e$.
+
+  Therefore, $e$ either precedes or overlaps with $d$.
+]
+
+#theorem[In LTQueueV2, if a dequeue $d$ precedes another enqueue $e$, then either:
+  - $d$ isn't matched.
+  - $d$ matches $e'$ such that $e'$ precedes or overlaps with $e$ and $e' eq.not e$.
+] <slotqueue-dequeue-enqueue-theorem>
+
+#proof[
+  If $d$ isn't matched, the theorem holds.
+
+  Suppose $d$ matches $e'$. By @slotqueue-matching-dequeue-enqueue-theorem, either $e'$ precedes or overlaps with $d$. Therefore, $e' != e$. Furthermore, $e$ cannot precede $e'$, because then $d$ would precede $e'$.
+
+  We have proved the theorem.
+]
+
+#theorem[If an enqueue $e_0$ precedes another enqueue $e_1$, then either:
+  - Both $e_0$ and $e_1$ aren't matched.
+  - $e_0$ is matched but $e_1$ is not matched.
+  - $e_0$ matches $d_0$ and $e_1$ matches $d_1$ such that $d_0$ precedes $d_1$.
+] <slotqueue-enqueue-enqueue-theorem>
+
+#proof[
+  If $e_1$ is not matched, the theorem holds.
+
+  Suppose $e_1$ matches $d_1$. By @slotqueue-matching-dequeue-enqueue-theorem, either $e_1$ precedes or overlaps with $d_1$.
+
+  Suppose the contrary, $e_0$ is unmatched or $e_0$ matches $d_0$ such that $d_1$ precedes $d_0$, then when $d_1$ starts, $e_0$ is still unmatched.
+
+  If $e_0$ and $e_1$ targets the same rank, it's obvious that $d_1$ must prioritize $e_0$ over $e_1$. Thus $d_1$ cannot match $e_1$.
+
+  If $e_0$ targets a later rank than $e_1$, $d_1$ cannot find $e_1$ in the first scan, because the scan is left-to-right, and if it finds $e_1$ it would later find $e_0$ that has a lower timestamp. Suppose $d_1$ finds $e_1$ in the second scan, that means $d_1$ finds $e' != e_1$ and $e'$'s timestamp is larger than $e_1$'s, which is larger than $e_0$'s. Due to the scan being left-to-right, $e'$ must target a later rank than $e_1$. If $e'$ also targets a later rank than $e_0$, then in the second scan, $d_1$ would have prioritized $e_0$ that has a lower timestamp. Suppose $e'$ targets an earlier rank than $e_0$ but later than $e_1$. Because $e_0$'s timestamp is larger than $e'$'s, it must precede or overlap with $e$. Similarlt, $e_1$ must precede or overlap with $e$. Because $e'$ targets an earlier rank than $e_0$, $e_0$'s *slot-refresh phase* must finish after $e'$'s. That means $e_1$ must start after $e'$'s *slot-refresh phase*, because $e_0$ precedes $e_1$. But then, $e_1$ must obtain a timestamp larger than $e'$, which is a contradiction.
+
+  Suppose $e_0$ targets an earlier rank than $e_1$. If $d_1$ finds $e_1$ in the first scan, than in the second scan, $d_1$ would have prioritize $e_0$'s timestamp. Suppose $d_1$ finds $e_1$ in the second scan and during the first scan, it finds $e' != e_1$ and $e'$'s timestamp is larger than $e_1$'s, which is larger than $e_0$'s. Due to how the second scan is defined, $e'$ targets a later rank than $e_1$, which targets a later rank than $e_0$. Because during the second scan, $e_0$ is not chosen, its *slot-refresh phase* must finish after $e'$'s. Because $e_0$ preceds $e_1$, $e_1$ must start after $e'$'s *slot-refresh phase*, so it must obtain a larger timestamp than $e'$, which is a contradiction.
+
+  Therefore, by contradiction, $e_0$ must be matched and $e_0$ matches $d_0$ such that $d_0$ precedes $d_1$.
+]
+
+#theorem[In LTQueueV2, if a dequeue $d_0$ precedes another dequeue $d_1$, then either:
+  - $d_0$ isn't matched.
+  - $d_1$ isn't matched.
+  - $d_0$ matches $e_0$ and $d_1$ matches $e_1$ such that $e_0$ precedes or overlaps with $e_1$.
+] <slotqueue-dequeue-dequeue-theorem>
+
+#proof[
+  If either $d_0$ isn't matched or $d_1$ isn't matched, the theorem holds.
+
+  Suppose $d_0$ matches $e_0$ and $d_1$ matches $e_1$.
+
+  If $e_1$ precedes $e_0$, applying @slotqueue-enqueue-enqueue-theorem, we have $e_1$ matches $d_1$ and $e_0$ matches $d_0$ such that $d_1$ precedes $d_0$. This is a contradiction.
+
+  Therefore, $e_0$ either precedes or overlaps with $e_1$.
+]
+
+#theorem(
+  name: "Linearizability of LTQueueV2",
+)[LTQueueV2 is linearizable.] <slotqueue-spsc-linearizability-theorem>
+
+#proof[
+  Suppose some history $H$ produced from the Slot-queueu algorithm.
+
+  If $H$ contains some pending method calls, we can just wait for them to complete (because the algorithm is wait-free, which we will prove later). Therefore, now we consider all $H$ to contain only completed method calls. So, we know that if a dequeue or an enqueue in $H$ is matched or not.
+
+  If there are some unmatched enqueues, we can append dequeues sequentially to the end of $H$ until there's no unmatched enqueues. Consider one such $H'$.
+
+  We already have a strict partial order $->$#sub($H'$) on $H'$.
+
+  Because the queue is MPSC, there's already a total order among the dequeues.
+
+  We will extend $->$#sub($H'$) to a strict total order $=>$#sub($H'$) on $H'$ as follows:
+  - If $X ->$#sub($H'$)$Y$ then $X =>$#sub($H'$)$Y$. $(1)$
+  - If a dequeue $d$ matches $e$ then $e =>$#sub($H'$)$d$. $(2)$
+  - If a dequeue $d_0$ matches $e_0$ and another dequeue matches $e_1$ such that $d_0 =>$#sub($H'$)$d_1$ then $e_0 =>$#sub($H'$)$e_1$. $(3)$
+  - If a dequeue $d$ overlaps with an enqueue $e$ but does not match $e$, $d =>$#sub($H'$)$e$. $(4)$
+
+  We will prove that $=>$#sub($H'$) is a strict total order on $H'$. That is, for every pair of different method calls $X$ and $Y$, either exactly one of these is true $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ and for any $X$, $X arrow.double.not$#sub($H'$)$X$.
+
+  It's obvious that $X arrow.double.not$#sub($H'$)$X$.
+
+  If $X$ and $Y$ are dequeues, because there's a total order among the dequeues, either exactly one of these is true: $X ->$#sub($H'$)$Y$ or $Y ->$#sub($H'$)$X$. Then due to $(1)$, either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$. Notice that we cannot obtain $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ from $(2)$, $(3)$, or $(4)$.
+  #linebreak()
+  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(*)$
+
+  If $X$ is a dequeue and $Y$ is an enqueue, in this case $(3)$ cannot help us obtain either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$, so we can disregard it.
+  - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$, so $(4)$ cannot apply. Applying @slotqueue-dequeue-enqueue-theorem, either
+    - $X$ isn't matched, $(2)$ cannot apply. Therefore, $Y arrow.double.not$#sub($H'$)$X$.
+    - $X$ matches $e'$ and $e' eq.not Y$. Therefore, $X$ does not match $Y$, or $(2)$ cannot apply. Therefore, $Y arrow.double.not$#sub($H'$)$X$.
+    Therefore, in this case, $X arrow.double$#sub($H'$)$Y$ and $Y arrow.double.not$#sub($H'$)$X$.
+  - If $Y ->$#sub($H'$)$X$, then due to $(1)$, $Y =>$#sub($H'$)$X$. By definition, $Y$ precedes $X$, so $(4)$ cannot apply. Even if $(2)$ applies, it can only help us obtain $Y =>$#sub($H'$)$X$.
+    #linebreak() Therefore, in this case, $Y arrow.double$#sub($H'$)$X$ and $X arrow.double.not$#sub($H'$)$Y$.
+  - If $X$ overlaps with $Y$:
+    - If $X$ matches $Y$, then due to $(2)$, $Y =>$#sub($H'$)$X$. Because $X$ matches $Y$, $(4)$ cannot apply. Therefore, in this case $Y =>$#sub($H'$)$X$ but $X arrow.double.not$#sub($H'$)$Y$.
+    - If $X$ does not match $Y$, then due to $(4)$, $X =>$#sub($H'$)$Y$. Because $X$ doesn't match $Y$, $(2)$ cannot apply. Therefore, in this case $X =>$#sub($H'$)$Y$ but $Y arrow.double.not$#sub($H'$)$X$.
+  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(**)$
+
+  If $X$ is an enqueue and $Y$ is an enqueue, in this case $(2)$ and $(4)$ are irrelevant:
+  - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$. Applying @slotqueue-enqueue-enqueue-theorem,
+    - Both $X$ and $Y$ aren't matched, then $(3)$ cannot apply. Therefore, in this case, $Y arrow.double.not$#sub($H'$)$X$.
+    - $X$ is matched but $Y$ is not matched, then $(3)$ cannot apply. Therefore, in this case, $Y arrow.double.not$#sub($H'$)$X$.
+    - $X$ matches $d_x$ and $Y$ matches $d_y$ such that $d_x$ precedes $d_y$, then $(3)$ applies and we obtain $X arrow.double$#sub($H'$)$Y$.
+    Therefore, in this case, $X arrow.double$#sub($H'$)$Y$ but $Y arrow.double.not$#sub($H'$)$X$.
+  - If $Y ->$#sub($H'$)$X$, this case is symmetric to the first case. We obtain $Y arrow.double$#sub($H'$)$X$ but $X arrow.double.not$#sub($H'$)$Y$.
+  - If $X$ overlaps with $Y$, because in $H'$, all enqueues are matched, then, $X$ matches $d_x$ and $d_y$. Because $d_x$ either precedes or succeeds $d_y$, Applying $(3)$, we obtain either $X arrow.double$#sub($H'$)$Y$ or $Y arrow.double$#sub($H'$)$X$ and there's no way to obtain the other.
+  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(***)$
+
+  From $(*)$, $(**)$, $(***)$, we have proved that $=>$#sub($H'$) is a strict total ordering that is consistent with $->$#sub($H'$). In other words, we can order method calls in $H'$ in a sequential manner. We will prove that this sequential order is consistent with FIFO semantics: 
+  - An enqueue can only be matched by one dequeue: This follows from @slotqueue-unique-match-enqueue.
+  - A dequeue can only be matched by one enqueue: This follows from @slotqueue-unique-match-dequeue.
+  - The order of item dequeues is the same as the order of item enqueues: Suppose there are two enqueues $e_1$, $e_2$ such that $e_1 arrow.double$#sub($H'$)$e_2$ and suppose they match $d_1$ and $d_2$. Then we have obtained $e_1 arrow.double$#sub($H'$)$e_2$ either because:
+    - $(3)$ applies, in this case $d_1 arrow.double$#sub($H'$)$d_2$ is a condition for it to apply.
+    - $(1)$ applies, then $e_1$ precedes $e_2$, by @slotqueue-enqueue-enqueue-theorem, $d_1$ must precede $d_2$, thus $d_1 arrow.double$#sub($H'$)$d_2$.
+    Therefore, if $e_1 arrow.double$#sub($H'$)$ e_2$ then $d_1 arrow.double$#sub($H'$)$d_2$.
+  - An enqueue can only be matched by a later dequeue: Suppose there is an enqueue $e$ matched by $d$. By $(2)$, obviously $e =>$#sub($H'$)$d$.
+    - If the queue is empty, dequeues return `false`. Suppose a dequeue $d$ such that any $e arrow.double$#sub($H'$)$d$ is all matched by some $d'$ and $d' arrow.double$#sub($H'$)$d$, we will prove that $d$ is unmatched. By @slotqueue-matching-dequeue-enqueue-theorem, $d$ can only match an enqueue $e_0$ that precedes or overlaps with $d$.
+      - If $e_0$ precedes $d$, by our assumption, it's already matched by another dequeue.
+      - If $e_0$ overlaps with $d$, by our assumption, $d arrow.double$#sub($H'$)$e_0$ because if $e_0 arrow.double$#sub($H'$)$d$, $e_0$ is already matched by another $d'$. Then, we can only obtain this because $(4)$ applies, but then $d$ does not match $e_0$.
+    Therefore, $d$ is unmatched.
+  - A dequeue returns `false` when the queue is empty: To put more precisely, for a dequeue $d$, if every successful enqueue $e'$ such that $e' =>$#sub($H'$)$d$ has been matched by $d'$ such that $d' =>$#sub($H'$)$d$, then $d$ would be unmatched and return `false`. Suppose the contrary, $d$ matches $e$. By definition, $e =>$#sub($H'$)$d$. This is a contradiction by our assumption.
+  - A dequeue returns `true` and matches an enqueue when the queue is not empty: To put more precisely, for a dequeue $d$, if there exists a successful enqueue $e'$ such that $e' =>$#sub($H'$)$d$ and has not been matched by a dequeue $d'$ such that $d' =>$#sub($H'$)$e'$, then $d$ would be match some $e$ and return `true`. This follows from @slotqueue-unmatched-enqueue-theorem.
+  - An enqueue that returns `true` will be matched if there are enough dequeues after that: Based on how @slotqueue-enqueue is defined, when an enqueue returns `true`, it has successfully execute `spsc_enqueue`. By @slotqueue-unmatched-enqueue-theorem, at some point, it would eventually be matched.
+  - An enqueue that returns `false` will never be matched: Based on how @slotqueue-enqueue is defined, when an enqueue returns `false`, the state of LTQueueV2 is not changed, except for the distributed counter. Therefore, it could never be matched.
+
+  In conclusion, $=>$#sub($H'$) is a way we can order method calls in $H'$ sequentially that conforms to FIFO semantics. Therefore, we can also order method calls in $H$ sequentially that conforms to FIFO semantics as we only append dequeues sequentially to the end of $H$ to obtain $H'$.
+
+  We have proved the theorem.
 ]
 
 === Progress guarantee
