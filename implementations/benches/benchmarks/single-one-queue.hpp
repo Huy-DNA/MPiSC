@@ -307,7 +307,6 @@ ltqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
 
     if (rank == 0) {
       LTDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
-      std::this_thread::sleep_for(std::chrono::microseconds(100));
       MPI_Barrier(MPI_COMM_WORLD);
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
