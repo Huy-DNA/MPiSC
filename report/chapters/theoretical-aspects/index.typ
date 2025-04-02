@@ -264,7 +264,28 @@ As a reminder, the bottom rectangular nodes are called the *enqueuer nodes* and 
 
 === Linearizability
 
+#theorem[Only the dequeuer and one enqueuer can operate on an enqueuer node.]
 
+#proof[This is trivial based on how the algorithm is defined.]
+
+We immediately obtain the following result.
+
+#corollary[Only one dequeue operation and one enqueue operation can operate concurrently on an enqueuer node.] <ltqueue-one-dequeue-one-enqueue-corollary>
+
+
+#theorem[The SPSC at an enqueuer node contains items with increasing timestamps.] <ltqueue-increasing-timestamp-theorem>
+
+#proof[
+  Each enqueue would `FAA` the distributed counter (line 14 in @ltqueue-enqueue) and enqueue into the SPSC an item with the timestamp obtained from that counter. Applying @ltqueue-one-dequeue-one-enqueue-corollary, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later enqueues, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
+]
+
+#theorem[For an enqueue or a dequeue $op$, if $op$ modifies an enqueuer node and this enqueuer node is attached to a leaf node $l$, then $p a t h(op)$ is the set of nodes lying on the path from $l$ to the root node.]
+
+#proof[This is trivial considering how `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) and `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) work.]
+
+#theorem[For any time $t$ and a node $n$, $r a n k(n, t)$ can only be `DUMMY_RANK` or the rank of an enqueuer that's attached to the subtree rooted at $n$.] <ltqueue-possible-ranks-theorem>
+
+#proof[This is trivial considering how `refreshNode`#sub(`e`), `refreshNode`#sub(`d`) and `refreshLeaf`#sub(`e`), `refreshLeaf`#sub(`d`) works.]
 
 === Progress guarantee
 

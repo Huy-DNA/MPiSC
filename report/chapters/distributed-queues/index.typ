@@ -435,7 +435,7 @@ The followings are the enqueuer procedures.
     booktabs: true,
     numbered-title: [`bool enqueue(data_t value)`],
   )[
-    + `timestamp = fetch_and_add_sync(Counter, 1)                                                 `
+    + `timestamp = fetch_and_add_sync(Counter, 1)                                        `
     + `spsc_enqueue(&Spsc, (value, timestamp))`
     + `propagate`#sub(`e`)`()`
   ],
