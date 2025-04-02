@@ -88,7 +88,7 @@ Our SPSC supports 3 methods:
   - The order of item dequeues is the same as the order of item enqueues.
   - An enqueue can only be matched by a later dequeue.
   - A dequeue returns `false` when the queue is empty.
-  - A dequeue returns `true` and matches an enqueue when the queue is not empty
+  - A dequeue returns `true` and matches an enqueue when the queue is not empty.
   - An enqueue returns `false` when the queue is full.
   - An enqueue would return `true` when the queue is not full and the number of elements should increase by one.
   - A read-front would return `false` when the queue is empty.
@@ -278,11 +278,11 @@ Notice that at these locations, we increase the associated version tags of the C
 
 === Linearizability
 
-#theorem[An enqueue can only match at most one dequeue.]
+#theorem[In LTQueueV1, an enqueue can only match at most one dequeue.] <ltqueue-unique-match-enqueue>
 
 #proof[A dequeue indirectly performs a value dequeue through `spsc_dequeue`. Because `spsc_dequeue` can only match one `spsc_enqueue` by another enqueue, the theorem holds.]
 
-#theorem[A dequeue can only match at most one enqueue.]
+#theorem[A dequeue can only match at most one enqueue.] <ltqueue-unique-match-dequeue>
 
 #proof[This is trivial as a dequeue can only read out at most one value, so it can only match at most one enqueue.]
 
@@ -293,7 +293,6 @@ Notice that at these locations, we increase the associated version tags of the C
 We immediately obtain the following result.
 
 #corollary[Only one dequeue operation and one enqueue operation can operate concurrently on an enqueuer node.] <ltqueue-one-dequeue-one-enqueue-corollary>
-
 
 #theorem[The SPSC at an enqueuer node contains items with increasing timestamps.] <ltqueue-increasing-timestamp-theorem>
 
@@ -573,6 +572,77 @@ We immediately obtain the following result.
   - $e_1$ matches $d_1$ and $e_0$ matches $d_0$ such that $d_1$ precedes $d_0$, which is contradictory.
 
   Therefore, the theorem holds.
+]
+
+#theorem[The LTQueueV1 algorithm is linearizable.]
+
+#proof[
+  Suppose some history $H$ produced from the modified LTQueueV1 algorithm.
+
+  If $H$ contains some pending method calls, we can just wait for them to complete (because the algorithm is wait-free, which we will prove later). Therefore, now we consider all $H$ to contain only completed method calls. So, we know that if a dequeue or an enqueue in $H$ is matched or not.
+
+  If there are some unmatched enqueues, we can append dequeues sequentially to the end of $H$ until there's no unmatched enqueues. Consider one such $H'$.
+
+  We already have a strict partial order $->$#sub($H'$) on $H'$.
+
+  Because the queue is MPSC, there's already a total order among the dequeues.
+
+  We will extend $->$#sub($H'$) to a strict total order $=>$#sub($H'$) on $H'$ as follows:
+  - If $X ->$#sub($H'$)$Y$ then $X =>$#sub($H'$)$Y$. $(1)$
+  - If a dequeue $d$ matches $e$ then $e =>$#sub($H'$)$d$. $(2)$
+  - If a dequeue $d_0$ matches $e_0$ and another dequeue matches $e_1$ such that $d_0 =>$#sub($H'$)$d_1$ then $e_0 =>$#sub($H'$)$e_1$. $(3)$
+  - If a dequeue $d$ overlaps with an enqueue $e$ but does not match $e$, $d =>$#sub($H'$)$e$. $(4)$
+
+  We will prove that $=>$#sub($H'$) is a strict total order on $H'$. That is, for every pair of different method calls $X$ and $Y$, either exactly one of these is true $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ and for any $X$, $X arrow.double.not$#sub($H'$)$X$.
+
+  It's obvious that $X arrow.double.not$#sub($H'$)$X$.
+
+  If $X$ and $Y$ are dequeues, because there's a total order among the dequeues, either exactly one of these is true: $X ->$#sub($H'$)$Y$ or $Y ->$#sub($H'$)$X$. Then due to $(1)$, either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$. Notice that we cannot obtain $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ from $(2)$, $(3)$, or $(4)$.
+  #linebreak()
+  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(*)$
+
+  If $X$ is a dequeue and $Y$ is a enqueue, in this case $(3)$ cannot help us obtain either $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$, so we can disregard it.
+  - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$, so $(4)$ cannot apply. Applying @ltqueue-dequeue-enqueue-theorem, either
+    - $X$ isn't matched, $(2)$ cannot apply. Therefore, $Y arrow.double.not$#sub($H'$)$X$.
+    - $X$ matches $e'$ and $e' eq.not Y$. Therefore, $X$ does not match $Y$, or $(2)$ cannot apply. Therefore, $Y arrow.double.not$#sub($H'$)$X$.
+    Therefore, in this case, $X arrow.double$#sub($H'$)$Y$ and $Y arrow.double.not$#sub($H'$)$X$.
+  - If $Y ->$#sub($H'$)$X$, then due to $(1)$, $Y =>$#sub($H'$)$X$. By definition, $Y$ precedes $X$, so $(4)$ cannot apply. Even if $(2)$ applies, it can only help us obtain $Y =>$#sub($H'$)$X$.
+    #linebreak() Therefore, in this case, $Y arrow.double$#sub($H'$)$X$ and $X arrow.double.not$#sub($H'$)$Y$.
+  - If $X$ overlaps with $Y$:
+    - If $X$ matches $Y$, then due to $(2)$, $Y =>$#sub($H'$)$X$. Because $X$ matches $Y$, $(4)$ cannot apply. Therefore, in this case $Y =>$#sub($H'$)$X$ but $X arrow.double.not$#sub($H'$)$Y$.
+    - If $X$ does not match $Y$, then due to $(4)$, $X =>$#sub($H'$)$Y$. Because $X$ doesn't match $Y$, $(2)$ cannot apply. Therefore, in this case $X =>$#sub($H'$)$Y$ but $Y arrow.double.not$#sub($H'$)$X$.
+  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(**)$
+
+  If $X$ is an enqueue and $Y$ is an enqueue, in this case $(2)$ and $(4)$ are irrelevant:
+  - If $X ->$#sub($H'$)$Y$, then due to $(1)$, $X =>$#sub($H'$)$Y$. By definition, $X$ precedes $Y$. Applying @ltqueue-enqueue-enqueue-theorem,
+    - Both $X$ and $Y$ aren't matched, then $(3)$ cannot apply. Therefore, in this case, $Y arrow.double.not$#sub($H'$)$X$.
+    - $X$ is matched but $Y$ is not matched, then $(3)$ cannot apply. Therefore, in this case, $Y arrow.double.not$#sub($H'$)$X$.
+    - $X$ matches $d_x$ and $Y$ matches $d_y$ such that $d_x$ precedes $d_y$, then $(3)$ applies and we obtain $X arrow.double$#sub($H'$)$Y$.
+    Therefore, in this case, $X arrow.double$#sub($H'$)$Y$ but $Y arrow.double.not$#sub($H'$)$X$.
+  - If $Y ->$#sub($H'$)$X$, this case is symmetric to the first case. We obtain $Y arrow.double$#sub($H'$)$X$ but $X arrow.double.not$#sub($H'$)$Y$.
+  - If $X$ overlaps with $Y$, because in $H'$, all `enqueue`s are matched, then, $X$ matches $d_x$ and $d_y$. Because $d_x$ either precedes or succeeds $d_y$, Applying $(3)$, we obtain either $X arrow.double$#sub($H'$)$Y$ or $Y arrow.double$#sub($H'$)$X$ and there's no way to obtain the other.
+  Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(***)$
+
+  From $(*)$, $(**)$, $(***)$, we have proved that $=>$#sub($H'$) is a strict total ordering that is consistent with $->$#sub($H'$). In other words, we can order method calls in $H'$ in a sequential manner. We will prove that this sequential order is consistent with FIFO semantics:
+  - An enqueue can only be matched by one dequeue: This follows from @ltqueue-unique-match-enqueue.
+  - A dequeue can only be matched by one enqueue: This follows from @ltqueue-unique-match-dequeue.
+  - The order of item dequeues is the same as the order of item enqueues: Suppose there are two `enqueue`s $e_1$, $e_2$ such that $e_1 arrow.double$#sub($H'$)$e_2$ and suppose they match $d_1$ and $d_2$. Then we have obtained $e_1 arrow.double$#sub($H'$)$e_2$ either because:
+    - $(3)$ applies, in this case $d_1 arrow.double$#sub($H'$)$d_2$ is a condition for it to apply.
+    - $(1)$ applies, then $e_1$ precedes $e_2$, by @ltqueue-enqueue-enqueue-theorem, $d_1$ must precede $d_2$, thus $d_1 arrow.double$#sub($H'$)$d_2$.
+    Therefore, if $e_1 arrow.double$#sub($H'$)$ e_2$ then $d_1 arrow.double$#sub($H'$)$d_2$.
+  - An enqueue can only be matched by a later dequeue: Suppose there is an `enqueue` $e$ matched by $d$. By $(2)$, obviously $e =>$#sub($H'$)$d$.
+    - If the queue is empty, `dequeue`s return `false`. Suppose a dequeue $d$ such that any $e arrow.double$#sub($H'$)$d$ is all matched by some $d'$ and $d' arrow.double$#sub($H'$)$d$, we will prove that $d$ is unmatched. By @ltqueue-matching-dequeue-enqueue-lemma, $d$ can only match an `enqueue` $e_0$ that precedes or overlaps with $d$.
+      - If $e_0$ precedes $d$, by our assumption, it's already matched by another `dequeue`.
+      - If $e_0$ overlaps with $d$, by our assumption, $d arrow.double$#sub($H'$)$e_0$ because if $e_0 arrow.double$#sub($H'$)$d$, $e_0$ is already matched by another $d'$. Then, we can only obtain this because $(4)$ applies, but then $d$ does not match $e_0$.
+    Therefore, $d$ is unmatched.
+  - A dequeue returns `false` when the queue is empty.
+  - A dequeue returns `true` and matches an enqueue when the queue is not empty.
+  - An enqueue returns `false` when the queue is full.
+  - An enqueue would return `true` when the queue is not full and the number of elements should increase by one.
+
+  In conclusion, $=>$#sub($H'$) is a way we can order method calls in $H'$ sequentially that conforms to FIFO semantics. Therefore, we can also order method calls in $H$ sequentially that conforms to FIFO semantics as we only append dequeues sequentially to the end of $H$ to obtain $H'$.
+
+  We have proved the theorem.
 ]
 
 === Progress guarantee
