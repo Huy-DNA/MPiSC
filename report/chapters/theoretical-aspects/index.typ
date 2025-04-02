@@ -362,6 +362,64 @@ We immediately obtain the following result.
   Combining $(*)$, $(**)$, $(***)$, we obtain the stronger version of the theorem.
 ]
 
+
+#theorem[If an enqueue $e$ obtains a timestamp $c$, finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a dequeue, $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.] <ltqueue-unmatched-enqueue-theorem>
+
+#proof[
+  We will prove a stronger version of this theorem: Suppose an enqueue $e$ obtains a timestamp $c$, finishes at time $t_0$ and is still *unmatched* at time $t_1$. For every $n_i in p a t h(e)$, $n_0$ is the leaf node and $n_i$ is the parent of $n_(i-1)$, $i gt.eq 1$. If $e$ starts and finishes its *node-$n_i$-refresh phase* at $t_(s t a r t\-i)$ and $t_(e n d\-i)$ then for any subrange $T$ of $[t_(e n d\-i), t_1]$ that does not overlap with a dequeue $d$ where $n_i in p a t h(d)$ and $d$ hasn't finished its *node $n_i$ refresh phase*, $m i n \- t s(r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.
+
+  If $t_1 lt t_0$ then the theorem holds.
+
+  Take $r_e$ to be the rank of the enqueuer that performs $e$.
+
+  Suppose $e$ enqueues an item with the timestamp $c$ into the local SPSC at time $t_(e n q u e u e)$. Because it's still unmatched up until $t_1$, $c$ is always in the local SPSC during $t_(e n q u e u e)$ to $t_1$. Therefore, $m i n \- s p s c \- t s(r_e, t) lt.eq c$ for any $t in [t_(e n q u e u e), t_1]$. $(1)$
+
+  Suppose $e$ finishes its *timestamp refresh phase* at $t_(r\-t s)$. Because $t_(r\-t s) gt.eq t_(e n q u e u e)$, due to $(1)$, $m i n \- t s(r_e, t) lt.eq c$ for every $t in [t_(r\-t s),t_1]$. $(2)$
+
+  Consider the leaf node $n_0 in p a t h (e)$. Due to $(2)$, $r a n k(n_0, t)$ is always $r_e$ for any $t in [t_(e n d\-0), t_1]$. Also due to $(2)$, $m i n \- t s(r a n k(n_0, t_r), t_s) lt.eq c$ for any $t_r, t_s in [t_(e n d\-0), t_1]$.
+
+  Consider any non-leaf node $n_i in p a t h(e)$. We can extend any subrange $T$ to the left until we either:
+  - Reach a dequeue $d$ such that $n_i in p a t h (d)$ and $d$ has just finished its *node-$n_i$-refresh phase*.
+  - Reach $t_(e n d \- i)$.
+  Consider one such subrange $T_i$.
+
+  Notice that $T_i$ always starts right after a *node-$n_i$-refresh phase*. Due to @ltqueue-refresh-node-theorem, there's always at least one successful `refreshNode` in this *node-$n_i$-refresh phase*.
+
+  Suppose the stronger version of the theorem already holds for $n_(i-1)$. That is, if $e$ starts and finishes its *node-$n_(i-1)$-refresh phase* at $t_(s t a r t\-(i-1))$ and $t_(e n d\-(i-1))$ then for any subrange $T$ of $[t_(e n d\-(i-1)), t_1]$ that does not overlap with a dequeue $d$ where $n_i in p a t h(d)$ and $d$ hasn't finished its *node $n_(i-1)$ refresh phase*, $m i n \- t s(r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.
+
+  Extend $T_i$ to the left until we either:
+  - Reach a dequeue $d$ such that $n_i in p a t h (d)$ and $d$ has just finished its *node-$n_(i-1)$-refresh phase*.
+  - Reach $t_(e n d \- (i-1))$.
+  Take the resulting range to be $T_(i-1)$. Obviously, $T_i subset.eq T_(i-1)$.
+
+  $T_(i-1)$ satisifies both criteria:
+  - It's a subrange of $[t_(e n d\-(i-1)), t_1]$.
+  - It does not overlap with a dequeue $d$ where $n_i in p a t h(d)$ and $d$ hasn't finished its *node-$n_(i-1)$-refresh phase*.
+  Therefore, $m i n \- t s(r a n k(n_(i-1), t_r), t_s) lt.eq c$ for any $t_r, t_s in T_(i-1)$.
+
+  Consider the last successful `refreshNode` on $n_i$ ending not after $T_i$, take $t_s'$ and $t_e'$ to be the start and end time of this `refreshNode`'s CAS-sequence. Because right at the start of $T_i$, a *node-$n_i$-refresh phase* just ends, this `refreshNode` must be within this *node-$n_i$-refresh phase*. $(4)$
+
+  This `refreshNode`'s CAS-sequence must be within $T_(i-1)$. This is because right at the start of $T_(i-1)$, a *node-$n_(i-1)$-refresh phase* just ends and $T_(i-1) supset.eq T_i$, $T_(i-1)$ must cover the *node-$n_i$-refresh phase* whose end $T_i$ starts from. Combining with $(4)$, $t_s' in T_(i-1)$ and $t_e' in T_i$. $(5)$
+
+  Due to how `refreshNode` is defined and the fact that $n_(i-1)$ is a child of $n_i$:
+  - $t_(r a n k)$ is the time `refreshNode` reads the rank stored in $n_(i-1)$, so that $t_s' lt.eq t_(r a n k) lt.eq t_e'$. Combining with $(5)$, $t_(r a n k) in T_(i-1)$.
+  - $t_(t s)$ is the time `refreshNode` reads the timestamp from that rank $t_s' lt.eq t_(t s) lt.eq t_e'$. Combining with $(5)$, $t_(t s) in T_(i-1)$.
+  - There exists a time $t'$, $t_s' lt.eq t' lt.eq t_e'$, #linebreak() $m i n \- t s(r a n k(n_i, t_e'), t') lt.eq m i n \- t s (r a n k(n_(i-1), t_(r a n k)), t_(t s))$. $(6)$
+
+  From $(6)$ and the fact that $t_(r a n k) in T_(i-1)$ and $t_(t s) in T_(i-1)$, $m i n \- t s(r a n k(n_i, t_e'), t') lt.eq c$.
+
+  There shall be no `spsc_dequeue` starting within $t_s'$ till the end of $T_i$ because:
+  - If there's an `spsc_dequeue` starting within $T_i$, then $T_i$'s assumption is violated.
+  - If there's an `spsc_dequeue` starting after $t_s'$ but before $T_i$, its dequeue must finish its *node-$n_i$-refresh phase* after $t_s'$ and before $T_i$. However, then $t_e'$ is no longer the end of the last successful `refreshNode` on $n_i$ not after $T_i$.
+  Because there's no `spsc_dequeue` starting in this timespan, $m i n \- t s(r a n k(n_i, t_e'), t_e') lt.eq m i n \- t s(r a n k(n_i, t_e'), t') lt.eq c$.
+
+  If there's no dequeue between $t_e'$ and the end of $T_i$ whose *node-$n_i$-refresh phase* hasn't finished, then by @ltqueue-monotonic-theorem, $m i n \- t s(r a n k(n_i, t_r), t_s)$ is monotonically decreasing for any $t_r$, $t_s$ starting from $t_e'$ till the end of $T_i$. Therefore, $m i n \- t s (r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T_i$.
+
+  Suppose there's a dequeue whose *node-$n_i$-refresh phase* is in progress some time between $t_e'$ and the end of $T_i$. By definition, this dequeue must finish it before $T_i$. Because $t_e'$ is the time of the last successful refresh on $n_i$ before $T_i$, $t_e'$ must be within the *node-$n_i$-refresh phase* of this dequeue and there should be no dequeue after that. By the way $t_e'$ is defined, technically, this dequeue has finished its *node-$n_i$-refresh phase* right at $t_e'$. Therefore, similarly, we can apply @ltqueue-monotonic-theorem, $m i n \- t s (r a n k(n_i, t_r), t_s) lt.eq c$ for any $t_r, t_s in T_i$.
+
+  By induction, we have proved the stronger version of the theorem. Therefore, the theorem directly follows.
+]
+
 === Progress guarantee
 
 === Memory reclamation
