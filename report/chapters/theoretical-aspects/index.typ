@@ -278,6 +278,14 @@ Notice that at these locations, we increase the associated version tags of the C
 
 === Linearizability
 
+#theorem[An enqueue can only match at most one dequeue.]
+
+#proof[A dequeue indirectly performs a value dequeue through `spsc_dequeue`. Because `spsc_dequeue` can only match one `spsc_enqueue` by another enqueue, the theorem holds.]
+
+#theorem[A dequeue can only match at most one enqueue.]
+
+#proof[This is trivial as a dequeue can only read out at most one value, so it can only match at most one enqueue.]
+
 #theorem[Only the dequeuer and one enqueuer can operate on an enqueuer node.]
 
 #proof[This is trivial based on how the algorithm is defined.]
@@ -361,7 +369,6 @@ We immediately obtain the following result.
 
   Combining $(*)$, $(**)$, $(***)$, we obtain the stronger version of the theorem.
 ]
-
 
 #theorem[If an enqueue $e$ obtains a timestamp $c$, finishes at time $t_0$ and is still *unmatched* at time $t_1$, then for any subrange $T$ of $[t_0, t_1]$ that does not overlap with a dequeue, $m i n \- t s(r a n k(r o o t, t_r), t_s) lt.eq c$ for any $t_r, t_s in T$.] <ltqueue-unmatched-enqueue-theorem>
 
