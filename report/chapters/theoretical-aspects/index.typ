@@ -824,6 +824,36 @@ Both `CAS`es target some slot in the `Slots` array.
 
 === Linearizability
 
+#lemma[If an enqueue $e$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` or `refreshDequeue` on $r a n k(e)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-enqueue-lemma>
+
+#proof[
+  If one of the two `refreshEnqueue`s succeeds, then the lemma obviously holds.
+
+  Consider the case where both fail.
+
+  The first `refreshEnqueue` fails because there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the first `refreshEnqueue`'s *CAS-sequence*.
+
+  The second `refreshEnqueue` fails because there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the second `refreshEnqueue`'s *CAS-sequence*. This another `refreshDequeue` must start its *CAS-sequence* after the end of the first successful `refreshDequeue`, due to @slotqueue-one-enqueuer-one-dequeuer-lemma. In other words, this another `refreshDequeue` starts and successfully ends its *CAS-sequence* between $t_0$ and $t_1$.
+
+  We have proved the theorem.
+]
+
+#lemma[If a dequeue $d$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` or `refreshDequeue` on $r a n k(d)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-dequeue-lemma>
+
+#proof[This is similar to the above lemma.]
+
+#lemma[
+  Given a rank $r$, if an enqueue $e$ on $r$ that obtains the timestamp $c$ completes at $t_0$ and is still unmatched by $t_1$, then $s l o t (r, t) lt.eq c$ for any $t in [t_0, t_1]$.
+] <slotqueue-unmatched-enqueue-lemma>
+
+#proof[
+  Take $t'$ to be the time $e$'s `spsc_enqueue` takes effect.
+
+  By @slotqueue-refresh-enqueue-lemma, there must be a successful refresh call that observes the effect of `spsc_enqueue` happening at $t''$, $t'' in [t', t_0]$.
+
+  By the same reasoning as in @aba-safe-slotqueue-theorem, any successful slot-modification instructions happening after $t''$ must observe the effect of `spsc_enqueue`. However, because $e$ is never matched between $t''$ and $t_1$, the timestamp $c$ is in the local SPSC the whole timespan $[t'', t_1]$. Therefore, any slot-modification instructions during $[t'', t_1]$ must set the slot's value to some value not greater than $c$.
+]
+
 === Progress guarantee
 
 === Memory reclamation
