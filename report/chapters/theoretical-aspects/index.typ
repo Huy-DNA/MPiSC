@@ -319,6 +319,10 @@ We immediately obtain the following result.
   We have proved the theorem.
 ]
 
+#theorem[If an enqueue or a dequeue begins its *node-$n$-refresh phase* at $t_0$ and finishes at $t_1$, there's always at least one successful `refreshNode` or `refreshLeaf` calls affecting $n$ and this successful call starts and ends its *CAS-sequence* between $t_0$ and $t_1$.] <ltqueue-refresh-node-theorem>
+
+#proof[This is similar to the above proof.]
+
 === Progress guarantee
 
 === Memory reclamation
