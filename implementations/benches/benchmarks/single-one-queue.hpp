@@ -11,7 +11,7 @@
 
 inline void
 slotqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
-                                          int iterations = 10) {
+                                     int iterations = 10) {
   int size;
   int rank;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -59,7 +59,7 @@ slotqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
       local_dequeues_microseconds = local_microseconds;
     } else {
       SlotEnqueuer<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
-      int warm_up_elements = elements_per_queue / 1000;
+      int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
         if (queue.enqueue(i)) {
@@ -143,8 +143,9 @@ slotqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
          total_enqueues_latency_microseconds);
 }
 
-inline void slotqueueV2_single_one_queue_benchmark(
-    unsigned long long number_of_elements, int iterations = 10) {
+inline void
+slotqueueV2_single_one_queue_benchmark(unsigned long long number_of_elements,
+                                       int iterations = 10) {
   int size;
   int rank;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -192,7 +193,7 @@ inline void slotqueueV2_single_one_queue_benchmark(
       local_dequeues_microseconds = local_microseconds;
     } else {
       SlotEnqueuerV2<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
-      int warm_up_elements = elements_per_queue / 1000;
+      int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
         if (queue.enqueue(i)) {
@@ -278,7 +279,7 @@ inline void slotqueueV2_single_one_queue_benchmark(
 
 inline void
 ltqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
-                                        int iterations = 10) {
+                                   int iterations = 10) {
   int size;
   int rank;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -327,7 +328,7 @@ ltqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
       local_dequeues_microseconds = local_microseconds;
     } else {
       LTEnqueuer<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
-      int warm_up_elements = elements_per_queue / 1000;
+      int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
         if (queue.enqueue(i)) {
@@ -354,6 +355,8 @@ ltqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
       auto t4 = std::chrono::high_resolution_clock::now();
       local_microseconds =
           std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1)
+              .count() +
+          std::chrono::duration_cast<std::chrono::microseconds>(t4 - t3)
               .count() -
           workload_microseconds;
       local_enqueues_microseconds = local_microseconds;
@@ -411,7 +414,7 @@ ltqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
 
 inline void
 fastqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
-                                          int iterations = 10) {
+                                     int iterations = 10) {
   int size;
   int rank;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -458,7 +461,7 @@ fastqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
       local_dequeues_microseconds = local_microseconds;
     } else {
       FastEnqueuer<int> queue(number_of_elements, 0, rank, MPI_COMM_WORLD);
-      int warm_up_elements = elements_per_queue / 1000;
+      int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
         if (queue.enqueue(i)) {
