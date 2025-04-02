@@ -230,6 +230,8 @@ As a reminder, the bottom rectangular nodes are called the *enqueuer nodes* and 
   ],
 )
 
+We will refer `propagate`#sub(`e`) and `propagate`#sub(`d`) as `propagate` if there's no need for discrimination. Similarly, we will sometimes refer to `refreshNode`#sub(`e`) and `refreshNode`#sub(`d`) as `refreshNode`, `refreshLeaf`#sub(`e`) and `refreshLeaf`#sub(`d`) as `refreshLeaf`, `refreshTimestamp`#sub(`e`) and `refreshTimestamp`#sub(`d`) as `refreshTimestamp`.
+
 #definition[For a tree node $n$, the rank stored in $n$ at time $t$ is denoted as $r a n k(n, t)$.]
 
 #definition[For an enqueue or a dequeue $op$, the rank of the enqueuer it affects is denoted as $r a n k(op)$.]
@@ -262,6 +264,18 @@ As a reminder, the bottom rectangular nodes are called the *enqueuer nodes* and 
 
 #definition[`refreshLeaf`#sub(`d`) (@ltqueue-dequeue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 109. `refreshLeaf`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 114.]
 
+=== ABA problem
+
+We use CAS instructions on:
+- Line 34 and line 36 of `refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp).
+- Line 52 of `refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node).
+- Line 60 of `refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf).
+- Line 88 and line 90 of `refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp).
+- Line 106 of `refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node).
+- Line 114 of `refreshLeaf`#sub(`e`) (@ltqueue-dequeue-refresh-leaf).
+
+Notice that at these locations, we increase the associated version tags of the CAS-ed values. These version tags are 32-bit in size, therefore, practically, ABA problem can't virtually occur. It's safe to assume that there's no ABA problem in LTQueueV1.
+
 === Linearizability
 
 #theorem[Only the dequeuer and one enqueuer can operate on an enqueuer node.]
@@ -287,9 +301,25 @@ We immediately obtain the following result.
 
 #proof[This is trivial considering how `refreshNode`#sub(`e`), `refreshNode`#sub(`d`) and `refreshLeaf`#sub(`e`), `refreshLeaf`#sub(`d`) works.]
 
-=== Progress guarantee
+#theorem[If an enqueue or a dequeue $op$ begins its *timestamp-refresh phase* at $t_0$ and finishes at time $t_1$, there's always at least one successful call to `refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp) or `refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp) that affects the enqueuer node corresponding to $r a n k(op)$ and this successful call starts and ends its *CAS-sequence* between $t_0$ and $t_1$.] <ltqueue-refresh-timestamp-theorem>
 
-=== ABA problem
+#proof[
+  Suppose the interested *timestamp-refresh phase* affects the enqueuer node $n$.
+
+  Notice that the *timestamp-refresh phase* of both enqueue and dequeue consists of at most 2 `refreshTimestamp` calls affecting $n$.
+
+  If one of the two `refreshTimestamp`s of the *timestamp-refresh phase* succeeds, then the theorem obviously holds.
+
+  Consider the case where both fail.
+
+  The first `refreshTimestamp` fails because there's another `refreshTimestamp` on $n$ ending its *CAS-sequence* successfully after $t_0$ but before the end of the first `refreshTimestamp`'s *CAS-sequence*.
+
+  The second `refreshTimestamp` fails because there's another `refreshTimestamp` on $n$ ending its *CAS-sequence* successfully after $t_0$ but before the end of the second `refreshTimestamp`'s *CAS-sequence*. This another `refreshTimestamp` must start its *CAS-sequence* after the end of the first successful `refreshTimestamp`, otherwise, it would overlap with the *CAS-sequence* of the first successful `refreshTimestamp`, but successful *CAS-sequences* on the same enqueuer node cannot overlap as ABA problem does not occur. In other words, this another `refreshTimestamp` starts and successfully ends its *CAS-sequence* between $t_0$ and $t_1$.
+
+  We have proved the theorem.
+]
+
+=== Progress guarantee
 
 === Memory reclamation
 
