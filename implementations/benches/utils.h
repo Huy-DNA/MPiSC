@@ -60,6 +60,7 @@ inline void report_RMO_latency(unsigned int ops = 1000) {
   MPI_Info info;
   MPI_Info_create(&info);
   MPI_Info_set(info, "same_disp_unit", "true");
+  MPI_Info_set(info, "accumulate_ordering", "none");
 
   double local_atomic_read_microseconds = 0;
   double local_atomic_write_microseconds = 0;
