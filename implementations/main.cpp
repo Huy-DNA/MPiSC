@@ -66,10 +66,10 @@ int main(int argc, char **argv) {
   }
 
   if (run_micro) {
-    // slotqueue_single_one_queue_microbenchmark(100000, 5);
+    slotqueue_single_one_queue_microbenchmark(100000, 5);
     slotqueueV2_single_one_queue_microbenchmark(100000, 5);
-    // ltqueue_single_one_queue_microbenchmark(100000, 5);
-    // fastqueue_single_one_queue_microbenchmark(100000, 5);
+    ltqueue_single_one_queue_microbenchmark(100000, 5);
+    fastqueue_single_one_queue_microbenchmark(100000, 5);
   }
 
   if (run_bench) {
