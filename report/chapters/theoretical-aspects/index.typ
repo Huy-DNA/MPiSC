@@ -676,11 +676,11 @@ We apply some domain knowledge of LTQueueV2 algorithm to the definitions introdu
 
 #definition[A *slot-modification instruction* on a slot `s` of an enqueue that affects `s` is line 16 of `refreshEnqueue` (@slotqueue-refresh-enqueue).]
 
-#definition[A *CAS-sequence* on a slot `s` of a dequeue that affects `s` is the sequence of instructions from line 44 to line 48 of its `refreshDequeue` (@slotqueue-refresh-dequeue).]
+#definition[A *CAS-sequence* on a slot `s` of a dequeue that affects `s` is the sequence of instructions from line 46 to line 50 of its `refreshDequeue` (@slotqueue-refresh-dequeue).]
 
-#definition[A *slot-modification instruction* on a slot `s` of a dequeue that affects `s` is line 48 of `refreshDequeue` (@slotqueue-refresh-dequeue).]
+#definition[A *slot-modification instruction* on a slot `s` of a dequeue that affects `s` is line 50 of `refreshDequeue` (@slotqueue-refresh-dequeue).]
 
-#definition[A *CAS-sequence* of a dequeue/enqueue is said to *observe a slot value of $s_0$* if it loads $s_0$ at line 10 of `refreshEnqueue` or line 44 of `refreshDequeue`.]
+#definition[A *CAS-sequence* of a dequeue/enqueue is said to *observe a slot value of $s_0$* if it loads $s_0$ at line 10 of `refreshEnqueue` or line 46 of `refreshDequeue`.]
 
 The followings are some other definitions that will be used throughout our proof.
 
@@ -694,7 +694,7 @@ The followings are some other definitions that will be used throughout our proof
 
 #definition[For a dequeue, *slot-refresh phase* refer to its execution of line 24-25 of @slotqueue-dequeue.]
 
-#definition[For a dequeue, *slot-scan phase* refer to its execution of line 27-41 of @slotqueue-read-minimum-rank.]
+#definition[For a dequeue, *slot-scan phase* refer to its execution of line 27-43 of @slotqueue-read-minimum-rank.]
 
 === ABA problem
 

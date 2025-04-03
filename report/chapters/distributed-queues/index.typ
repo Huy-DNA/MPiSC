@@ -855,6 +855,8 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
     + *for* `index` *in* `0..Enqueuer_count`
       + `aread_async(Slots, index, &bufferred_slots[index])`
     + `flush(Slots)`
+    + *if* every entry in `bufferred_slots` is `MAX_TIMESTAMP`
+      + *return* `DUMMY_RANK`
     + *for* `index` *in* `0..Enqueuer_count`
       + `aread_async(Slots, index, &bufferred_slots[index])`
     + `flush(Slots)`
@@ -869,13 +871,13 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
   ],
 ) <slotqueue-read-minimum-rank>
 
-`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (line 27). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (line 28-33). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (line 36-41).
+`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (line 27). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (line 28-33). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (line 32). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (line 38-43).
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 41,
+    line-numbering: i => i + 43,
     booktabs: true,
     numbered-title: [`refreshDequeue(rank: int)` *returns* `bool`],
   )[
@@ -891,4 +893,4 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
   ],
 ) <slotqueue-refresh-dequeue>
 
-`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (line 44) and the front element (line 46). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, it's the front element's timestamp (line 47). It finally tries to CAS the slot with the new timestamp (line 48).
+`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (line 46) and the front element (line 48). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, it's the front element's timestamp (line 49). It finally tries to CAS the slot with the new timestamp (line 50).
