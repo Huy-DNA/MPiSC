@@ -78,10 +78,9 @@ inline void read_sync(T *dst, int disp, unsigned int target_rank,
 #ifdef PROFILE
   CALI_CXX_MARK_FUNCTION;
 #endif
-  MPI_Request request;
-  MPI_Rget(dst, sizeof(T), MPI_CHAR, target_rank, disp, sizeof(T), MPI_CHAR,
-           win, &request);
-  MPI_Wait(&request, MPI_STATUS_IGNORE);
+  MPI_Get(dst, sizeof(T), MPI_CHAR, target_rank, disp, sizeof(T), MPI_CHAR,
+          win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -90,10 +89,9 @@ inline void batch_read_sync(T *dst, int size, int disp,
 #ifdef PROFILE
   CALI_CXX_MARK_FUNCTION;
 #endif
-  MPI_Request request;
-  MPI_Rget(dst, sizeof(T) * size, MPI_CHAR, target_rank, disp, size * sizeof(T),
-           MPI_CHAR, win, &request);
-  MPI_Wait(&request, MPI_STATUS_IGNORE);
+  MPI_Get(dst, sizeof(T) * size, MPI_CHAR, target_rank, disp, size * sizeof(T),
+           MPI_CHAR, win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
@@ -158,7 +156,7 @@ inline void batch_awrite_sync(const T *src, int size, int disp,
   CALI_CXX_MARK_FUNCTION;
 #endif
   MPI_Accumulate(src, sizeof(T) * size, MPI_CHAR, target_rank, disp,
-                  sizeof(T) * size, MPI_CHAR, MPI_REPLACE, win);
+                 sizeof(T) * size, MPI_CHAR, MPI_REPLACE, win);
   MPI_Win_flush(target_rank, win);
 }
 
@@ -179,7 +177,7 @@ inline void batch_awrite_async(const T *src, int size, int disp,
   CALI_CXX_MARK_FUNCTION;
 #endif
   MPI_Accumulate(src, sizeof(T) * size, MPI_CHAR, target_rank, disp,
-                  sizeof(T) * size, MPI_CHAR, MPI_REPLACE, win);
+                 sizeof(T) * size, MPI_CHAR, MPI_REPLACE, win);
   MPI_Win_flush(target_rank, win);
 }
 
@@ -212,10 +210,9 @@ inline void aread_sync(T *dst, int disp, unsigned int target_rank,
 #ifdef PROFILE
   CALI_CXX_MARK_FUNCTION;
 #endif
-  MPI_Request request;
-  MPI_Rget_accumulate(NULL, 0, MPI_INT, dst, sizeof(T), MPI_CHAR, target_rank,
-                      disp, sizeof(T), MPI_CHAR, MPI_NO_OP, win, &request);
-  MPI_Wait(&request, MPI_STATUS_IGNORE);
+  MPI_Get_accumulate(NULL, 0, MPI_INT, dst, sizeof(T), MPI_CHAR, target_rank,
+                     disp, sizeof(T), MPI_CHAR, MPI_NO_OP, win);
+  MPI_Win_flush(target_rank, win);
 }
 
 template <typename T>
