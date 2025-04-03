@@ -24,6 +24,8 @@ private:
   const MPI_Aint _host;
   const MPI_Aint _capacity;
 
+  MPI_Info _info;
+
 public:
   FastEnqueuer(MPI_Aint capacity, MPI_Aint host, MPI_Aint self_rank,
                MPI_Comm comm)
@@ -31,18 +33,17 @@ public:
     int rank;
     MPI_Comm_rank(comm, &rank);
 
-    MPI_Info info;
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "same_disp_unit", "true");
+    MPI_Info_create(&this->_info);
+    MPI_Info_set(this->_info, "same_disp_unit", "true");
 
     if (host == rank) {
-      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
+      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
                        &this->_head_ptr, &this->_head_win);
-      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
+      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
                        &this->_tail_ptr, &this->_tail_win);
-      MPI_Win_allocate(capacity * sizeof(T), sizeof(T), info, comm,
+      MPI_Win_allocate(capacity * sizeof(T), sizeof(T), this->_info, comm,
                        &this->_data_ptr, &this->_data_win);
-      MPI_Win_allocate(capacity * sizeof(bool), sizeof(bool), info, comm,
+      MPI_Win_allocate(capacity * sizeof(bool), sizeof(bool), this->_info, comm,
                        &this->_flag_ptr, &this->_flag_win);
 
       MPI_Win_lock_all(0, this->_head_win);
@@ -58,13 +59,13 @@ public:
       MPI_Win_unlock_all(this->_data_win);
       MPI_Win_unlock_all(this->_flag_win);
     } else {
-      MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_head_ptr,
+      MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_head_ptr,
                        &this->_head_win);
-      MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_tail_ptr,
+      MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_tail_ptr,
                        &this->_tail_win);
-      MPI_Win_allocate(0, sizeof(T), info, comm, &this->_data_ptr,
+      MPI_Win_allocate(0, sizeof(T), this->_info, comm, &this->_data_ptr,
                        &this->_data_win);
-      MPI_Win_allocate(0, sizeof(bool), info, comm, &this->_flag_ptr,
+      MPI_Win_allocate(0, sizeof(bool), this->_info, comm, &this->_flag_ptr,
                        &this->_flag_win);
     }
     MPI_Barrier(comm);
@@ -83,6 +84,7 @@ public:
     MPI_Win_free(&this->_tail_win);
     MPI_Win_free(&this->_data_win);
     MPI_Win_free(&this->_flag_win);
+    MPI_Info_free(&this->_info);
   }
 
   bool enqueue(const T &data) {
@@ -167,6 +169,7 @@ private:
 
   const MPI_Aint _host;
   const MPI_Aint _capacity;
+  MPI_Info _info;
 
 public:
   FastDequeuer(MPI_Aint capacity, MPI_Aint host, MPI_Aint self_rank,
@@ -175,18 +178,17 @@ public:
     int rank;
     MPI_Comm_rank(comm, &rank);
 
-    MPI_Info info;
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "same_disp_unit", "true");
+    MPI_Info_create(&this->_info);
+    MPI_Info_set(this->_info, "same_disp_unit", "true");
 
     if (host == rank) {
-      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
+      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
                        &this->_head_ptr, &this->_head_win);
-      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
+      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
                        &this->_tail_ptr, &this->_tail_win);
-      MPI_Win_allocate(capacity * sizeof(T), sizeof(T), info, comm,
+      MPI_Win_allocate(capacity * sizeof(T), sizeof(T), this->_info, comm,
                        &this->_data_ptr, &this->_data_win);
-      MPI_Win_allocate(capacity * sizeof(bool), sizeof(bool), info, comm,
+      MPI_Win_allocate(capacity * sizeof(bool), sizeof(bool), this->_info, comm,
                        &this->_flag_ptr, &this->_flag_win);
 
       MPI_Win_lock_all(0, this->_head_win);
@@ -202,13 +204,13 @@ public:
       MPI_Win_unlock_all(this->_data_win);
       MPI_Win_unlock_all(this->_flag_win);
     } else {
-      MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_head_ptr,
+      MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_head_ptr,
                        &this->_head_win);
-      MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_tail_ptr,
+      MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_tail_ptr,
                        &this->_tail_win);
-      MPI_Win_allocate(0, sizeof(T), info, comm, &this->_data_ptr,
+      MPI_Win_allocate(0, sizeof(T), this->_info, comm, &this->_data_ptr,
                        &this->_data_win);
-      MPI_Win_allocate(0, sizeof(bool), info, comm, &this->_flag_ptr,
+      MPI_Win_allocate(0, sizeof(bool), this->_info, comm, &this->_flag_ptr,
                        &this->_flag_win);
     }
     MPI_Barrier(comm);
@@ -228,6 +230,7 @@ public:
     MPI_Win_free(&this->_tail_win);
     MPI_Win_free(&this->_data_win);
     MPI_Win_free(&this->_flag_win);
+    MPI_Info_free(&this->_info);
   }
 
   bool dequeue(T *output) {

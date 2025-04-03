@@ -39,6 +39,7 @@ private:
 
   MPI_Win _tree_win;
   tree_node_t *_tree_ptr;
+  MPI_Info _info;
 
   class Spsc {
     const MPI_Aint _self_rank;
@@ -56,21 +57,21 @@ private:
     MPI_Win _last_win;
     MPI_Aint *_last_ptr;
     MPI_Aint _last_buf;
+    MPI_Info _info;
 
   public:
     Spsc(MPI_Aint capacity, MPI_Aint self_rank, MPI_Aint dequeuer_rank,
          MPI_Comm comm)
         : _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
           _capacity{capacity}, _first_buf{0}, _last_buf{0} {
-      MPI_Info info;
-      MPI_Info_create(&info);
-      MPI_Info_set(info, "same_disp_unit", "true");
+      MPI_Info_create(&this->_info);
+      MPI_Info_set(this->_info, "same_disp_unit", "true");
 
-      MPI_Win_allocate(capacity * sizeof(data_t), sizeof(data_t), info, comm,
-                       &this->_data_ptr, &this->_data_win);
-      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
+      MPI_Win_allocate(capacity * sizeof(data_t), sizeof(data_t), this->_info,
+                       comm, &this->_data_ptr, &this->_data_win);
+      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
                        &this->_first_ptr, &this->_first_win);
-      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
+      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
                        &this->_last_ptr, &this->_last_win);
 
       MPI_Win_lock_all(0, this->_first_win);
@@ -93,6 +94,7 @@ private:
       MPI_Win_free(&this->_data_win);
       MPI_Win_free(&this->_first_win);
       MPI_Win_free(&this->_last_win);
+      MPI_Info_free(&this->_info);
     }
 
     bool enqueue(const data_t &data) {
@@ -312,15 +314,15 @@ public:
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
         _spsc{capacity, self_rank, dequeuer_rank, comm} {
-    MPI_Info info;
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "same_disp_unit", "true");
+    MPI_Info_create(&this->_info);
+    MPI_Info_set(this->_info, "same_disp_unit", "true");
 
-    MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_counter_ptr,
-                     &this->_counter_win);
+    MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm,
+                     &this->_counter_ptr, &this->_counter_win);
 
-    MPI_Win_allocate(sizeof(timestamp_t), sizeof(timestamp_t), info, comm,
-                     &this->_min_timestamp_ptr, &this->_min_timestamp_win);
+    MPI_Win_allocate(sizeof(timestamp_t), sizeof(timestamp_t), this->_info,
+                     comm, &this->_min_timestamp_ptr,
+                     &this->_min_timestamp_win);
 
     MPI_Win_lock_all(0, this->_min_timestamp_win);
     const timestamp_t start_timestamp = {MAX_TIMESTAMP, 0};
@@ -328,8 +330,8 @@ public:
                  this->_min_timestamp_win);
     MPI_Win_unlock_all(this->_min_timestamp_win);
 
-    MPI_Win_allocate(0, sizeof(tree_node_t), info, comm, &this->_tree_ptr,
-                     &this->_tree_win);
+    MPI_Win_allocate(0, sizeof(tree_node_t), this->_info, comm,
+                     &this->_tree_ptr, &this->_tree_win);
 
     MPI_Barrier(comm);
 
@@ -348,6 +350,7 @@ public:
     MPI_Win_free(&this->_tree_win);
     MPI_Win_free(&this->_min_timestamp_win);
     MPI_Win_free(&this->_counter_win);
+    MPI_Info_free(&this->_info);
   }
 
   bool enqueue(const T &data) {
@@ -425,6 +428,7 @@ private:
 
   MPI_Win _tree_win;
   tree_node_t *_tree_ptr;
+  MPI_Info _info;
 
   class Spsc {
     const MPI_Aint _self_rank;
@@ -441,6 +445,7 @@ private:
     MPI_Win _last_win;
     MPI_Aint *_last_ptr;
     std::vector<MPI_Aint> _last_buf;
+    MPI_Info _info;
 
   public:
     Spsc(MPI_Aint capacity, MPI_Aint self_rank, MPI_Comm comm)
@@ -450,15 +455,14 @@ private:
       _first_buf = std::vector<MPI_Aint>(size);
       _last_buf = std::vector<MPI_Aint>(size);
 
-      MPI_Info info;
-      MPI_Info_create(&info);
-      MPI_Info_set(info, "same_disp_unit", "true");
+      MPI_Info_create(&this->_info);
+      MPI_Info_set(this->_info, "same_disp_unit", "true");
 
-      MPI_Win_allocate(0, sizeof(data_t), info, comm, &this->_data_ptr,
+      MPI_Win_allocate(0, sizeof(data_t), this->_info, comm, &this->_data_ptr,
                        &this->_data_win);
-      MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_first_ptr,
-                       &this->_first_win);
-      MPI_Win_allocate(0, sizeof(MPI_Aint), info, comm, &this->_last_ptr,
+      MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm,
+                       &this->_first_ptr, &this->_first_win);
+      MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_last_ptr,
                        &this->_last_win);
       MPI_Barrier(comm);
 
@@ -474,6 +478,7 @@ private:
       MPI_Win_free(&this->_data_win);
       MPI_Win_free(&this->_first_win);
       MPI_Win_free(&this->_last_win);
+      MPI_Win_free(&this->_info);
     }
 
     bool dequeue(data_t *output, int enqueuer_rank) {
@@ -666,21 +671,20 @@ public:
   LTDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
              MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _spsc{capacity, self_rank, comm} {
-    MPI_Info info;
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "same_disp_unit", "true");
+    MPI_Info_create(&this->_info);
+    MPI_Info_set(this->_info, "same_disp_unit", "true");
 
-    MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), info, comm,
+    MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
                      &this->_counter_ptr, &this->_counter_win);
     MPI_Win_lock_all(0, this->_counter_win);
     *this->_counter_ptr = 0;
     MPI_Win_unlock_all(this->_counter_win);
 
-    MPI_Win_allocate(0, sizeof(timestamp_t), info, comm,
+    MPI_Win_allocate(0, sizeof(timestamp_t), this->_info, comm,
                      &this->_min_timestamp_ptr, &this->_min_timestamp_win);
 
     MPI_Win_allocate(this->_get_tree_size() * sizeof(tree_node_t),
-                     sizeof(tree_node_t), info, comm, &this->_tree_ptr,
+                     sizeof(tree_node_t), this->_info, comm, &this->_tree_ptr,
                      &this->_tree_win);
 
     MPI_Win_lock_all(0, this->_tree_win);
@@ -704,6 +708,7 @@ public:
     MPI_Win_free(&this->_tree_win);
     MPI_Win_free(&this->_min_timestamp_win);
     MPI_Win_free(&this->_counter_win);
+    MPI_Info_free(&this->_info);
   }
 
   bool dequeue(T *output) {
