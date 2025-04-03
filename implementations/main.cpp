@@ -11,6 +11,8 @@
 int main(int argc, char **argv) {
   MPI_Init(&argc, &argv);
 
+  report_RMO_latency();
+
   slotqueue_single_one_queue_microbenchmark(100000, 5);
   slotqueueV2_single_one_queue_microbenchmark(100000, 5);
   ltqueue_single_one_queue_microbenchmark(100000, 5);
