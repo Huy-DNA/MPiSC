@@ -51,7 +51,7 @@ inline void report_RMO_latency(unsigned int ops = 10000) {
   MPI_Info_create(&info);
   MPI_Info_set(info, "same_disp_unit", "true");
 
-  MPI_Win_allocate(rank != 0 ? 0 : size * sizeof(int), sizeof(int), info,
+  MPI_Win_allocate(rank != 0 ? 0 : sizeof(int), sizeof(int), info,
                    MPI_COMM_WORLD, &ptr, &win);
 
   double local_read_microseconds = 0;
@@ -59,7 +59,7 @@ inline void report_RMO_latency(unsigned int ops = 10000) {
     for (int i = 0; i < ops; ++i) {
       int dst;
       auto t_0 = std::chrono::high_resolution_clock::now();
-      read_sync(&dst, rank, 0, win);
+      read_sync(&dst, 0, 0, win);
       auto t_1 = std::chrono::high_resolution_clock::now();
       local_read_microseconds +=
           std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
@@ -68,12 +68,16 @@ inline void report_RMO_latency(unsigned int ops = 10000) {
     local_read_microseconds /= ops;
   }
 
+  MPI_Win_flush_all(win);
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Win_flush_all(win);
+
   double local_write_microseconds = 0;
   if (rank != 0) {
     for (int i = 0; i < ops; ++i) {
       int src = rank;
       auto t_0 = std::chrono::high_resolution_clock::now();
-      write_sync(&src, rank, 0, win);
+      write_sync(&src, 0, 0, win);
       auto t_1 = std::chrono::high_resolution_clock::now();
       local_write_microseconds +=
           std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
@@ -82,15 +86,17 @@ inline void report_RMO_latency(unsigned int ops = 10000) {
     local_write_microseconds /= ops;
   }
 
+  MPI_Win_flush_all(win);
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Win_flush_all(win);
+
   double local_atomic_read_microseconds = 0;
   if (rank != 0) {
     for (int i = 0; i < ops; ++i) {
       int dest;
-      for (int j = 0; j < rank; ++j) {
-        awrite_async(&rank, j, 0, win); // create contention
-      }
+      awrite_async(&rank, 0, 0, win); // create contention
       auto t_0 = std::chrono::high_resolution_clock::now();
-      aread_sync(&dest, rank, 0, win);
+      aread_sync(&dest, 0, 0, win);
       auto t_1 = std::chrono::high_resolution_clock::now();
       local_atomic_read_microseconds +=
           std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
@@ -99,15 +105,17 @@ inline void report_RMO_latency(unsigned int ops = 10000) {
     local_atomic_read_microseconds /= ops;
   }
 
+  MPI_Win_flush_all(win);
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Win_flush_all(win);
+
   double local_atomic_write_microseconds = 0;
   if (rank != 0) {
     for (int i = 0; i < ops; ++i) {
       int src = rank;
-      for (int j = 0; j < rank; ++j) {
-        awrite_async(&rank, j, 0, win); // create contention
-      }
+      awrite_async(&rank, 0, 0, win); // create contention
       auto t_0 = std::chrono::high_resolution_clock::now();
-      awrite_sync(&src, rank, 0, win);
+      awrite_sync(&src, 0, 0, win);
       auto t_1 = std::chrono::high_resolution_clock::now();
       local_atomic_write_microseconds +=
           std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
@@ -115,6 +123,10 @@ inline void report_RMO_latency(unsigned int ops = 10000) {
     }
     local_atomic_write_microseconds /= ops;
   }
+
+  MPI_Win_flush_all(win);
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Win_flush_all(win);
 
   double local_faa_microseconds = 0;
   if (rank != 0) {
@@ -133,8 +145,11 @@ inline void report_RMO_latency(unsigned int ops = 10000) {
     local_faa_microseconds /= ops;
   }
 
-  double local_cas_microseconds = 0;
+  MPI_Win_flush_all(win);
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Win_flush_all(win);
 
+  double local_cas_microseconds = 0;
   if (rank != 0) {
     int old_val = 0;
     int new_val = rank;
@@ -154,6 +169,10 @@ inline void report_RMO_latency(unsigned int ops = 10000) {
     local_cas_microseconds /= ops;
   }
 
+  MPI_Win_flush_all(win);
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Win_flush_all(win);
+
   double read_microseconds;
   double atomic_read_microseconds;
   double write_microseconds;
@@ -164,8 +183,8 @@ inline void report_RMO_latency(unsigned int ops = 10000) {
                 MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce(&local_atomic_read_microseconds, &atomic_read_microseconds, 1,
                 MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  MPI_Allreduce(&local_write_microseconds, &write_microseconds, 1,
-                MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&local_write_microseconds, &write_microseconds, 1, MPI_DOUBLE,
+                MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce(&local_atomic_write_microseconds, &atomic_write_microseconds, 1,
                 MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   MPI_Allreduce(&local_faa_microseconds, &faa_microseconds, 1, MPI_DOUBLE,
@@ -185,4 +204,6 @@ inline void report_RMO_latency(unsigned int ops = 10000) {
     printf("FAA latency: %g us\n", faa_microseconds / (size - 1));
     printf("CAS latency: %g us\n", cas_microseconds / (size - 1));
   }
+
+  MPI_Win_free(&win);
 }
