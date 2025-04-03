@@ -35,6 +35,7 @@ public:
 
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
+    MPI_Info_set(this->_info, "accumulate_ordering", "none");
 
     if (host == rank) {
       MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
@@ -45,19 +46,14 @@ public:
                        &this->_data_ptr, &this->_data_win);
       MPI_Win_allocate(capacity * sizeof(bool), sizeof(bool), this->_info, comm,
                        &this->_flag_ptr, &this->_flag_win);
-
-      MPI_Win_lock_all(0, this->_head_win);
-      MPI_Win_lock_all(0, this->_tail_win);
-      MPI_Win_lock_all(0, this->_data_win);
-      MPI_Win_lock_all(0, this->_flag_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_head_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tail_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_data_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_flag_win);
       *this->_head_ptr = 0;
       *this->_tail_ptr = 0;
       memset(this->_data_ptr, 0, capacity * sizeof(T));
       memset(this->_flag_ptr, 0, capacity * sizeof(bool));
-      MPI_Win_unlock_all(this->_head_win);
-      MPI_Win_unlock_all(this->_tail_win);
-      MPI_Win_unlock_all(this->_data_win);
-      MPI_Win_unlock_all(this->_flag_win);
     } else {
       MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_head_ptr,
                        &this->_head_win);
@@ -67,12 +63,16 @@ public:
                        &this->_data_win);
       MPI_Win_allocate(0, sizeof(bool), this->_info, comm, &this->_flag_ptr,
                        &this->_flag_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_head_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tail_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_data_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_flag_win);
     }
+    MPI_Win_flush_all(this->_head_win);
+    MPI_Win_flush_all(this->_tail_win);
+    MPI_Win_flush_all(this->_data_win);
+    MPI_Win_flush_all(this->_flag_win);
     MPI_Barrier(comm);
-    MPI_Win_lock_all(0, this->_head_win);
-    MPI_Win_lock_all(0, this->_tail_win);
-    MPI_Win_lock_all(0, this->_data_win);
-    MPI_Win_lock_all(0, this->_flag_win);
   }
 
   ~FastEnqueuer() {
@@ -180,6 +180,7 @@ public:
 
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
+    MPI_Info_set(this->_info, "accumulate_ordering", "none");
 
     if (host == rank) {
       MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
@@ -190,19 +191,14 @@ public:
                        &this->_data_ptr, &this->_data_win);
       MPI_Win_allocate(capacity * sizeof(bool), sizeof(bool), this->_info, comm,
                        &this->_flag_ptr, &this->_flag_win);
-
-      MPI_Win_lock_all(0, this->_head_win);
-      MPI_Win_lock_all(0, this->_tail_win);
-      MPI_Win_lock_all(0, this->_data_win);
-      MPI_Win_lock_all(0, this->_flag_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_head_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tail_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_data_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_flag_win);
       *this->_head_ptr = 0;
       *this->_tail_ptr = 0;
       memset(this->_data_ptr, 0, capacity * sizeof(T));
       memset(this->_flag_ptr, 0, capacity * sizeof(bool));
-      MPI_Win_unlock_all(this->_head_win);
-      MPI_Win_unlock_all(this->_tail_win);
-      MPI_Win_unlock_all(this->_data_win);
-      MPI_Win_unlock_all(this->_flag_win);
     } else {
       MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_head_ptr,
                        &this->_head_win);
@@ -212,13 +208,16 @@ public:
                        &this->_data_win);
       MPI_Win_allocate(0, sizeof(bool), this->_info, comm, &this->_flag_ptr,
                        &this->_flag_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_head_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tail_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_data_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_flag_win);
     }
+    MPI_Win_flush_all(this->_head_win);
+    MPI_Win_flush_all(this->_tail_win);
+    MPI_Win_flush_all(this->_data_win);
+    MPI_Win_flush_all(this->_flag_win);
     MPI_Barrier(comm);
-
-    MPI_Win_lock_all(0, this->_head_win);
-    MPI_Win_lock_all(0, this->_tail_win);
-    MPI_Win_lock_all(0, this->_data_win);
-    MPI_Win_lock_all(0, this->_flag_win);
   }
 
   ~FastDequeuer() {
