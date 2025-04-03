@@ -366,8 +366,11 @@ private:
     MPI_Aint order = DUMMY_RANK;
     timestamp_t min_timestamp = MAX_TIMESTAMP;
 
-    batch_aread_sync(this->_min_timestamp_buf, this->_number_of_enqueuers, 0,
-                     this->_self_rank, this->_min_timestamp_win);
+    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
+      aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
+                  this->_min_timestamp_win);
+    }
+    flush(this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
@@ -378,8 +381,11 @@ private:
     if (order == DUMMY_RANK) {
       return DUMMY_RANK;
     }
-    batch_aread_sync(this->_min_timestamp_buf, this->_number_of_enqueuers, 0,
-                     this->_self_rank, this->_min_timestamp_win);
+    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
+      aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
+                  this->_min_timestamp_win);
+    }
+    flush(this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
