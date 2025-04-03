@@ -478,7 +478,7 @@ private:
       MPI_Win_free(&this->_data_win);
       MPI_Win_free(&this->_first_win);
       MPI_Win_free(&this->_last_win);
-      MPI_Win_free(&this->_info);
+      MPI_Info_free(&this->_info);
     }
 
     bool dequeue(data_t *output, int enqueuer_rank) {
