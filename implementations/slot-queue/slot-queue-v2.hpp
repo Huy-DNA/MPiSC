@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../comm.hpp"
-#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -146,7 +145,7 @@ private:
 
       data_t data;
       aread_sync(&data, this->_first_buf % this->_capacity, this->_self_rank,
-                  this->_data_win);
+                 this->_data_win);
 
       *output_timestamp = data.timestamp;
       return true;
@@ -365,22 +364,18 @@ private:
     if (rank != MAX_TIMESTAMP) {
       return rank;
     }
-    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
-      aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
-                  this->_min_timestamp_win);
-    }
-    flush(this->_self_rank, this->_min_timestamp_win);
+    batch_aread_sync(this->_min_timestamp_buf, this->_number_of_enqueuers, 0,
+                     this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       if (_min_timestamp_buf[i] != MAX_TIMESTAMP) {
         this->_first_scan.push({(MPI_Aint)i, _min_timestamp_buf[i]});
       }
-      aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
-                  this->_min_timestamp_win);
     }
     if (this->_first_scan.size() == 0) {
       return DUMMY_RANK;
     }
-    flush(this->_self_rank, this->_min_timestamp_win);
+    batch_aread_sync(this->_min_timestamp_buf, this->_number_of_enqueuers, 0,
+                     this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       if (_min_timestamp_buf[i] != MAX_TIMESTAMP) {
         this->_second_scan.push({(MPI_Aint)i, _min_timestamp_buf[i]});
