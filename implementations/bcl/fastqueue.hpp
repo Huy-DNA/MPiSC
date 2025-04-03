@@ -73,6 +73,10 @@ public:
     MPI_Win_flush_all(this->_data_win);
     MPI_Win_flush_all(this->_flag_win);
     MPI_Barrier(comm);
+    MPI_Win_flush_all(this->_head_win);
+    MPI_Win_flush_all(this->_tail_win);
+    MPI_Win_flush_all(this->_data_win);
+    MPI_Win_flush_all(this->_flag_win);
   }
 
   ~FastEnqueuer() {
@@ -218,6 +222,10 @@ public:
     MPI_Win_flush_all(this->_data_win);
     MPI_Win_flush_all(this->_flag_win);
     MPI_Barrier(comm);
+    MPI_Win_flush_all(this->_head_win);
+    MPI_Win_flush_all(this->_tail_win);
+    MPI_Win_flush_all(this->_data_win);
+    MPI_Win_flush_all(this->_flag_win);
   }
 
   ~FastDequeuer() {

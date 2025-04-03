@@ -79,10 +79,14 @@ private:
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_last_win);
       *this->_first_ptr = 0;
       *this->_last_ptr = 0;
+
       MPI_Win_flush_all(this->_data_win);
       MPI_Win_flush_all(this->_first_win);
       MPI_Win_flush_all(this->_last_win);
       MPI_Barrier(comm);
+      MPI_Win_flush_all(this->_data_win);
+      MPI_Win_flush_all(this->_first_win);
+      MPI_Win_flush_all(this->_last_win);
     }
 
     ~Spsc() {
@@ -335,6 +339,9 @@ public:
     MPI_Win_flush_all(this->_counter_win);
     MPI_Win_flush_all(this->_tree_win);
     MPI_Barrier(comm);
+    MPI_Win_flush_all(this->_min_timestamp_win);
+    MPI_Win_flush_all(this->_counter_win);
+    MPI_Win_flush_all(this->_tree_win);
   }
 
   LTEnqueuer(const LTEnqueuer &) = delete;
@@ -466,7 +473,13 @@ private:
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_first_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_last_win);
 
+      MPI_Win_flush_all(this->_data_win);
+      MPI_Win_flush_all(this->_first_win);
+      MPI_Win_flush_all(this->_last_win);
       MPI_Barrier(comm);
+      MPI_Win_flush_all(this->_data_win);
+      MPI_Win_flush_all(this->_first_win);
+      MPI_Win_flush_all(this->_last_win);
     }
 
     ~Spsc() {
@@ -694,6 +707,9 @@ public:
     MPI_Win_flush_all(this->_counter_win);
     MPI_Win_flush_all(this->_tree_win);
     MPI_Barrier(comm);
+    MPI_Win_flush_all(this->_min_timestamp_win);
+    MPI_Win_flush_all(this->_counter_win);
+    MPI_Win_flush_all(this->_tree_win);
   }
   LTDequeuer(const LTDequeuer &) = delete;
   LTDequeuer &operator=(const LTDequeuer &) = delete;

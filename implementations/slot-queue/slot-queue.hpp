@@ -71,7 +71,11 @@ private:
       *this->_last_ptr = 0;
       MPI_Win_flush_all(this->_first_win);
       MPI_Win_flush_all(this->_last_win);
+      MPI_Win_flush_all(this->_data_win);
       MPI_Barrier(comm);
+      MPI_Win_flush_all(this->_first_win);
+      MPI_Win_flush_all(this->_last_win);
+      MPI_Win_flush_all(this->_data_win);
     }
 
     ~Spsc() {
@@ -189,7 +193,11 @@ public:
     MPI_Win_lock_all(MPI_MODE_NOCHECK, _counter_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, _min_timestamp_win);
 
+    MPI_Win_flush_all(_counter_win);
+    MPI_Win_flush_all(_min_timestamp_win);
     MPI_Barrier(comm);
+    MPI_Win_flush_all(_counter_win);
+    MPI_Win_flush_all(_min_timestamp_win);
   }
 
   SlotEnqueuer(const SlotEnqueuer &) = delete;
@@ -311,7 +319,13 @@ private:
       MPI_Win_lock_all(MPI_MODE_NOCHECK, _last_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_win);
 
+      MPI_Win_flush_all(_first_win);
+      MPI_Win_flush_all(_last_win);
+      MPI_Win_flush_all(_data_win);
       MPI_Barrier(comm);
+      MPI_Win_flush_all(_first_win);
+      MPI_Win_flush_all(_last_win);
+      MPI_Win_flush_all(_data_win);
     }
 
     ~Spsc() {
@@ -450,6 +464,8 @@ public:
     MPI_Win_flush_all(this->_counter_win);
     MPI_Win_flush_all(this->_min_timestamp_win);
     MPI_Barrier(comm);
+    MPI_Win_flush_all(this->_counter_win);
+    MPI_Win_flush_all(this->_min_timestamp_win);
   }
 
   SlotDequeuer(const SlotDequeuer &) = delete;
