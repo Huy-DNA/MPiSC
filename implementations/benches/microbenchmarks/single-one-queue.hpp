@@ -413,7 +413,7 @@ inline void slotqueueV2b_single_one_queue_microbenchmark(
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
-  report("SlotqueueV2a", number_of_elements, iterations, total_microseconds,
+  report("SlotqueueV2b", number_of_elements, iterations, total_microseconds,
          total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
          total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
          total_enqueues_latency_microseconds);
