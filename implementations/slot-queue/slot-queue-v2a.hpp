@@ -8,7 +8,7 @@
 #include <queue>
 #include <vector>
 
-template <typename T> class SlotEnqueuerV2 {
+template <typename T> class SlotEnqueuerV2a {
 private:
   typedef uint64_t timestamp_t;
   constexpr static timestamp_t MAX_TIMESTAMP = ~((uint64_t)0);
@@ -169,7 +169,7 @@ private:
   }
 
 public:
-  SlotEnqueuerV2(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+  SlotEnqueuerV2a(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
                  MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
@@ -188,10 +188,10 @@ public:
     MPI_Barrier(comm);
   }
 
-  SlotEnqueuerV2(const SlotEnqueuerV2 &) = delete;
-  SlotEnqueuerV2 &operator=(const SlotEnqueuerV2 &) = delete;
+  SlotEnqueuerV2a(const SlotEnqueuerV2a &) = delete;
+  SlotEnqueuerV2a &operator=(const SlotEnqueuerV2a &) = delete;
 
-  ~SlotEnqueuerV2() {
+  ~SlotEnqueuerV2a() {
     MPI_Win_unlock_all(_counter_win);
     MPI_Win_unlock_all(_min_timestamp_win);
     MPI_Win_free(&this->_counter_win);
@@ -245,7 +245,7 @@ public:
   }
 };
 
-template <typename T> class SlotDequeuerV2 {
+template <typename T> class SlotDequeuerV2a {
 private:
   typedef uint64_t timestamp_t;
   constexpr static timestamp_t MAX_TIMESTAMP = ~((uint64_t)0);
@@ -455,7 +455,7 @@ private:
   }
 
 public:
-  SlotDequeuerV2(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+  SlotDequeuerV2a(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
                  MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _spsc{capacity, self_rank, comm} {
     int size;
@@ -485,9 +485,9 @@ public:
     MPI_Barrier(comm);
   }
 
-  SlotDequeuerV2(const SlotDequeuerV2 &) = delete;
-  SlotDequeuerV2 &operator=(const SlotDequeuerV2 &) = delete;
-  ~SlotDequeuerV2() {
+  SlotDequeuerV2a(const SlotDequeuerV2a &) = delete;
+  SlotDequeuerV2a &operator=(const SlotDequeuerV2a &) = delete;
+  ~SlotDequeuerV2a() {
     MPI_Win_unlock_all(_counter_win);
     MPI_Win_unlock_all(_min_timestamp_win);
     MPI_Win_free(&this->_counter_win);

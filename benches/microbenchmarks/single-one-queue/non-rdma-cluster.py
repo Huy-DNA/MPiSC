@@ -543,7 +543,7 @@ queue_data = {
             0.334522,
         ],
     },
-    "SlotqueueV2": {
+    "SlotqueueV2a": {
         "dequeue_throughput": [
             0.0237635,
             0.0197364,
@@ -735,7 +735,7 @@ queue_styles = {
     "SlotQueue": {"color": "blue", "marker": "o"},
     "LTQueue": {"color": "red", "marker": "s"},
     "FastQueue": {"color": "green", "marker": "^"},
-    "SlotqueueV2": {"color": "purple", "marker": "d", "linestyle": "--"},
+    "SlotqueueV2a": {"color": "purple", "marker": "d", "linestyle": "--"},
 }
 
 # Generate merged plots for each metric
@@ -752,7 +752,7 @@ for metric in metrics:
             color=style["color"],
             marker=style["marker"],
             linestyle=style.get("linestyle", "-"),
-            label=f"{queue_name}{'*' if queue_name == 'SlotqueueV2' else ''}",
+            label=f"{queue_name}{'*' if queue_name == 'SlotqueueV2a' else ''}",
         )
 
     # Set title and labels
@@ -775,5 +775,5 @@ for metric in metrics:
 
 print("All comparative plots have been generated in the 'non-rdma-cluster' folder.")
 print(
-    "Note: SlotqueueV2 is marked with an asterisk (*) in the legend to indicate it is experimental."
+    "Note: SlotqueueV2a is marked with an asterisk (*) in the legend to indicate it is experimental."
 )

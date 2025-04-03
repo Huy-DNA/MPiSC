@@ -4,11 +4,11 @@
 #include "benches/utils.h"
 #include "caliper/cali_macros.h"
 #include "ltqueue/ltqueue.hpp"
-#include "slot-queue/slot-queue-v2.hpp"
+#include "slot-queue/slot-queue-v2a.hpp"
 #include "slot-queue/slot-queue.hpp"
+#include <caliper/cali.h>
 #include <chrono>
 #include <mpi.h>
-#include <caliper/cali.h>
 
 inline void
 slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
@@ -146,7 +146,7 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
          total_enqueues_latency_microseconds);
 }
 
-inline void slotqueueV2_single_one_queue_microbenchmark(
+inline void slotqueueV2a_single_one_queue_microbenchmark(
     unsigned long long number_of_elements, int iterations = 10) {
   int size;
   int rank;
@@ -174,7 +174,8 @@ inline void slotqueueV2_single_one_queue_microbenchmark(
 
     if (rank == 0) {
       CALI_MARK_BEGIN("slot-dequeuer-v2-init-1");
-      SlotDequeuerV2<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
+      SlotDequeuerV2a<int> queue(elements_per_queue, rank, rank,
+                                 MPI_COMM_WORLD);
       CALI_MARK_END("slot-dequeuer-v2-init-1");
       CALI_MARK_BEGIN("slot-dequeuer-v2-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
@@ -196,7 +197,7 @@ inline void slotqueueV2_single_one_queue_microbenchmark(
       local_dequeues_microseconds = local_microseconds;
     } else {
       CALI_MARK_BEGIN("slot-enqueuer-v2-init-1");
-      SlotEnqueuerV2<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
+      SlotEnqueuerV2a<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
       CALI_MARK_END("slot-enqueuer-v2-init-1");
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
@@ -275,7 +276,7 @@ inline void slotqueueV2_single_one_queue_microbenchmark(
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
-  report("SlotqueueV2", number_of_elements, iterations, total_microseconds,
+  report("SlotqueueV2a", number_of_elements, iterations, total_microseconds,
          total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
          total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
          total_enqueues_latency_microseconds);
@@ -310,7 +311,7 @@ ltqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
 
     if (rank == 0) {
       CALI_MARK_BEGIN("lt-dequeuer-init-1");
-      LTDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD); 
+      LTDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
       CALI_MARK_END("lt-dequeuer-init-1");
       CALI_MARK_BEGIN("lt-dequeuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
