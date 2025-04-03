@@ -1,10 +1,13 @@
 #pragma once
 #include "comm.hpp"
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <mpi.h>
+#include <random>
 #include <string>
+#include <vector>
 
 inline void cache_flush() {
   static constexpr uint64_t bigger_than_cachesize = 100 * 1024 * 1024;
@@ -59,88 +62,96 @@ inline void report_RMO_latency(unsigned int ops = 1000) {
   MPI_Info_set(info, "same_disp_unit", "true");
 
   double local_atomic_read_microseconds = 0;
-  for (int i = 0; i < ops; ++i) {
-    MPI_Win win;
-    int *ptr;
-    MPI_Win_allocate(rank != 0 ? 0 : sizeof(int), sizeof(int), info,
-                     MPI_COMM_WORLD, &ptr, &win);
-    if (rank != 0) {
-      int dest;
-      awrite_async(&rank, 0, 0, win); // create contention
-      auto t_0 = std::chrono::high_resolution_clock::now();
-      aread_sync(&dest, 0, 0, win);
-      auto t_1 = std::chrono::high_resolution_clock::now();
-      local_atomic_read_microseconds +=
-          std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
-              .count();
-    }
-    MPI_Win_free(&win);
-  }
-  local_atomic_read_microseconds /= ops;
-
   double local_atomic_write_microseconds = 0;
-  for (int i = 0; i < ops; ++i) {
-    MPI_Win win;
-    int *ptr;
-    MPI_Win_allocate(rank != 0 ? 0 : sizeof(int), sizeof(int), info,
-                     MPI_COMM_WORLD, &ptr, &win);
-    if (rank != 0) {
-      int src = rank * i;
-      awrite_async(&rank, 0, 0, win); // create contention
-      auto t_0 = std::chrono::high_resolution_clock::now();
-      awrite_sync(&src, 0, 0, win);
-      auto t_1 = std::chrono::high_resolution_clock::now();
-      local_atomic_write_microseconds +=
-          std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
-              .count();
-    }
-    MPI_Win_free(&win);
-  }
-  local_atomic_write_microseconds /= ops;
-
   double local_faa_microseconds = 0;
-  for (int i = 0; i < ops; ++i) {
-    MPI_Win win;
-    int *ptr;
-    MPI_Win_allocate(rank != 0 ? 0 : sizeof(int), sizeof(int), info,
-                     MPI_COMM_WORLD, &ptr, &win);
-    if (rank != 0) {
-      int src = rank * i;
-      awrite_async(&src, 0, 0, win); // create contention
-      int dst;
-      auto t_0 = std::chrono::high_resolution_clock::now();
-      fetch_and_add_sync(&dst, 1, 0, 0, win);
-      auto t_1 = std::chrono::high_resolution_clock::now();
-      local_faa_microseconds +=
-          std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
-              .count();
-    }
-    MPI_Win_free(&win);
-  }
-  local_faa_microseconds /= ops;
-
   double local_cas_microseconds = 0;
-  for (int i = 0; i < ops; ++i) {
+
+  enum OpType { READ, WRITE, FAA, CAS };
+  std::vector<OpType> operations;
+  operations.reserve(ops * 4);
+
+  for (unsigned int i = 0; i < ops; ++i) {
+    operations.push_back(READ);
+    operations.push_back(WRITE);
+    operations.push_back(FAA);
+    operations.push_back(CAS);
+  }
+
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::shuffle(operations.begin(), operations.end(), gen);
+
+  for (unsigned int i = 0; i < operations.size(); ++i) {
+    OpType current_op = operations[i];
+
     MPI_Win win;
     int *ptr;
     MPI_Win_allocate(rank != 0 ? 0 : sizeof(int), sizeof(int), info,
                      MPI_COMM_WORLD, &ptr, &win);
+
     if (rank != 0) {
-      int old_val = 0;
-      int new_val = rank;
-      int result = 0;
-      int src = rank * i;
-      awrite_async(&src, 0, 0, win); // create contention
-      auto t_0 = std::chrono::high_resolution_clock::now();
-      compare_and_swap_sync(&old_val, &new_val, &result, 0, 0, win);
-      auto t_1 = std::chrono::high_resolution_clock::now();
-      local_cas_microseconds +=
-          std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
-              .count();
-      old_val = result;
+      switch (current_op) {
+      case READ: {
+        int dest;
+        awrite_async(&rank, 0, 0, win);
+        auto t_0 = std::chrono::high_resolution_clock::now();
+        aread_sync(&dest, 0, 0, win);
+        auto t_1 = std::chrono::high_resolution_clock::now();
+        local_atomic_read_microseconds +=
+            std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
+                .count();
+        break;
+      }
+
+      case WRITE: {
+        int src = rank * i;
+        awrite_async(&rank, 0, 0, win);
+        auto t_0 = std::chrono::high_resolution_clock::now();
+        awrite_sync(&src, 0, 0, win);
+        auto t_1 = std::chrono::high_resolution_clock::now();
+        local_atomic_write_microseconds +=
+            std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
+                .count();
+        break;
+      }
+
+      case FAA: {
+        int src = rank * i;
+        awrite_async(&src, 0, 0, win);
+        int dst;
+        auto t_0 = std::chrono::high_resolution_clock::now();
+        fetch_and_add_sync(&dst, 1, 0, 0, win);
+        auto t_1 = std::chrono::high_resolution_clock::now();
+        local_faa_microseconds +=
+            std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
+                .count();
+        break;
+      }
+
+      case CAS: {
+        int old_val = 0;
+        int new_val = rank;
+        int result = 0;
+        int src = rank * i;
+        awrite_async(&src, 0, 0, win);
+        auto t_0 = std::chrono::high_resolution_clock::now();
+        compare_and_swap_sync(&old_val, &new_val, &result, 0, 0, win);
+        auto t_1 = std::chrono::high_resolution_clock::now();
+        local_cas_microseconds +=
+            std::chrono::duration_cast<std::chrono::microseconds>(t_1 - t_0)
+                .count();
+        old_val = result;
+        break;
+      }
+      }
     }
+
     MPI_Win_free(&win);
   }
+
+  local_atomic_read_microseconds /= ops;
+  local_atomic_write_microseconds /= ops;
+  local_faa_microseconds /= ops;
   local_cas_microseconds /= ops;
 
   double atomic_read_microseconds;
