@@ -89,6 +89,7 @@ inline void report_RMO_latency(unsigned int ops = 1000) {
     int *ptr;
     MPI_Win_allocate(rank != 0 ? 0 : sizeof(int), sizeof(int), info,
                      MPI_COMM_WORLD, &ptr, &win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, win);
 
     if (rank != 0) {
       switch (current_op) {
@@ -147,6 +148,7 @@ inline void report_RMO_latency(unsigned int ops = 1000) {
       }
     }
 
+    MPI_Win_unlock_all(win);
     MPI_Win_free(&win);
   }
 
