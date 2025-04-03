@@ -9,13 +9,13 @@
 
 template <typename T> class LTEnqueuer {
 private:
-  struct tree_node_t {
+  struct alignas(8) tree_node_t {
     int32_t rank;
     uint32_t tag;
   };
   constexpr static int32_t DUMMY_RANK = ~((uint32_t)0);
 
-  struct timestamp_t {
+  struct alignas(8) timestamp_t {
     uint32_t timestamp;
     uint32_t tag;
   };
@@ -399,14 +399,14 @@ public:
 
 template <typename T> class LTDequeuer {
 private:
-  struct tree_node_t {
+  struct alignas(8) tree_node_t {
     int32_t rank;
     uint32_t tag;
   };
 
   constexpr static int32_t DUMMY_RANK = ~((uint32_t)0);
 
-  struct timestamp_t {
+  struct alignas(8) timestamp_t {
     uint32_t timestamp;
     uint32_t tag;
   };
