@@ -48,7 +48,7 @@ inline double spin_wait(double us) {
   return (t2 - t1).count() / 1000.0;
 }
 
-inline void report_RMO_latency(unsigned int ops = 50) {
+inline void report_RMO_latency(unsigned int ops = 1000) {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   int size;
