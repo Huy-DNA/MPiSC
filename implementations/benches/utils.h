@@ -1,4 +1,5 @@
 #pragma once
+#include "comm.hpp"
 #include <chrono>
 #include <cstdio>
 #include <mpi.h>

@@ -132,33 +132,19 @@ public:
       }
     }
 
-    if (this->_capacity - old_tail % this->_capacity >= data.size()) {
-      batch_awrite_sync(data.data(), data.size(), old_tail % this->_capacity,
-                        this->_host, this->_data_win);
-      std::vector<char> set(data.size(), true);
-      batch_awrite_sync(set.data(), data.size(), old_tail % this->_capacity,
-                        this->_host, this->_flag_win);
-    } else {
-      batch_awrite_async(
-          data.data(), this->_capacity - old_tail % this->_capacity,
-          old_tail % this->_capacity, this->_host, this->_data_win);
-      batch_awrite_async(
-          data.data() + this->_capacity - old_tail % this->_capacity,
-          data.size() - this->_capacity + old_tail % this->_capacity, 0,
-          this->_host, this->_data_win);
-      flush(this->_host, this->_data_win);
-
-      std::vector<char> set(data.size(), true);
-
-      batch_awrite_async(
-          set.data(), this->_capacity - old_tail % this->_capacity,
-          old_tail % this->_capacity, this->_host, this->_flag_win);
-      batch_awrite_async(
-          set.data() + this->_capacity - old_tail % this->_capacity,
-          set.size() - this->_capacity + old_tail % this->_capacity, 0,
-          this->_host, this->_flag_win);
-      flush(this->_host, this->_data_win);
+    const uint64_t size = data.size();
+    for (int i = 0; i < size; ++i) {
+      const uint64_t disp = (old_tail + i) % this->_capacity;
+      awrite_async(data.data() + i, disp, this->_host, this->_data_win);
     }
+    flush(this->_host, this->_data_win);
+    for (int i = 0; i < size; ++i) {
+      const uint64_t disp = (old_tail + i) % this->_capacity;
+      bool t = true;
+      awrite_async(&t, disp, this->_host, this->_flag_win);
+    }
+    flush(this->_host, this->_flag_win);
+
     return true;
   }
 };

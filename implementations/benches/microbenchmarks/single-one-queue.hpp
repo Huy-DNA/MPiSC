@@ -8,7 +8,6 @@
 #include "slot-queue/slot-queue.hpp"
 #include <chrono>
 #include <mpi.h>
-#include <thread>
 #include <caliper/cali.h>
 
 inline void

@@ -111,21 +111,12 @@ private:
         }
       }
 
-      if (this->_capacity - this->_last_buf % this->_capacity >= data.size()) {
-        batch_awrite_sync(data.data(), data.size(),
-                          this->_last_buf % this->_capacity, this->_self_rank,
-                          this->_data_win);
-      } else {
-        batch_awrite_async(data.data(),
-                           this->_capacity - this->_last_buf % this->_capacity,
-                           this->_last_buf % this->_capacity, this->_self_rank,
-                           this->_data_win);
-        batch_awrite_async(
-            data.data() + this->_capacity - this->_last_buf % this->_capacity,
-            data.size() - this->_capacity + this->_last_buf % this->_capacity,
-            0, this->_self_rank, this->_data_win);
-        flush(this->_self_rank, this->_data_win);
+      const uint64_t size = data.size();
+      for (int i = 0; i < size; ++i) {
+        const uint64_t disp = (this->_last_buf + i) % this->_capacity;
+        awrite_async(data.data() + i, disp, this->_self_rank, this->_data_win);
       }
+      flush(this->_self_rank, this->_data_win);
 
       awrite_sync(&new_last, 0, this->_self_rank, this->_last_win);
       this->_last_buf = new_last;
