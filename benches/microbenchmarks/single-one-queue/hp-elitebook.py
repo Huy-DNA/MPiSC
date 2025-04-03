@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os
 
 # Ensure the output directory exists
-output_dir = "single-one-queue"
+output_dir = "hp-elitebook"
 os.makedirs(output_dir, exist_ok=True)
 
 # Data for processors and queue types
@@ -258,7 +258,7 @@ for metric in metrics:
     plt.savefig(filename)
     plt.close()  # Close the figure to free up memory
 
-print("All comparative plots have been generated in the 'single-one-queue' folder.")
+print("All comparative plots have been generated in the 'hp-elitebook' folder.")
 print(
     "Note: SlotqueueV2 is marked with an asterisk (*) in the legend to indicate it is experimental."
 )
