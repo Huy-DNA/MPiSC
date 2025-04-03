@@ -147,11 +147,18 @@ private:
 #ifdef PROFILE
     CALI_CXX_MARK_FUNCTION;
 #endif
+    // avoid possibily redundant remote read below
+    timestamp_t new_timestamp;
+    if (!this->_spsc.read_front(&new_timestamp)) {
+      new_timestamp = MAX_TIMESTAMP;
+    }
+    if (new_timestamp != ts) {
+      return true;
+    }
 
     timestamp_t old_timestamp;
     aread_sync(&old_timestamp, this->_enqueuer_order, this->_dequeuer_rank,
                this->_min_timestamp_win);
-    timestamp_t new_timestamp;
     if (!this->_spsc.read_front(&new_timestamp)) {
       new_timestamp = MAX_TIMESTAMP;
     }

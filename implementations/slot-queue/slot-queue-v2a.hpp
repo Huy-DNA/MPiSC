@@ -150,11 +150,18 @@ private:
 #ifdef PROFILE
     CALI_CXX_MARK_FUNCTION;
 #endif
+    // avoid possibily redundant remote read below
+    timestamp_t new_timestamp;
+    if (!this->_spsc.read_front(&new_timestamp)) {
+      new_timestamp = MAX_TIMESTAMP;
+    }
+    if (new_timestamp != ts) {
+      return true;
+    }
 
     timestamp_t old_timestamp;
     aread_sync(&old_timestamp, this->_enqueuer_order, this->_dequeuer_rank,
                this->_min_timestamp_win);
-    timestamp_t new_timestamp;
     if (!this->_spsc.read_front(&new_timestamp)) {
       new_timestamp = MAX_TIMESTAMP;
     }
@@ -170,7 +177,7 @@ private:
 
 public:
   SlotEnqueuerV2a(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
-                 MPI_Comm comm)
+                  MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
         _spsc{capacity, self_rank, dequeuer_rank, comm} {
@@ -203,7 +210,6 @@ public:
 #ifdef PROFILE
     CALI_CXX_MARK_FUNCTION;
 #endif
-
     timestamp_t counter;
     fetch_and_add_sync(&counter, 1, 0, this->_dequeuer_rank,
                        this->_counter_win);
@@ -456,7 +462,7 @@ private:
 
 public:
   SlotDequeuerV2a(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
-                 MPI_Comm comm)
+                  MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _spsc{capacity, self_rank, comm} {
     int size;
     MPI_Comm_size(comm, &size);
