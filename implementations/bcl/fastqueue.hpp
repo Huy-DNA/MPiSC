@@ -86,6 +86,10 @@ public:
   }
 
   bool enqueue(const T &data) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     MPI_Aint old_tail;
     fetch_and_add_sync(&old_tail, 1, 0, this->_host, this->_tail_win);
     MPI_Aint new_tail = old_tail + 1;
@@ -107,6 +111,10 @@ public:
   }
 
   bool enqueue(const std::vector<T> &data) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     if (data.size() == 0) {
       return true;
     }
@@ -237,6 +245,10 @@ public:
   }
 
   bool dequeue(T *output) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     MPI_Aint old_head;
     fetch_and_add_sync(&old_head, 1, 0, this->_host, this->_head_win);
     MPI_Aint new_head = old_head + 1;

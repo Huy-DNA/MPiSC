@@ -152,6 +152,10 @@ private:
   } _spsc;
 
   bool _refreshEnqueue(timestamp_t ts) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     timestamp_t old_timestamp;
     aread_sync(&old_timestamp, this->_enqueuer_order, this->_dequeuer_rank,
                this->_min_timestamp_win);
@@ -202,6 +206,10 @@ public:
   }
 
   bool enqueue(const T &data) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     timestamp_t counter;
     fetch_and_add_sync(&counter, 1, 0, this->_dequeuer_rank,
                        this->_counter_win);
@@ -217,6 +225,10 @@ public:
   }
 
   bool enqueue(const std::vector<T> &data) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     if (data.size() == 0) {
       return true;
     }
@@ -347,10 +359,15 @@ private:
   } _spsc;
 
   MPI_Aint _readMinimumRank() {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     MPI_Aint order = DUMMY_RANK;
     timestamp_t min_timestamp = MAX_TIMESTAMP;
 
-    batch_aread_sync(this->_min_timestamp_buf, this->_number_of_enqueuers, 0, this->_self_rank, this->_min_timestamp_win);
+    batch_aread_sync(this->_min_timestamp_buf, this->_number_of_enqueuers, 0,
+                     this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
@@ -361,7 +378,8 @@ private:
     if (order == DUMMY_RANK) {
       return DUMMY_RANK;
     }
-    batch_aread_sync(this->_min_timestamp_buf, this->_number_of_enqueuers, 0, this->_self_rank, this->_min_timestamp_win);
+    batch_aread_sync(this->_min_timestamp_buf, this->_number_of_enqueuers, 0,
+                     this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
@@ -373,6 +391,10 @@ private:
   }
 
   bool _refreshDequeue(MPI_Aint rank) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     MPI_Aint enqueuer_order = this->_get_enqueuer_order(rank);
     timestamp_t old_timestamp;
     aread_sync(&old_timestamp, enqueuer_order, this->_self_rank,
@@ -436,6 +458,10 @@ public:
   }
 
   bool dequeue(T *output) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     MPI_Aint rank = this->_readMinimumRank();
     if (rank == DUMMY_RANK) {
       return false;

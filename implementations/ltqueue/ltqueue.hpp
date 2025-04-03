@@ -199,6 +199,10 @@ private:
   }
 
   void _propagate() {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     if (!this->_refresh_self_node()) {
       this->_refresh_self_node();
     }
@@ -212,6 +216,10 @@ private:
   }
 
   bool _refresh_self_node() {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     bool res;
     int self_index = this->_get_self_index();
     tree_node_t self_node;
@@ -239,6 +247,10 @@ private:
   }
 
   bool _refresh_timestamp() {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     bool res;
 
     uint32_t min_timestamp;
@@ -271,6 +283,10 @@ private:
   }
 
   bool _refresh(int current_index) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     tree_node_t current_node;
     uint32_t min_timestamp = MAX_TIMESTAMP;
     int32_t min_timestamp_rank = DUMMY_RANK;
@@ -344,6 +360,10 @@ public:
   }
 
   bool enqueue(const T &data) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     uint32_t timestamp;
     fetch_and_add_sync(&timestamp, 1, 0, this->_dequeuer_rank,
                        this->_counter_win);
@@ -358,6 +378,10 @@ public:
   }
 
   bool enqueue(const std::vector<T> &data) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     if (data.size() == 0) {
       return true;
     }
@@ -534,6 +558,10 @@ private:
   }
 
   bool _refresh_timestamp(int enqueuer_rank) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     bool res;
 
     uint32_t min_timestamp;
@@ -566,6 +594,10 @@ private:
   }
 
   bool _refresh_self_node(int enqueuer_rank) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     bool res;
     int self_index = this->_get_enqueuer_index(enqueuer_rank);
     tree_node_t self_node;
@@ -592,6 +624,10 @@ private:
   }
 
   bool _refresh(int current_index) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     tree_node_t current_node;
     uint32_t min_timestamp = MAX_TIMESTAMP;
     int32_t min_timestamp_rank = DUMMY_RANK;
@@ -619,6 +655,10 @@ private:
   }
 
   void _propagate(int enqueuer_rank) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     if (!this->_refresh_self_node(enqueuer_rank)) {
       this->_refresh_self_node(enqueuer_rank);
     }
@@ -676,6 +716,10 @@ public:
   }
 
   bool dequeue(T *output) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+
     tree_node_t root;
     aread_sync(&root, 0, this->_self_rank, this->_tree_win);
 
