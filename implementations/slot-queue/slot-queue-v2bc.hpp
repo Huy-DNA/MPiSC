@@ -408,10 +408,22 @@ private:
         }
       }
 
-      data_t data;
-      aread_sync(&data, this->_first_buf[enqueuer_rank] % this->_capacity,
-                 enqueuer_rank, this->_data_win);
-      *output_timestamp = data.timestamp;
+      if (this->_cached_size[enqueuer_rank] <= 0) {
+        int nreads =
+            std::min(this->_batch_size, this->_last_buf[enqueuer_rank] -
+                                            this->_first_buf[enqueuer_rank]);
+        this->_cached_size[enqueuer_rank] = nreads;
+        for (int i = 0; i < nreads; ++i) {
+          aread_async(this->_cached_data[enqueuer_rank] + nreads - i - 1,
+                      (this->_first_buf[enqueuer_rank] + i) % this->_capacity,
+                      enqueuer_rank, this->_data_win);
+        }
+        flush(enqueuer_rank, this->_data_win);
+      }
+      *output_timestamp =
+          this->_cached_data[enqueuer_rank]
+                            [this->_cached_size[enqueuer_rank] - 1]
+                                .timestamp;
       return true;
     }
   } _spsc;
