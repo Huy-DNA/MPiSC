@@ -101,8 +101,8 @@ private:
         }
       }
 
-      awrite_sync(&data, this->_last_buf % this->_capacity, this->_self_rank,
-                  this->_data_win);
+      write_sync(&data, this->_last_buf % this->_capacity, this->_self_rank,
+                 this->_data_win);
       awrite_sync(&new_last, 0, this->_self_rank, this->_last_win);
       this->_last_buf = new_last;
 
@@ -122,7 +122,7 @@ private:
       const uint64_t size = data.size();
       for (int i = 0; i < size; ++i) {
         const uint64_t disp = (this->_last_buf + i) % this->_capacity;
-        awrite_async(data.data() + i, disp, this->_self_rank, this->_data_win);
+        write_async(data.data() + i, disp, this->_self_rank, this->_data_win);
       }
       flush(this->_self_rank, this->_data_win);
 
@@ -142,8 +142,8 @@ private:
       }
 
       data_t data;
-      aread_sync(&data, this->_first_buf % this->_capacity, this->_self_rank,
-                 this->_data_win);
+      read_sync(&data, this->_first_buf % this->_capacity, this->_self_rank,
+                this->_data_win);
 
       *output_timestamp = data.timestamp;
       return true;
@@ -363,8 +363,8 @@ private:
         }
       }
 
-      aread_sync(output, this->_first_buf[enqueuer_rank] % this->_capacity,
-                 enqueuer_rank, this->_data_win);
+      read_sync(output, this->_first_buf[enqueuer_rank] % this->_capacity,
+                enqueuer_rank, this->_data_win);
       awrite_sync(&new_first, 0, enqueuer_rank, this->_first_win);
       this->_first_buf[enqueuer_rank] = new_first;
 
@@ -381,8 +381,8 @@ private:
       }
 
       data_t data;
-      aread_sync(&data, this->_first_buf[enqueuer_rank] % this->_capacity,
-                 enqueuer_rank, this->_data_win);
+      read_sync(&data, this->_first_buf[enqueuer_rank] % this->_capacity,
+                enqueuer_rank, this->_data_win);
       *output_timestamp = data.timestamp;
       return true;
     }
