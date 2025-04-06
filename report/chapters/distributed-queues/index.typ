@@ -803,9 +803,13 @@ To enqueue a value, `enqueue` first obtains a timestamp by FAA-ing the distribut
     numbered-title: [`bool refreshEnqueue(timestamp_t ts)`],
   )[
     + `enqueuer_order = enqueueOrder(Self_rank)                                     `
+    + `front = (data_t {}, timestamp_t {})`
+    + `success = spsc_readFront(Spsc, &front)`
+    + `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
+    + *if* `(new_timestamp != ts)`
+      + *return* `true`
     + `old_timestamp = timestamp_t {}`
     + `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
-    + `front = (data_t {}, timestamp_t {})`
     + `success = spsc_readFront(Spsc, &front)`
     + `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
     + *if* `(new_timestamp != ts)`
@@ -816,7 +820,7 @@ To enqueue a value, `enqueue` first obtains a timestamp by FAA-ing the distribut
   ],
 ) <slotqueue-refresh-enqueue>
 
-`refreshEnqueue`'s responsibility is to refresh the timestamp stores in the enqueuer's slot to potentially notify the dequeuer of its newly-enqueued element. It first reads its slot's old timestamp (line 10) and the current front element in the SPSC (line 12). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, the front element's timestamp (line 13). Note that `refreshEnqueue` immediately succeeds if the new timestamp is different from the timestamp `ts` of the element it enqueues (line 15). Otherwise, it tries to CAS its slot's timestamp with the new timestamp (line 16).
+`refreshEnqueue`'s responsibility is to refresh the timestamp stores in the enqueuer's slot to potentially notify the dequeuer of its newly-enqueued element. If it finds that the front element's timestamp is different from the timestamp `ts` it returns `true` immediately (line 9-13). Otherwise, it reads its slot's old timestamp (line 14) and re-reads the current front element in the SPSC (line 16). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, the front element's timestamp (line 17). Note that `refreshEnqueue` immediately succeeds if the new timestamp is different from the timestamp `ts` of the element it enqueues (line 19). Otherwise, it tries to CAS its slot's timestamp with the new timestamp (line 20).
 
 The dequeuer operations are given as follows.
 
@@ -824,7 +828,7 @@ The dequeuer operations are given as follows.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 16,
+    line-numbering: i => i + 20,
     booktabs: true,
     numbered-title: [`bool dequeue(data_t* output)`],
   )[
@@ -841,13 +845,13 @@ The dequeuer operations are given as follows.
   ],
 ) <slotqueue-dequeue>
 
-To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot currently stores the minimum timestamp (line 17). If the obtained rank is `DUMMY_RANK`, failure is signaled (line 18-19). Otherwise, it tries to dequeue the SPSC of the corresponding enqueuer (line 21). It then tries to refresh the enqueuer's slot's timestamp to potentially notify the enqueuer of the dequeue (line 24-25). It then signals success (line 26).
+To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot currently stores the minimum timestamp (line 21). If the obtained rank is `DUMMY_RANK`, failure is signaled (line 22-23). Otherwise, it tries to dequeue the SPSC of the corresponding enqueuer (line 25). It then tries to refresh the enqueuer's slot's timestamp to potentially notify the enqueuer of the dequeue (line 28-29). It then signals success (line 30).
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 26,
+    line-numbering: i => i + 30,
     booktabs: true,
     numbered-title: [`uint64_t readMinimumRank()`],
   )[
@@ -871,13 +875,13 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
   ],
 ) <slotqueue-read-minimum-rank>
 
-`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (line 27). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (line 28-33). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (line 32). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (line 38-43).
+`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (line 31). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (line 32-37). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (line 36). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (line 42-47).
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 43,
+    line-numbering: i => i + 47,
     booktabs: true,
     numbered-title: [`refreshDequeue(rank: int)` *returns* `bool`],
   )[
@@ -893,4 +897,4 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
   ],
 ) <slotqueue-refresh-dequeue>
 
-`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (line 46) and the front element (line 48). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, it's the front element's timestamp (line 49). It finally tries to CAS the slot with the new timestamp (line 50).
+`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (line 50) and the front element (line 52). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, it's the front element's timestamp (line 53). It finally tries to CAS the slot with the new timestamp (line 54).

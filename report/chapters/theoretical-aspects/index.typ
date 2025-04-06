@@ -672,15 +672,15 @@ Each enqueuer hosts an SPSC that can only accessed by itself and the dequeuer. T
 
 We apply some domain knowledge of Slotqueue algorithm to the definitions introduced in @ABA-safety.
 
-#definition[A *CAS-sequence* on a slot `s` of an enqueue that affects `s` is the sequence of instructions from line 10 to line 16 of its `refreshEnqueue` (@slotqueue-refresh-enqueue).]
+#definition[A *CAS-sequence* on a slot `s` of an enqueue that affects `s` is the sequence of instructions from line 14 to line 20 of its `refreshEnqueue` (@slotqueue-refresh-enqueue).]
 
-#definition[A *slot-modification instruction* on a slot `s` of an enqueue that affects `s` is line 16 of `refreshEnqueue` (@slotqueue-refresh-enqueue).]
+#definition[A *slot-modification instruction* on a slot `s` of an enqueue that affects `s` is line 20 of `refreshEnqueue` (@slotqueue-refresh-enqueue).]
 
-#definition[A *CAS-sequence* on a slot `s` of a dequeue that affects `s` is the sequence of instructions from line 46 to line 50 of its `refreshDequeue` (@slotqueue-refresh-dequeue).]
+#definition[A *CAS-sequence* on a slot `s` of a dequeue that affects `s` is the sequence of instructions from line 50 to line 54 of its `refreshDequeue` (@slotqueue-refresh-dequeue).]
 
-#definition[A *slot-modification instruction* on a slot `s` of a dequeue that affects `s` is line 50 of `refreshDequeue` (@slotqueue-refresh-dequeue).]
+#definition[A *slot-modification instruction* on a slot `s` of a dequeue that affects `s` is line 54 of `refreshDequeue` (@slotqueue-refresh-dequeue).]
 
-#definition[A *CAS-sequence* of a dequeue/enqueue is said to *observe a slot value of $s_0$* if it loads $s_0$ at line 10 of `refreshEnqueue` or line 46 of `refreshDequeue`.]
+#definition[A *CAS-sequence* of a dequeue/enqueue is said to *observe a slot value of $s_0$* if it loads $s_0$ at line 14 of `refreshEnqueue` or line 50 of `refreshDequeue`.]
 
 The followings are some other definitions that will be used throughout our proof.
 
@@ -692,9 +692,9 @@ The followings are some other definitions that will be used throughout our proof
 
 #definition[For an enqueue, *slot-refresh phase* refer to its execution of line 5-6 of @slotqueue-enqueue.]
 
-#definition[For a dequeue, *slot-refresh phase* refer to its execution of line 24-25 of @slotqueue-dequeue.]
+#definition[For a dequeue, *slot-refresh phase* refer to its execution of line 28-29 of @slotqueue-dequeue.]
 
-#definition[For a dequeue, *slot-scan phase* refer to its execution of line 27-43 of @slotqueue-read-minimum-rank.]
+#definition[For a dequeue, *slot-scan phase* refer to its execution of line 31-47 of @slotqueue-read-minimum-rank.]
 
 === ABA problem
 
@@ -727,7 +727,7 @@ Both `CAS`es target some slot in the `Slots` array.
 #theorem[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only changes a slot to a value other than `MAX_TIMESTAMP`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX-theorem>
 
 #proof[
-  For `refreshEnqueue` to change the slot's value, the condition on line 14 must be `false`. Then, `new_timestamp` must equal to `ts`, which is not `MAX_TIMESTAMP`. It's obvious that the `CAS` on line 16 changes the slot to a value other than `MAX_TIMESTAMP`.
+  For `refreshEnqueue` to change the slot's value, the condition on line 18 must be `false`. Then, `new_timestamp` must equal to `ts`, which is not `MAX_TIMESTAMP`. It's obvious that the `CAS` on line 20 changes the slot to a value other than `MAX_TIMESTAMP`.
 ]
 
 #theorem(
