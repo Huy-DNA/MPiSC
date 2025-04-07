@@ -1,13 +1,14 @@
 #pragma once
 
 #include "../comm.hpp"
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <mpi.h>
 #include <vector>
 
-template <typename T> class SlotEnqueuer {
+template <typename T> class SlotEnqueuerV2c {
 private:
   typedef uint64_t timestamp_t;
   constexpr static timestamp_t MAX_TIMESTAMP = ~((uint64_t)0);
@@ -63,6 +64,7 @@ private:
                        &this->_first_ptr, &this->_first_win);
       MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
                        &this->_last_ptr, &this->_last_win);
+
       MPI_Win_lock_all(MPI_MODE_NOCHECK, _first_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, _last_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_win);
@@ -177,8 +179,8 @@ private:
   }
 
 public:
-  SlotEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
-               MPI_Comm comm)
+  SlotEnqueuerV2c(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+                  MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
         _spsc{capacity, self_rank, dequeuer_rank, comm} {
@@ -200,10 +202,10 @@ public:
     MPI_Win_flush_all(_min_timestamp_win);
   }
 
-  SlotEnqueuer(const SlotEnqueuer &) = delete;
-  SlotEnqueuer &operator=(const SlotEnqueuer &) = delete;
+  SlotEnqueuerV2c(const SlotEnqueuerV2c &) = delete;
+  SlotEnqueuerV2c &operator=(const SlotEnqueuerV2c &) = delete;
 
-  ~SlotEnqueuer() {
+  ~SlotEnqueuerV2c() {
     MPI_Win_unlock_all(_counter_win);
     MPI_Win_unlock_all(_min_timestamp_win);
     MPI_Win_free(&this->_counter_win);
@@ -257,7 +259,7 @@ public:
   }
 };
 
-template <typename T> class SlotDequeuer {
+template <typename T> class SlotDequeuerV2c {
 private:
   typedef uint64_t timestamp_t;
   constexpr static timestamp_t MAX_TIMESTAMP = ~((uint64_t)0);
@@ -297,13 +299,28 @@ private:
     std::vector<MPI_Aint> _last_buf;
     MPI_Info _info;
 
+    int _comm_size;
+    MPI_Aint _batch_size;
+    data_t **_cached_data;
+    MPI_Aint *_cached_size;
+
   public:
-    Spsc(MPI_Aint capacity, MPI_Aint self_rank, MPI_Comm comm)
-        : _self_rank{self_rank}, _capacity{capacity} {
-      int size;
-      MPI_Comm_size(comm, &size);
-      _first_buf = std::vector<MPI_Aint>(size);
-      _last_buf = std::vector<MPI_Aint>(size);
+    Spsc(MPI_Aint capacity, MPI_Aint self_rank, MPI_Comm comm,
+         MPI_Aint batch_size)
+        : _self_rank{self_rank}, _capacity{capacity}, _batch_size{batch_size} {
+      MPI_Comm_size(comm, &this->_comm_size);
+      _first_buf = std::vector<MPI_Aint>(this->_comm_size);
+      _last_buf = std::vector<MPI_Aint>(this->_comm_size);
+
+      this->_cached_data =
+          (data_t **)malloc(sizeof(data_t *) * this->_comm_size);
+      this->_cached_size =
+          (MPI_Aint *)malloc(sizeof(MPI_Aint) * this->_comm_size);
+      for (int i = 0; i < this->_comm_size; ++i) {
+        this->_cached_data[i] =
+            (data_t *)malloc(sizeof(data_t) * this->_batch_size);
+        this->_cached_size[i] = 0;
+      }
 
       MPI_Info_create(&this->_info);
       MPI_Info_set(this->_info, "same_disp_unit", "true");
@@ -336,6 +353,11 @@ private:
       MPI_Win_free(&this->_first_win);
       MPI_Win_free(&this->_last_win);
       MPI_Info_free(&this->_info);
+      for (int i = 0; i < this->_comm_size; ++i) {
+        free(this->_cached_data[i]);
+      }
+      free(this->_cached_data);
+      free(this->_cached_size);
     }
 
     bool dequeue(data_t *output, int enqueuer_rank) {
@@ -348,8 +370,23 @@ private:
         }
       }
 
-      aread_sync(output, this->_first_buf[enqueuer_rank] % this->_capacity,
-                 enqueuer_rank, this->_data_win);
+      if (this->_cached_size[enqueuer_rank] > 0) {
+        *output = this->_cached_data[enqueuer_rank]
+                                    [this->_cached_size[enqueuer_rank] - 1];
+        --this->_cached_size[enqueuer_rank];
+      } else {
+        aread_async(output, this->_first_buf[enqueuer_rank] % this->_capacity,
+                    enqueuer_rank, this->_data_win);
+        int nreads = std::min(this->_batch_size,
+                              this->_last_buf[enqueuer_rank] - new_first);
+        this->_cached_size[enqueuer_rank] = nreads;
+        for (int i = 0; i < nreads; ++i) {
+          aread_async(this->_cached_data[enqueuer_rank] + nreads - i - 1,
+                      (new_first + i) % this->_capacity, enqueuer_rank,
+                      this->_data_win);
+        }
+        flush(enqueuer_rank, this->_data_win);
+      }
       awrite_sync(&new_first, 0, enqueuer_rank, this->_first_win);
       this->_first_buf[enqueuer_rank] = new_first;
 
@@ -365,10 +402,22 @@ private:
         }
       }
 
-      data_t data;
-      aread_sync(&data, this->_first_buf[enqueuer_rank] % this->_capacity,
-                 enqueuer_rank, this->_data_win);
-      *output_timestamp = data.timestamp;
+      if (this->_cached_size[enqueuer_rank] <= 0) {
+        int nreads =
+            std::min(this->_batch_size, this->_last_buf[enqueuer_rank] -
+                                            this->_first_buf[enqueuer_rank]);
+        this->_cached_size[enqueuer_rank] = nreads;
+        for (int i = 0; i < nreads; ++i) {
+          aread_async(this->_cached_data[enqueuer_rank] + nreads - i - 1,
+                      (this->_first_buf[enqueuer_rank] + i) % this->_capacity,
+                      enqueuer_rank, this->_data_win);
+        }
+        flush(enqueuer_rank, this->_data_win);
+      }
+      *output_timestamp =
+          this->_cached_data[enqueuer_rank]
+                            [this->_cached_size[enqueuer_rank] - 1]
+                                .timestamp;
       return true;
     }
   } _spsc;
@@ -436,9 +485,10 @@ private:
   }
 
 public:
-  SlotDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
-               MPI_Comm comm)
-      : _comm{comm}, _self_rank{self_rank}, _spsc{capacity, self_rank, comm} {
+  SlotDequeuerV2c(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+                  MPI_Comm comm, MPI_Aint batch_size = 10)
+      : _comm{comm}, _self_rank{self_rank},
+        _spsc{capacity, self_rank, comm, batch_size} {
     int size;
     MPI_Comm_size(comm, &size);
     this->_number_of_enqueuers = size - 1;
@@ -468,9 +518,9 @@ public:
     MPI_Win_flush_all(this->_min_timestamp_win);
   }
 
-  SlotDequeuer(const SlotDequeuer &) = delete;
-  SlotDequeuer &operator=(const SlotDequeuer &) = delete;
-  ~SlotDequeuer() {
+  SlotDequeuerV2c(const SlotDequeuerV2c &) = delete;
+  SlotDequeuerV2c &operator=(const SlotDequeuerV2c &) = delete;
+  ~SlotDequeuerV2c() {
     MPI_Win_unlock_all(_counter_win);
     MPI_Win_unlock_all(_min_timestamp_win);
     MPI_Win_free(&this->_counter_win);

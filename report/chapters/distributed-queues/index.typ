@@ -18,8 +18,8 @@
 #show: definition-rules
 
 Based on the MPSC algorithms we have surveyed in @related-works[], we propose two wait-free distributed MPSC algorithms:
-- LTQueuev1 (@naive-LTQueue) is a direct modification of LTQueue @ltqueue without any usage of LL/SC.
-- LTQueueV2 (@slotqueue) is inspired by the timestamp-refreshing idea of LTQueue @ltqueue and repeated-rescan of Jiffy @jiffy. Although it still bears some resemblance to LTQueue, we believe it to be more optimized for distributed context.
+- dLTQueue (@naive-LTQueue) is a direct modification of the original LTQueue @ltqueue without any usage of LL/SC, adapted for distributed environment.
+- Slotqueue (@slotqueue) is inspired by the timestamp-refreshing idea of LTQueue @ltqueue and repeated-rescan of Jiffy @jiffy. Although it still bears some resemblance to LTQueue, we believe it to be more optimized for distributed context.
 
 #figure(
   kind: "table",
@@ -29,8 +29,8 @@ Based on the MPSC algorithms we have surveyed in @related-works[], we propose tw
     columns: (1.3fr, 1fr, 1fr),
     table.header(
       [*MPSC*],
-      [*LTQueueV1*],
-      [*LTQueueV2*],
+      [*dLTQueue*],
+      [*Slotqueue*],
     ),
 
     [Correctness], [Linearizable], [Linearizable],
@@ -228,13 +228,13 @@ The procedures of the dequeuer are given as follows.
 `spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
 
 
-== LTQueueV1 - Modified LTQueue without LL/SC <naive-LTQueue>
+== dLTQueue - Modified LTQueue without LL/SC <naive-LTQueue>
 
 This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSCs, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
 
 === Structure
 
-The structure of our modified LTQueue is shown as in @modified-ltqueue-tree.
+The structure of our dLTQueue is shown as in @modified-ltqueue-tree.
 
 We differentiate between 2 types of nodes: *enqueuer nodes* (represented as the rectangular boxes at the bottom of @modified-ltqueue-tree) and normal *tree nodes* (represented as the circular boxes in @modified-ltqueue-tree).
 
@@ -253,7 +253,7 @@ Note that if a local SPSC is empty, the `min_timestamp` variable of the correspo
       supplement: "Image",
       image("/static/images/modified-ltqueue.png"),
       caption: [
-        LTQueueV1's structure
+        dLTQueue's structure
       ],
     ) <modified-ltqueue-tree>
   ],
@@ -266,7 +266,7 @@ Placement-wise:
 
 === Pseudocode
 
-Below is the types utilized in LTQueueV1.
+Below is the types utilized in dLTQueue.
 
 #pseudocode-list(line-numbering: none)[
   + *Types*
@@ -290,16 +290,16 @@ Below is the types utilized in LTQueueV1.
 
 The shared variables in our LTQueue version are as followed.
 
-Note that we have described a very specific and simple way to organize the tree nodes in LTQueue in a min-heap-like array structure hosted on the sole dequeuer. We will resume our description of the related tree-structure procedures `parent()` (@ltqueue-parent), `children()` (@ltqueue-children), `leafNodeIndex()` (@ltqueue-leaf-node-index) with this representation in mind. However, our algorithm doesn't strictly require this representation and can be subtituted with other more-optimized representations & distributed placements, as long as the similar tree-structure procedures are supported.
+Note that we have described a very specific and simple way to organize the tree nodes in dLTQueue in a min-heap-like array structure hosted on the sole dequeuer. We will resume our description of the related tree-structure procedures `parent()` (@ltqueue-parent), `children()` (@ltqueue-children), `leafNodeIndex()` (@ltqueue-leaf-node-index) with this representation in mind. However, our algorithm doesn't strictly require this representation and can be subtituted with other more-optimized representations & distributed placements, as long as the similar tree-structure procedures are supported.
 
 #pseudocode-list(line-numbering: none)[
   + *Shared variables*
     + `Counter`: `remote<uint64_t>`
       + A distributed counter shared by the enqueuers. Hosted at the dequeuer.
     + `Tree_size`: `uint64_t`
-      + A read-only variable storing the number of tree nodes present in the LTQueue.
+      + A read-only variable storing the number of tree nodes present in the dLTQueue.
     + `Nodes`: `remote<node_t>`
-      + An array with `Tree_size` entries storing all the tree nodes present in the LTQueue shared by all processes.
+      + An array with `Tree_size` entries storing all the tree nodes present in the dLTQueue shared by all processes.
       + Hosted at the dequeuer.
       + This array is organized in a similar manner as a min-heap: At index `0` is the root node. For every index $i gt 0$, $floor((i - 1) / 2)$ is the index of the parent of node $i$. For every index $i gt 0$, $2i + 1$ and $2i + 2$ are the indices of the children of node $i$.
     + `Dequeuer_rank`: `uint32_t`
@@ -676,30 +676,30 @@ node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
 
 The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with appropriate changes to accommodate the dequeuer.
 
-== LTQueueV2 - Optimized LTQueue for distributed context <slotqueue>
+== Slotqueue - Optimized dLTQueue for distributed context <slotqueue>
 
 === Motivation
 
-Even though the straightforward LTQueue algorithm we have ported in @naive-LTQueue pretty much preserve the original algorithm's characteristics, that is wait-freedom and time complexity of $Theta(log n)$ for both `enqueue` and `dequeue` operations (which we will prove in @theoretical-aspects[]), we have to be aware that this is $Theta(log n)$ remote operations, which is potentially expensive and a bottleneck in the algorithm.
+Even though the straightforward dLTQueue algorithm we have ported in @naive-LTQueue pretty much preserve the original algorithm's characteristics, that is wait-freedom and time complexity of $Theta(log n)$ for both `enqueue` and `dequeue` operations (which we will prove in @theoretical-aspects[]), we have to be aware that this is $Theta(log n)$ remote operations, which is potentially expensive and a bottleneck in the algorithm.
 
 Therefore, to be more suitable for distributed context, we propose a new algorithm that's inspired by LTQueue, in which both `enqueue` and `dequeue` only perform a constant number of remote operations, at the cost of `dequeue` having to perform $Theta(n)$ local operations, where $n$ is the number of enqueuers. Because remote operations are much more expensive, this might be a worthy tradeoff.
 
 === Structure
 
-The structure of LTQueueV2 is shown as in @slotqueue-structure.
+The structure of Slotqueue is shown as in @slotqueue-structure.
 
-Each enqueuer hosts a distributed SPSC as in LTQueueV1 (@naive-LTQueue). The enqueuer when enqueues a value to its local SPSC will timestamp the value using a distributed counter hosted at the dequeuer.
+Each enqueuer hosts a distributed SPSC as in dLTQueue (@naive-LTQueue). The enqueuer when enqueues a value to its local SPSC will timestamp the value using a distributed counter hosted at the dequeuer.
 
 Additionally, the dequeuer hosts an array whose entries each corresponds with an enqueuer. Each entry stores the minimum timestamp of the local SPSC of the corresponding enqueuer.
 
 #figure(
   image("/static/images/slotqueue.png"),
-  caption: [Basic structure of LTQueueV2],
+  caption: [Basic structure of Slotqueue],
 ) <slotqueue-structure>
 
 === Pseudocode
 
-We first introduce the types and shared variables utilized in LTQueueV2.
+We first introduce the types and shared variables utilized in Slotqueue.
 
 #pseudocode-list(line-numbering: none)[
   + *Types*
@@ -720,7 +720,7 @@ We first introduce the types and shared variables utilized in LTQueueV2.
       + The rank of the dequeuer process. This is read-only.
 ]
 
-Similar to the idea of assigning an order to each enqueuer in LTQueueV1, the following procedure computes an enqueuer's order based on its rank:
+Similar to the idea of assigning an order to each enqueuer in dLTQueue, the following procedure computes an enqueuer's order based on its rank:
 
 #figure(
   kind: "algorithm",
@@ -803,9 +803,13 @@ To enqueue a value, `enqueue` first obtains a timestamp by FAA-ing the distribut
     numbered-title: [`bool refreshEnqueue(timestamp_t ts)`],
   )[
     + `enqueuer_order = enqueueOrder(Self_rank)                                     `
+    + `front = (data_t {}, timestamp_t {})`
+    + `success = spsc_readFront(Spsc, &front)`
+    + `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
+    + *if* `(new_timestamp != ts)`
+      + *return* `true`
     + `old_timestamp = timestamp_t {}`
     + `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
-    + `front = (data_t {}, timestamp_t {})`
     + `success = spsc_readFront(Spsc, &front)`
     + `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
     + *if* `(new_timestamp != ts)`
@@ -816,7 +820,7 @@ To enqueue a value, `enqueue` first obtains a timestamp by FAA-ing the distribut
   ],
 ) <slotqueue-refresh-enqueue>
 
-`refreshEnqueue`'s responsibility is to refresh the timestamp stores in the enqueuer's slot to potentially notify the dequeuer of its newly-enqueued element. It first reads its slot's old timestamp (line 10) and the current front element in the SPSC (line 12). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, the front element's timestamp (line 13). Note that `refreshEnqueue` immediately succeeds if the new timestamp is different from the timestamp `ts` of the element it enqueues (line 15). Otherwise, it tries to CAS its slot's timestamp with the new timestamp (line 16).
+`refreshEnqueue`'s responsibility is to refresh the timestamp stores in the enqueuer's slot to potentially notify the dequeuer of its newly-enqueued element. It first reads the current front element (line 10). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, the front element's timestamp (line 11). If it finds that the front element's timestamp is different from the timestamp `ts` it returns `true` immediately (line 9-13). Otherwise, it reads its slot's old timestamp (line 14) and re-reads the current front element in the SPSC (line 16) to update the new timstamp. Note that similar to line 13, `refreshEnqueue` immediately succeeds if the new timestamp is different from the timestamp `ts` of the element it enqueues (line 19). Otherwise, it tries to CAS its slot's timestamp with the new timestamp (line 20).
 
 The dequeuer operations are given as follows.
 
@@ -824,7 +828,7 @@ The dequeuer operations are given as follows.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 16,
+    line-numbering: i => i + 20,
     booktabs: true,
     numbered-title: [`bool dequeue(data_t* output)`],
   )[
@@ -841,13 +845,13 @@ The dequeuer operations are given as follows.
   ],
 ) <slotqueue-dequeue>
 
-To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot currently stores the minimum timestamp (line 17). If the obtained rank is `DUMMY_RANK`, failure is signaled (line 18-19). Otherwise, it tries to dequeue the SPSC of the corresponding enqueuer (line 21). It then tries to refresh the enqueuer's slot's timestamp to potentially notify the enqueuer of the dequeue (line 24-25). It then signals success (line 26).
+To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot currently stores the minimum timestamp (line 21). If the obtained rank is `DUMMY_RANK`, failure is signaled (line 22-23). Otherwise, it tries to dequeue the SPSC of the corresponding enqueuer (line 25). It then tries to refresh the enqueuer's slot's timestamp to potentially notify the enqueuer of the dequeue (line 28-29). It then signals success (line 30).
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 26,
+    line-numbering: i => i + 30,
     booktabs: true,
     numbered-title: [`uint64_t readMinimumRank()`],
   )[
@@ -871,13 +875,13 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
   ],
 ) <slotqueue-read-minimum-rank>
 
-`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (line 27). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (line 28-33). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (line 32). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (line 38-43).
+`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (line 31). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (line 32-37). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (line 36). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (line 42-47).
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 43,
+    line-numbering: i => i + 47,
     booktabs: true,
     numbered-title: [`refreshDequeue(rank: int)` *returns* `bool`],
   )[
@@ -893,4 +897,4 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
   ],
 ) <slotqueue-refresh-dequeue>
 
-`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (line 46) and the front element (line 48). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, it's the front element's timestamp (line 49). It finally tries to CAS the slot with the new timestamp (line 50).
+`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (line 50) and the front element (line 52). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, it's the front element's timestamp (line 53). It finally tries to CAS the slot with the new timestamp (line 54).
