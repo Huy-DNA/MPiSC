@@ -703,8 +703,8 @@ Noticeably, we use no scheme to avoid ABA problem in Slotqueue. In actuality, AB
 We will prove that Slotqueue is ABA-safe, as introduced in @ABA-safety.
 
 Notice that we only use `CAS`es on:
-- Line 16 of `refreshEnqueue` (@slotqueue-refresh-enqueue), which is part of an enqueue.
-- Line 48 of `refreshDequeue` (@slotqueue-refresh-dequeue), which is part of a dequeue.
+- Line 20 of `refreshEnqueue` (@slotqueue-refresh-enqueue), which is part of an enqueue.
+- Line 54 of `refreshDequeue` (@slotqueue-refresh-dequeue), which is part of a dequeue.
 
 Both `CAS`es target some slot in the `Slots` array.
 
@@ -724,7 +724,7 @@ Both `CAS`es target some slot in the `Slots` array.
   Each enqueue would `FAA` the distributed counter (line 3 in @slotqueue-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @slotqueue-one-enqueuer-one-dequeuer-theorem, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later enqueues, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
 ]
 
-#theorem[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only changes a slot to a value other than `MAX_TIMESTAMP`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX-theorem>
+#theorem[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only change a slot to a value other than `MAX_TIMESTAMP`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX-theorem>
 
 #proof[
   For `refreshEnqueue` to change the slot's value, the condition on line 18 must be `false`. Then, `new_timestamp` must equal to `ts`, which is not `MAX_TIMESTAMP`. It's obvious that the `CAS` on line 20 changes the slot to a value other than `MAX_TIMESTAMP`.
