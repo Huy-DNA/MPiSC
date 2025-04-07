@@ -1,775 +1,1333 @@
 2
 ---- Slotqueue ----
-Dequeue latency: 435.321 us
-Dequeue throughput: 0.0229716 10^5ops/s
-Enqueue latency: 294.567 us
-Enqueue throughput: 0.0339481 10^5ops/s
-Total throughput: 0.0459661 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 420.814 us
-Dequeue throughput: 0.0237635 10^5ops/s
-Enqueue latency: 282.55 us
-Enqueue throughput: 0.0353919 10^5ops/s
-Total throughput: 0.0475507 10^5ops/s
+Dequeue latency: 503.652 us
+Dequeue throughput: 0.019855 10^5ops/s
+Enqueue latency: 235.323 us
+Enqueue throughput: 0.0424948 10^5ops/s
+Total throughput: 0.0397298 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 508.287 us
+Dequeue throughput: 0.0196739 10^5ops/s
+Enqueue latency: 239.384 us
+Enqueue throughput: 0.0417738 10^5ops/s
+Total throughput: 0.0393676 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 818.522 us
+Dequeue throughput: 0.0122171 10^5ops/s
+Enqueue latency: 821.507 us
+Enqueue throughput: 0.0121727 10^5ops/s
+Total throughput: 0.0243333 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 825.368 us
+Dequeue throughput: 0.0121158 10^5ops/s
+Enqueue latency: 828.01 us
+Enqueue throughput: 0.0120772 10^5ops/s
+Total throughput: 0.0241422 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 314.834 us
+Dequeue throughput: 0.0317628 10^5ops/s
+Enqueue latency: 240.211 us
+Enqueue throughput: 0.04163 10^5ops/s
+Total throughput: 0.0635573 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 942.432 us
-Dequeue throughput: 0.0106108 10^5ops/s
-Enqueue latency: 815.356 us
-Enqueue throughput: 0.0122646 10^5ops/s
-Total throughput: 0.0212323 10^5ops/s
+Dequeue latency: 1185.89 us
+Dequeue throughput: 0.0084325 10^5ops/s
+Enqueue latency: 1149.07 us
+Enqueue throughput: 0.00870271 10^5ops/s
+Total throughput: 0.0168734 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 287.044 us
-Dequeue throughput: 0.0348379 10^5ops/s
-Enqueue latency: 288.748 us
-Enqueue throughput: 0.0346323 10^5ops/s
-Total throughput: 0.06923 10^5ops/s
+Dequeue latency: 388.856 us
+Dequeue throughput: 0.0257165 10^5ops/s
+Enqueue latency: 390.922 us
+Enqueue throughput: 0.0255805 10^5ops/s
+Total throughput: 0.0511355 10^5ops/s
 3
 ---- Slotqueue ----
-Dequeue latency: 537.484 us
-Dequeue throughput: 0.0186052 10^5ops/s
-Enqueue latency: 340.483 us
-Enqueue throughput: 0.0587401 10^5ops/s
-Total throughput: 0.0372476 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 506.677 us
-Dequeue throughput: 0.0197364 10^5ops/s
-Enqueue latency: 339.465 us
-Enqueue throughput: 0.0589163 10^5ops/s
-Total throughput: 0.0395123 10^5ops/s
+Dequeue latency: 663.99 us
+Dequeue throughput: 0.0150605 10^5ops/s
+Enqueue latency: 236.522 us
+Enqueue throughput: 0.0845586 10^5ops/s
+Total throughput: 0.0301511 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 607.102 us
+Dequeue throughput: 0.0164717 10^5ops/s
+Enqueue latency: 234.442 us
+Enqueue throughput: 0.085309 10^5ops/s
+Total throughput: 0.0329763 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 565.309 us
+Dequeue throughput: 0.0176895 10^5ops/s
+Enqueue latency: 484.081 us
+Enqueue throughput: 0.0413154 10^5ops/s
+Total throughput: 0.0354143 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 285.998 us
+Dequeue throughput: 0.0349653 10^5ops/s
+Enqueue latency: 481.317 us
+Enqueue throughput: 0.0415526 10^5ops/s
+Total throughput: 0.0700004 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 411.243 us
+Dequeue throughput: 0.0243165 10^5ops/s
+Enqueue latency: 235.425 us
+Enqueue throughput: 0.0849529 10^5ops/s
+Total throughput: 0.0486817 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 1346.23 us
-Dequeue throughput: 0.00742815 10^5ops/s
-Enqueue latency: 1660.3 us
-Enqueue throughput: 0.012046 10^5ops/s
-Total throughput: 0.0148712 10^5ops/s
+Dequeue latency: 1676.12 us
+Dequeue throughput: 0.00596616 10^5ops/s
+Enqueue latency: 1919.26 us
+Enqueue throughput: 0.0104207 10^5ops/s
+Total throughput: 0.0119443 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 160.902 us
-Dequeue throughput: 0.0621497 10^5ops/s
-Enqueue latency: 312.727 us
-Enqueue throughput: 0.0639536 10^5ops/s
-Total throughput: 0.122792 10^5ops/s
+Dequeue latency: 218.823 us
+Dequeue throughput: 0.0456991 10^5ops/s
+Enqueue latency: 414.574 us
+Enqueue throughput: 0.0482422 10^5ops/s
+Total throughput: 0.0902524 10^5ops/s
 4
 ---- Slotqueue ----
-Dequeue latency: 565.945 us
-Dequeue throughput: 0.0176696 10^5ops/s
-Enqueue latency: 319.554 us
-Enqueue throughput: 0.0938809 10^5ops/s
-Total throughput: 0.0353744 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 485.297 us
-Dequeue throughput: 0.0206059 10^5ops/s
-Enqueue latency: 321.49 us
-Enqueue throughput: 0.0933154 10^5ops/s
-Total throughput: 0.0412531 10^5ops/s
+Dequeue latency: 799.863 us
+Dequeue throughput: 0.0125021 10^5ops/s
+Enqueue latency: 241.39 us
+Enqueue throughput: 0.12428 10^5ops/s
+Total throughput: 0.0250293 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 591.934 us
+Dequeue throughput: 0.0168938 10^5ops/s
+Enqueue latency: 225.079 us
+Enqueue throughput: 0.133287 10^5ops/s
+Total throughput: 0.0338214 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 658.327 us
+Dequeue throughput: 0.01519 10^5ops/s
+Enqueue latency: 452.848 us
+Enqueue throughput: 0.0662473 10^5ops/s
+Total throughput: 0.0304104 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 289.195 us
+Dequeue throughput: 0.0345788 10^5ops/s
+Enqueue latency: 456.088 us
+Enqueue throughput: 0.0657768 10^5ops/s
+Total throughput: 0.0692267 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 435.007 us
+Dequeue throughput: 0.0229881 10^5ops/s
+Enqueue latency: 216.624 us
+Enqueue throughput: 0.138489 10^5ops/s
+Total throughput: 0.0460222 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 1520.21 us
-Dequeue throughput: 0.00657806 10^5ops/s
-Enqueue latency: 2168.37 us
-Enqueue throughput: 0.0138352 10^5ops/s
-Total throughput: 0.0131693 10^5ops/s
+Dequeue latency: 1837.92 us
+Dequeue throughput: 0.00544092 10^5ops/s
+Enqueue latency: 2330.49 us
+Enqueue throughput: 0.0128728 10^5ops/s
+Total throughput: 0.0108927 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 106.157 us
-Dequeue throughput: 0.0941999 10^5ops/s
-Enqueue latency: 307.52 us
-Enqueue throughput: 0.0975546 10^5ops/s
-Total throughput: 0.184746 10^5ops/s
+Dequeue latency: 125.166 us
+Dequeue throughput: 0.0798942 10^5ops/s
+Enqueue latency: 350.613 us
+Enqueue throughput: 0.0855643 10^5ops/s
+Total throughput: 0.159948 10^5ops/s
 5
 ---- Slotqueue ----
-Dequeue latency: 462.011 us
-Dequeue throughput: 0.0216445 10^5ops/s
-Enqueue latency: 297.596 us
-Enqueue throughput: 0.13441 10^5ops/s
-Total throughput: 0.0433756 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 459.018 us
-Dequeue throughput: 0.0217856 10^5ops/s
-Enqueue latency: 293.741 us
-Enqueue throughput: 0.136174 10^5ops/s
-Total throughput: 0.0436584 10^5ops/s
+Dequeue latency: 526.275 us
+Dequeue throughput: 0.0190015 10^5ops/s
+Enqueue latency: 173.325 us
+Enqueue throughput: 0.23078 10^5ops/s
+Total throughput: 0.038079 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 519.951 us
+Dequeue throughput: 0.0192326 10^5ops/s
+Enqueue latency: 173.259 us
+Enqueue throughput: 0.230868 10^5ops/s
+Total throughput: 0.0385421 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 377.569 us
+Dequeue throughput: 0.0264852 10^5ops/s
+Enqueue latency: 500.737 us
+Enqueue throughput: 0.0798823 10^5ops/s
+Total throughput: 0.0530764 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 224.331 us
+Dequeue throughput: 0.0445771 10^5ops/s
+Enqueue latency: 680.742 us
+Enqueue throughput: 0.0587594 10^5ops/s
+Total throughput: 0.0870623 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 232.856 us
+Dequeue throughput: 0.042945 10^5ops/s
+Enqueue latency: 178.019 us
+Enqueue throughput: 0.224695 10^5ops/s
+Total throughput: 0.0860618 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 1583.94 us
-Dequeue throughput: 0.00631338 10^5ops/s
-Enqueue latency: 2704.68 us
-Enqueue throughput: 0.0147892 10^5ops/s
-Total throughput: 0.012652 10^5ops/s
+Dequeue latency: 1871.68 us
+Dequeue throughput: 0.0053428 10^5ops/s
+Enqueue latency: 2949.62 us
+Enqueue throughput: 0.0135611 10^5ops/s
+Total throughput: 0.010707 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 138.983 us
-Dequeue throughput: 0.0719515 10^5ops/s
-Enqueue latency: 424.735 us
-Enqueue throughput: 0.0941764 10^5ops/s
-Total throughput: 0.13897 10^5ops/s
+Dequeue latency: 146.518 us
+Dequeue throughput: 0.0682508 10^5ops/s
+Enqueue latency: 451.645 us
+Enqueue throughput: 0.0885652 10^5ops/s
+Total throughput: 0.132919 10^5ops/s
 6
 ---- Slotqueue ----
-Dequeue latency: 490.654 us
-Dequeue throughput: 0.0203809 10^5ops/s
-Enqueue latency: 320.07 us
-Enqueue throughput: 0.156216 10^5ops/s
-Total throughput: 0.0408638 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 481.97 us
-Dequeue throughput: 0.0207482 10^5ops/s
-Enqueue latency: 314.363 us
-Enqueue throughput: 0.159052 10^5ops/s
-Total throughput: 0.0416001 10^5ops/s
+Dequeue latency: 539.806 us
+Dequeue throughput: 0.0185252 10^5ops/s
+Enqueue latency: 193.043 us
+Enqueue throughput: 0.25901 10^5ops/s
+Total throughput: 0.0371429 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 542.72 us
+Dequeue throughput: 0.0184257 10^5ops/s
+Enqueue latency: 193.112 us
+Enqueue throughput: 0.258917 10^5ops/s
+Total throughput: 0.0369435 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 418.45 us
+Dequeue throughput: 0.0238977 10^5ops/s
+Enqueue latency: 556.191 us
+Enqueue throughput: 0.0898971 10^5ops/s
+Total throughput: 0.047915 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 140.939 us
+Dequeue throughput: 0.0709527 10^5ops/s
+Enqueue latency: 573.388 us
+Enqueue throughput: 0.087201 10^5ops/s
+Total throughput: 0.138862 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 232.668 us
+Dequeue throughput: 0.0429797 10^5ops/s
+Enqueue latency: 195.61 us
+Enqueue throughput: 0.25561 10^5ops/s
+Total throughput: 0.0861743 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 1809.31 us
-Dequeue throughput: 0.00552697 10^5ops/s
-Enqueue latency: 3352.36 us
-Enqueue throughput: 0.0149149 10^5ops/s
-Total throughput: 0.0110816 10^5ops/s
+Dequeue latency: 2173.69 us
+Dequeue throughput: 0.00460047 10^5ops/s
+Enqueue latency: 3957.8 us
+Enqueue throughput: 0.0126333 10^5ops/s
+Total throughput: 0.00922394 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 109.744 us
-Dequeue throughput: 0.0911213 10^5ops/s
-Enqueue latency: 448.334 us
-Enqueue throughput: 0.111524 10^5ops/s
-Total throughput: 0.175241 10^5ops/s
+Dequeue latency: 128.578 us
+Dequeue throughput: 0.0777738 10^5ops/s
+Enqueue latency: 529.055 us
+Enqueue throughput: 0.0945081 10^5ops/s
+Total throughput: 0.149867 10^5ops/s
 7
 ---- Slotqueue ----
-Dequeue latency: 522.988 us
-Dequeue throughput: 0.0191209 10^5ops/s
-Enqueue latency: 359.8 us
-Enqueue throughput: 0.166759 10^5ops/s
-Total throughput: 0.0382801 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 510.273 us
-Dequeue throughput: 0.0195973 10^5ops/s
-Enqueue latency: 353.546 us
-Enqueue throughput: 0.169709 10^5ops/s
-Total throughput: 0.0392339 10^5ops/s
+Dequeue latency: 586.461 us
+Dequeue throughput: 0.0170514 10^5ops/s
+Enqueue latency: 216.814 us
+Enqueue throughput: 0.276735 10^5ops/s
+Total throughput: 0.0341369 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 572.22 us
+Dequeue throughput: 0.0174758 10^5ops/s
+Enqueue latency: 216.557 us
+Enqueue throughput: 0.277063 10^5ops/s
+Total throughput: 0.0349865 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 420.736 us
+Dequeue throughput: 0.0237679 10^5ops/s
+Enqueue latency: 570.231 us
+Enqueue throughput: 0.10522 10^5ops/s
+Total throughput: 0.0475833 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 125.004 us
+Dequeue throughput: 0.0799974 10^5ops/s
+Enqueue latency: 628.986 us
+Enqueue throughput: 0.0953916 10^5ops/s
+Total throughput: 0.15407 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 259.577 us
+Dequeue throughput: 0.0385243 10^5ops/s
+Enqueue latency: 219.813 us
+Enqueue throughput: 0.27296 10^5ops/s
+Total throughput: 0.0771256 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2074.09 us
-Dequeue throughput: 0.00482138 10^5ops/s
-Enqueue latency: 4119.16 us
-Enqueue throughput: 0.0145661 10^5ops/s
-Total throughput: 0.0096524 10^5ops/s
+Dequeue latency: 2325.95 us
+Dequeue throughput: 0.00429932 10^5ops/s
+Enqueue latency: 4456.87 us
+Enqueue throughput: 0.0134624 10^5ops/s
+Total throughput: 0.00860723 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 97.4234 us
-Dequeue throughput: 0.102645 10^5ops/s
-Enqueue latency: 501.211 us
-Enqueue throughput: 0.11971 10^5ops/s
-Total throughput: 0.19638 10^5ops/s
+Dequeue latency: 102.341 us
+Dequeue throughput: 0.0977125 10^5ops/s
+Enqueue latency: 527.132 us
+Enqueue throughput: 0.113823 10^5ops/s
+Total throughput: 0.188382 10^5ops/s
 8
 ---- Slotqueue ----
-Dequeue latency: 455.713 us
-Dequeue throughput: 0.0219436 10^5ops/s
-Enqueue latency: 331.011 us
-Enqueue throughput: 0.211473 10^5ops/s
-Total throughput: 0.0439092 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 445.295 us
-Dequeue throughput: 0.022457 10^5ops/s
-Enqueue latency: 325.345 us
-Enqueue throughput: 0.215156 10^5ops/s
-Total throughput: 0.0449365 10^5ops/s
+Dequeue latency: 556.802 us
+Dequeue throughput: 0.0179597 10^5ops/s
+Enqueue latency: 214.602 us
+Enqueue throughput: 0.326185 10^5ops/s
+Total throughput: 0.0359373 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 561.59 us
+Dequeue throughput: 0.0178066 10^5ops/s
+Enqueue latency: 225.13 us
+Enqueue throughput: 0.310932 10^5ops/s
+Total throughput: 0.035631 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 428.123 us
+Dequeue throughput: 0.0233578 10^5ops/s
+Enqueue latency: 619.041 us
+Enqueue throughput: 0.113078 10^5ops/s
+Total throughput: 0.0467389 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 137.949 us
+Dequeue throughput: 0.0724905 10^5ops/s
+Enqueue latency: 685.862 us
+Enqueue throughput: 0.102061 10^5ops/s
+Total throughput: 0.145053 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 259.75 us
+Dequeue throughput: 0.0384986 10^5ops/s
+Enqueue latency: 225.84 us
+Enqueue throughput: 0.309953 10^5ops/s
+Total throughput: 0.0770356 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 1995.4 us
-Dequeue throughput: 0.00501152 10^5ops/s
-Enqueue latency: 4269.23 us
-Enqueue throughput: 0.0163964 10^5ops/s
-Total throughput: 0.010028 10^5ops/s
+Dequeue latency: 2494.52 us
+Dequeue throughput: 0.00400879 10^5ops/s
+Enqueue latency: 5092.1 us
+Enqueue throughput: 0.0137468 10^5ops/s
+Total throughput: 0.00802159 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 79.3786 us
-Dequeue throughput: 0.125979 10^5ops/s
-Enqueue latency: 450.151 us
-Enqueue throughput: 0.155503 10^5ops/s
-Total throughput: 0.241264 10^5ops/s
+Dequeue latency: 99.7226 us
+Dequeue throughput: 0.100278 10^5ops/s
+Enqueue latency: 597.966 us
+Enqueue throughput: 0.117064 10^5ops/s
+Total throughput: 0.191684 10^5ops/s
 9
 ---- Slotqueue ----
-Dequeue latency: 481.399 us
-Dequeue throughput: 0.0207728 10^5ops/s
-Enqueue latency: 411.921 us
-Enqueue throughput: 0.194212 10^5ops/s
-Total throughput: 0.0417117 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 471.467 us
-Dequeue throughput: 0.0212104 10^5ops/s
-Enqueue latency: 417.981 us
-Enqueue throughput: 0.191396 10^5ops/s
-Total throughput: 0.0425904 10^5ops/s
+Dequeue latency: 521.709 us
+Dequeue throughput: 0.0191678 10^5ops/s
+Enqueue latency: 215.068 us
+Enqueue throughput: 0.371975 10^5ops/s
+Total throughput: 0.0384889 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 517.109 us
+Dequeue throughput: 0.0193383 10^5ops/s
+Enqueue latency: 221.672 us
+Enqueue throughput: 0.360893 10^5ops/s
+Total throughput: 0.0388313 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 407.388 us
+Dequeue throughput: 0.0245466 10^5ops/s
+Enqueue latency: 593.108 us
+Enqueue throughput: 0.134883 10^5ops/s
+Total throughput: 0.0492896 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 133.495 us
+Dequeue throughput: 0.0749092 10^5ops/s
+Enqueue latency: 657.052 us
+Enqueue throughput: 0.121756 10^5ops/s
+Total throughput: 0.150418 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 236.707 us
+Dequeue throughput: 0.0422463 10^5ops/s
+Enqueue latency: 223.079 us
+Enqueue throughput: 0.358617 10^5ops/s
+Total throughput: 0.0848305 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2307.19 us
-Dequeue throughput: 0.00433427 10^5ops/s
-Enqueue latency: 5017.17 us
-Enqueue throughput: 0.0159452 10^5ops/s
-Total throughput: 0.00870321 10^5ops/s
+Dequeue latency: 2407.02 us
+Dequeue throughput: 0.00415452 10^5ops/s
+Enqueue latency: 5245.85 us
+Enqueue throughput: 0.0152501 10^5ops/s
+Total throughput: 0.00834227 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 78.6368 us
-Dequeue throughput: 0.127167 10^5ops/s
-Enqueue latency: 472.341 us
-Enqueue throughput: 0.169369 10^5ops/s
-Total throughput: 0.250875 10^5ops/s
+Dequeue latency: 86.8858 us
+Dequeue throughput: 0.115094 10^5ops/s
+Enqueue latency: 544.16 us
+Enqueue throughput: 0.147015 10^5ops/s
+Total throughput: 0.217969 10^5ops/s
 10
 ---- Slotqueue ----
-Dequeue latency: 481.942 us
-Dequeue throughput: 0.0207494 10^5ops/s
-Enqueue latency: 348.305 us
-Enqueue throughput: 0.258394 10^5ops/s
-Total throughput: 0.0416648 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 470.602 us
-Dequeue throughput: 0.0212494 10^5ops/s
-Enqueue latency: 344.654 us
-Enqueue throughput: 0.261132 10^5ops/s
-Total throughput: 0.0426688 10^5ops/s
+Dequeue latency: 516.571 us
+Dequeue throughput: 0.0193584 10^5ops/s
+Enqueue latency: 241.106 us
+Enqueue throughput: 0.37328 10^5ops/s
+Total throughput: 0.0388717 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 492.328 us
+Dequeue throughput: 0.0203116 10^5ops/s
+Enqueue latency: 227.03 us
+Enqueue throughput: 0.396423 10^5ops/s
+Total throughput: 0.0407858 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 377.281 us
+Dequeue throughput: 0.0265055 10^5ops/s
+Enqueue latency: 563.222 us
+Enqueue throughput: 0.159795 10^5ops/s
+Total throughput: 0.053223 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 144.262 us
+Dequeue throughput: 0.0693181 10^5ops/s
+Enqueue latency: 760.329 us
+Enqueue throughput: 0.11837 10^5ops/s
+Total throughput: 0.139191 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 239.587 us
+Dequeue throughput: 0.0417385 10^5ops/s
+Enqueue latency: 244.107 us
+Enqueue throughput: 0.368691 10^5ops/s
+Total throughput: 0.083811 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2209.64 us
-Dequeue throughput: 0.00452561 10^5ops/s
-Enqueue latency: 5039.09 us
-Enqueue throughput: 0.0178604 10^5ops/s
-Total throughput: 0.00908743 10^5ops/s
+Dequeue latency: 2509.64 us
+Dequeue throughput: 0.00398464 10^5ops/s
+Enqueue latency: 5963 us
+Enqueue throughput: 0.0150931 10^5ops/s
+Total throughput: 0.00800115 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 69.1146 us
-Dequeue throughput: 0.144687 10^5ops/s
-Enqueue latency: 506.736 us
-Enqueue throughput: 0.177607 10^5ops/s
-Total throughput: 0.271645 10^5ops/s
+Dequeue latency: 80.677 us
+Dequeue throughput: 0.123951 10^5ops/s
+Enqueue latency: 583.895 us
+Enqueue throughput: 0.154137 10^5ops/s
+Total throughput: 0.236607 10^5ops/s
 11
 ---- Slotqueue ----
-Dequeue latency: 476.104 us
-Dequeue throughput: 0.0210038 10^5ops/s
-Enqueue latency: 367.719 us
-Enqueue throughput: 0.271946 10^5ops/s
-Total throughput: 0.0422176 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 490.924 us
-Dequeue throughput: 0.0203698 10^5ops/s
-Enqueue latency: 379.541 us
-Enqueue throughput: 0.263476 10^5ops/s
-Total throughput: 0.0409432 10^5ops/s
+Dequeue latency: 573.065 us
+Dequeue throughput: 0.01745 10^5ops/s
+Enqueue latency: 328.784 us
+Enqueue throughput: 0.304151 10^5ops/s
+Total throughput: 0.0350746 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 522.157 us
+Dequeue throughput: 0.0191513 10^5ops/s
+Enqueue latency: 242.513 us
+Enqueue throughput: 0.412349 10^5ops/s
+Total throughput: 0.0384942 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 416.97 us
+Dequeue throughput: 0.0239825 10^5ops/s
+Enqueue latency: 725.558 us
+Enqueue throughput: 0.137825 10^5ops/s
+Total throughput: 0.0482049 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 120.808 us
+Dequeue throughput: 0.0827758 10^5ops/s
+Enqueue latency: 734.955 us
+Enqueue throughput: 0.136063 10^5ops/s
+Total throughput: 0.166379 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 230.952 us
+Dequeue throughput: 0.043299 10^5ops/s
+Enqueue latency: 244.957 us
+Enqueue throughput: 0.408235 10^5ops/s
+Total throughput: 0.0870309 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2161.98 us
-Dequeue throughput: 0.00462538 10^5ops/s
-Enqueue latency: 5151.04 us
-Enqueue throughput: 0.0194136 10^5ops/s
-Total throughput: 0.00929702 10^5ops/s
+Dequeue latency: 2545.88 us
+Dequeue throughput: 0.00392791 10^5ops/s
+Enqueue latency: 6241.98 us
+Enqueue throughput: 0.0160206 10^5ops/s
+Total throughput: 0.0078951 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 66.7526 us
-Dequeue throughput: 0.149807 10^5ops/s
-Enqueue latency: 530.401 us
-Enqueue throughput: 0.188536 10^5ops/s
-Total throughput: 0.293625 10^5ops/s
+Dequeue latency: 70.0758 us
+Dequeue throughput: 0.142703 10^5ops/s
+Enqueue latency: 592.143 us
+Enqueue throughput: 0.168878 10^5ops/s
+Total throughput: 0.26596 10^5ops/s
 12
 ---- Slotqueue ----
-Dequeue latency: 512.254 us
-Dequeue throughput: 0.0195216 10^5ops/s
-Enqueue latency: 460.818 us
-Enqueue throughput: 0.238706 10^5ops/s
-Total throughput: 0.0390626 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 504.542 us
-Dequeue throughput: 0.01982 10^5ops/s
-Enqueue latency: 451.316 us
-Enqueue throughput: 0.243732 10^5ops/s
-Total throughput: 0.0396597 10^5ops/s
+Dequeue latency: 582.86 us
+Dequeue throughput: 0.0171568 10^5ops/s
+Enqueue latency: 321.959 us
+Enqueue throughput: 0.341658 10^5ops/s
+Total throughput: 0.0343307 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 575.892 us
+Dequeue throughput: 0.0173644 10^5ops/s
+Enqueue latency: 276.894 us
+Enqueue throughput: 0.397264 10^5ops/s
+Total throughput: 0.0347461 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 450.531 us
+Dequeue throughput: 0.022196 10^5ops/s
+Enqueue latency: 828.199 us
+Enqueue throughput: 0.132818 10^5ops/s
+Total throughput: 0.0444143 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 120.506 us
+Dequeue throughput: 0.0829833 10^5ops/s
+Enqueue latency: 753.088 us
+Enqueue throughput: 0.146065 10^5ops/s
+Total throughput: 0.16605 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 250.259 us
+Dequeue throughput: 0.0399586 10^5ops/s
+Enqueue latency: 270.6 us
+Enqueue throughput: 0.406504 10^5ops/s
+Total throughput: 0.0799571 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2397.42 us
-Dequeue throughput: 0.00417114 10^5ops/s
-Enqueue latency: 5905.34 us
-Enqueue throughput: 0.0186272 10^5ops/s
-Total throughput: 0.00834646 10^5ops/s
+Dequeue latency: 2755.78 us
+Dequeue throughput: 0.00362874 10^5ops/s
+Enqueue latency: 6689.74 us
+Enqueue throughput: 0.0164431 10^5ops/s
+Total throughput: 0.00726111 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 57.0022 us
-Dequeue throughput: 0.175432 10^5ops/s
-Enqueue latency: 518.046 us
-Enqueue throughput: 0.212336 10^5ops/s
-Total throughput: 0.339895 10^5ops/s
+Dequeue latency: 67.7384 us
+Dequeue throughput: 0.147627 10^5ops/s
+Enqueue latency: 642.744 us
+Enqueue throughput: 0.171141 10^5ops/s
+Total throughput: 0.276049 10^5ops/s
 13
 ---- Slotqueue ----
-Dequeue latency: 475.123 us
-Dequeue throughput: 0.0210472 10^5ops/s
-Enqueue latency: 377.161 us
-Enqueue throughput: 0.318166 10^5ops/s
-Total throughput: 0.0422627 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 500.348 us
-Dequeue throughput: 0.0199861 10^5ops/s
-Enqueue latency: 504.659 us
-Enqueue throughput: 0.237784 10^5ops/s
-Total throughput: 0.0401321 10^5ops/s
+Dequeue latency: 543.735 us
+Dequeue throughput: 0.0183913 10^5ops/s
+Enqueue latency: 367.418 us
+Enqueue throughput: 0.326603 10^5ops/s
+Total throughput: 0.0369297 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 527.675 us
+Dequeue throughput: 0.0189511 10^5ops/s
+Enqueue latency: 366.047 us
+Enqueue throughput: 0.327826 10^5ops/s
+Total throughput: 0.0380537 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 441.06 us
+Dequeue throughput: 0.0226727 10^5ops/s
+Enqueue latency: 965.806 us
+Enqueue throughput: 0.124249 10^5ops/s
+Total throughput: 0.0455267 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 164.603 us
+Dequeue throughput: 0.0607523 10^5ops/s
+Enqueue latency: 1027.98 us
+Enqueue throughput: 0.116734 10^5ops/s
+Total throughput: 0.121991 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 255.889 us
+Dequeue throughput: 0.0390795 10^5ops/s
+Enqueue latency: 348.178 us
+Enqueue throughput: 0.344652 10^5ops/s
+Total throughput: 0.0784716 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2478.54 us
-Dequeue throughput: 0.00403463 10^5ops/s
-Enqueue latency: 6373.3 us
-Enqueue throughput: 0.0188285 10^5ops/s
-Total throughput: 0.00810153 10^5ops/s
+Dequeue latency: 2742.05 us
+Dequeue throughput: 0.00364691 10^5ops/s
+Enqueue latency: 7310.95 us
+Enqueue throughput: 0.0164137 10^5ops/s
+Total throughput: 0.007323 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 76.5488 us
-Dequeue throughput: 0.130636 10^5ops/s
-Enqueue latency: 682.165 us
-Enqueue throughput: 0.175911 10^5ops/s
-Total throughput: 0.260185 10^5ops/s
+Dequeue latency: 81.0212 us
+Dequeue throughput: 0.123424 10^5ops/s
+Enqueue latency: 738.405 us
+Enqueue throughput: 0.162512 10^5ops/s
+Total throughput: 0.237391 10^5ops/s
 14
 ---- Slotqueue ----
-Dequeue latency: 523.133 us
-Dequeue throughput: 0.0191156 10^5ops/s
-Enqueue latency: 601.547 us
-Enqueue throughput: 0.21611 10^5ops/s
-Total throughput: 0.0382503 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 522.786 us
-Dequeue throughput: 0.0191283 10^5ops/s
-Enqueue latency: 617.121 us
-Enqueue throughput: 0.210655 10^5ops/s
-Total throughput: 0.0382757 10^5ops/s
+Dequeue latency: 537.346 us
+Dequeue throughput: 0.01861 10^5ops/s
+Enqueue latency: 346.68 us
+Enqueue throughput: 0.374985 10^5ops/s
+Total throughput: 0.0372386 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 524.852 us
+Dequeue throughput: 0.019053 10^5ops/s
+Enqueue latency: 317.28 us
+Enqueue throughput: 0.409733 10^5ops/s
+Total throughput: 0.0381251 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 406.753 us
+Dequeue throughput: 0.024585 10^5ops/s
+Enqueue latency: 903.037 us
+Enqueue throughput: 0.143959 10^5ops/s
+Total throughput: 0.0491945 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 119.818 us
+Dequeue throughput: 0.0834601 10^5ops/s
+Enqueue latency: 782.109 us
+Enqueue throughput: 0.166217 10^5ops/s
+Total throughput: 0.167004 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 238.525 us
+Dequeue throughput: 0.0419244 10^5ops/s
+Enqueue latency: 326.024 us
+Enqueue throughput: 0.398744 10^5ops/s
+Total throughput: 0.0838906 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2589.77 us
-Dequeue throughput: 0.00386135 10^5ops/s
-Enqueue latency: 7164.07 us
-Enqueue throughput: 0.0181461 10^5ops/s
-Total throughput: 0.00772657 10^5ops/s
+Dequeue latency: 2691.14 us
+Dequeue throughput: 0.0037159 10^5ops/s
+Enqueue latency: 7415.59 us
+Enqueue throughput: 0.0175306 10^5ops/s
+Total throughput: 0.00743552 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 64.2414 us
-Dequeue throughput: 0.155663 10^5ops/s
-Enqueue latency: 640.144 us
-Enqueue throughput: 0.203079 10^5ops/s
-Total throughput: 0.307604 10^5ops/s
+Dequeue latency: 99.155 us
+Dequeue throughput: 0.100852 10^5ops/s
+Enqueue latency: 994.11 us
+Enqueue throughput: 0.13077 10^5ops/s
+Total throughput: 0.198771 10^5ops/s
 15
 ---- Slotqueue ----
-Dequeue latency: 480.645 us
-Dequeue throughput: 0.0208054 10^5ops/s
-Enqueue latency: 461.893 us
-Enqueue throughput: 0.3031 10^5ops/s
-Total throughput: 0.0417772 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 470.943 us
-Dequeue throughput: 0.021234 10^5ops/s
-Enqueue latency: 467.694 us
-Enqueue throughput: 0.299341 10^5ops/s
-Total throughput: 0.0426379 10^5ops/s
+Dequeue latency: 535.337 us
+Dequeue throughput: 0.0186798 10^5ops/s
+Enqueue latency: 345.108 us
+Enqueue throughput: 0.405671 10^5ops/s
+Total throughput: 0.0375091 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 511.719 us
+Dequeue throughput: 0.019542 10^5ops/s
+Enqueue latency: 290.137 us
+Enqueue throughput: 0.48253 10^5ops/s
+Total throughput: 0.0392403 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 414.592 us
+Dequeue throughput: 0.0241201 10^5ops/s
+Enqueue latency: 936.954 us
+Enqueue throughput: 0.14942 10^5ops/s
+Total throughput: 0.0484331 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 115.097 us
+Dequeue throughput: 0.0868832 10^5ops/s
+Enqueue latency: 797.633 us
+Enqueue throughput: 0.175519 10^5ops/s
+Total throughput: 0.174462 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 237.364 us
+Dequeue throughput: 0.0421295 10^5ops/s
+Enqueue latency: 314.115 us
+Enqueue throughput: 0.445696 10^5ops/s
+Total throughput: 0.084596 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2299.14 us
-Dequeue throughput: 0.00434946 10^5ops/s
-Enqueue latency: 6188.48 us
-Enqueue throughput: 0.0226227 10^5ops/s
-Total throughput: 0.00873371 10^5ops/s
+Dequeue latency: 2672.02 us
+Dequeue throughput: 0.00374249 10^5ops/s
+Enqueue latency: 7817.75 us
+Enqueue throughput: 0.017908 10^5ops/s
+Total throughput: 0.00751491 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 59.3402 us
-Dequeue throughput: 0.16852 10^5ops/s
-Enqueue latency: 647.963 us
-Enqueue throughput: 0.216062 10^5ops/s
-Total throughput: 0.330347 10^5ops/s
+Dequeue latency: 65.514 us
+Dequeue throughput: 0.152639 10^5ops/s
+Enqueue latency: 733.974 us
+Enqueue throughput: 0.190743 10^5ops/s
+Total throughput: 0.292543 10^5ops/s
 16
 ---- Slotqueue ----
-Dequeue latency: 480.848 us
-Dequeue throughput: 0.0207966 10^5ops/s
-Enqueue latency: 634.258 us
-Enqueue throughput: 0.236497 10^5ops/s
-Total throughput: 0.0416972 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 477.038 us
-Dequeue throughput: 0.0209627 10^5ops/s
-Enqueue latency: 612.277 us
-Enqueue throughput: 0.244987 10^5ops/s
-Total throughput: 0.0420302 10^5ops/s
+Dequeue latency: 557.677 us
+Dequeue throughput: 0.0179315 10^5ops/s
+Enqueue latency: 359.714 us
+Enqueue throughput: 0.416998 10^5ops/s
+Total throughput: 0.0359527 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 544.383 us
+Dequeue throughput: 0.0183694 10^5ops/s
+Enqueue latency: 383.957 us
+Enqueue throughput: 0.390669 10^5ops/s
+Total throughput: 0.0368307 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 441.438 us
+Dequeue throughput: 0.0226532 10^5ops/s
+Enqueue latency: 1077.2 us
+Enqueue throughput: 0.13925 10^5ops/s
+Total throughput: 0.0454197 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 146.433 us
+Dequeue throughput: 0.0682907 10^5ops/s
+Enqueue latency: 1164.39 us
+Enqueue throughput: 0.128823 10^5ops/s
+Total throughput: 0.136923 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 267.279 us
+Dequeue throughput: 0.0374141 10^5ops/s
+Enqueue latency: 476.288 us
+Enqueue throughput: 0.314936 10^5ops/s
+Total throughput: 0.0750154 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2499.61 us
-Dequeue throughput: 0.00400063 10^5ops/s
-Enqueue latency: 8314.71 us
-Enqueue throughput: 0.0180403 10^5ops/s
-Total throughput: 0.00802125 10^5ops/s
+Dequeue latency: 2861.06 us
+Dequeue throughput: 0.00349521 10^5ops/s
+Enqueue latency: 8908.74 us
+Enqueue throughput: 0.0168374 10^5ops/s
+Total throughput: 0.00700789 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 63.9852 us
-Dequeue throughput: 0.156286 10^5ops/s
-Enqueue latency: 769.007 us
-Enqueue throughput: 0.195057 10^5ops/s
-Total throughput: 0.30537 10^5ops/s
+Dequeue latency: 83.8734 us
+Dequeue throughput: 0.119227 10^5ops/s
+Enqueue latency: 1010.41 us
+Enqueue throughput: 0.148454 10^5ops/s
+Total throughput: 0.234219 10^5ops/s
 17
 ---- Slotqueue ----
-Dequeue latency: 471.26 us
-Dequeue throughput: 0.0212197 10^5ops/s
-Enqueue latency: 573.634 us
-Enqueue throughput: 0.278924 10^5ops/s
-Total throughput: 0.0426092 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 464.546 us
-Dequeue throughput: 0.0215264 10^5ops/s
-Enqueue latency: 556.156 us
-Enqueue throughput: 0.287689 10^5ops/s
-Total throughput: 0.043225 10^5ops/s
+Dequeue latency: 528.832 us
+Dequeue throughput: 0.0189096 10^5ops/s
+Enqueue latency: 391.269 us
+Enqueue throughput: 0.408926 10^5ops/s
+Total throughput: 0.0379705 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 521.166 us
+Dequeue throughput: 0.0191878 10^5ops/s
+Enqueue latency: 379.084 us
+Enqueue throughput: 0.42207 10^5ops/s
+Total throughput: 0.038529 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 425.557 us
+Dequeue throughput: 0.0234986 10^5ops/s
+Enqueue latency: 1083.62 us
+Enqueue throughput: 0.147654 10^5ops/s
+Total throughput: 0.0471852 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 110.852 us
+Dequeue throughput: 0.09021 10^5ops/s
+Enqueue latency: 840.855 us
+Enqueue throughput: 0.190282 10^5ops/s
+Total throughput: 0.181142 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 241.492 us
+Dequeue throughput: 0.0414092 10^5ops/s
+Enqueue latency: 344.767 us
+Enqueue throughput: 0.464082 10^5ops/s
+Total throughput: 0.0831498 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2439.17 us
-Dequeue throughput: 0.00409976 10^5ops/s
-Enqueue latency: 7778.94 us
-Enqueue throughput: 0.0205684 10^5ops/s
-Total throughput: 0.00823231 10^5ops/s
+Dequeue latency: 2894.26 us
+Dequeue throughput: 0.00345512 10^5ops/s
+Enqueue latency: 9234.84 us
+Enqueue throughput: 0.0173257 10^5ops/s
+Total throughput: 0.00693787 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 61.1596 us
-Dequeue throughput: 0.163507 10^5ops/s
-Enqueue latency: 727.644 us
-Enqueue throughput: 0.219888 10^5ops/s
-Total throughput: 0.323982 10^5ops/s
+Dequeue latency: 62.092 us
+Dequeue throughput: 0.161051 10^5ops/s
+Enqueue latency: 747.064 us
+Enqueue throughput: 0.214172 10^5ops/s
+Total throughput: 0.314325 10^5ops/s
 18
 ---- Slotqueue ----
-Dequeue latency: 488.645 us
-Dequeue throughput: 0.0204648 10^5ops/s
-Enqueue latency: 680.568 us
-Enqueue throughput: 0.249791 10^5ops/s
-Total throughput: 0.0409909 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 493.504 us
-Dequeue throughput: 0.0202633 10^5ops/s
-Enqueue latency: 760.217 us
-Enqueue throughput: 0.22362 10^5ops/s
-Total throughput: 0.0405873 10^5ops/s
+Dequeue latency: 566.334 us
+Dequeue throughput: 0.0176574 10^5ops/s
+Enqueue latency: 479.28 us
+Enqueue throughput: 0.354698 10^5ops/s
+Total throughput: 0.0353678 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 525.304 us
+Dequeue throughput: 0.0190366 10^5ops/s
+Enqueue latency: 373.337 us
+Enqueue throughput: 0.455352 10^5ops/s
+Total throughput: 0.0381303 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 400.991 us
+Dequeue throughput: 0.0249382 10^5ops/s
+Enqueue latency: 951.78 us
+Enqueue throughput: 0.178613 10^5ops/s
+Total throughput: 0.0499513 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 136.968 us
+Dequeue throughput: 0.0730096 10^5ops/s
+Enqueue latency: 1111.85 us
+Enqueue throughput: 0.152898 10^5ops/s
+Total throughput: 0.146238 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 253.927 us
+Dequeue throughput: 0.0393813 10^5ops/s
+Enqueue latency: 409.222 us
+Enqueue throughput: 0.415423 10^5ops/s
+Total throughput: 0.0788808 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2521.19 us
-Dequeue throughput: 0.00396639 10^5ops/s
-Enqueue latency: 8384.41 us
-Enqueue throughput: 0.0202757 10^5ops/s
-Total throughput: 0.00794467 10^5ops/s
+Dequeue latency: 2902.5 us
+Dequeue throughput: 0.00344531 10^5ops/s
+Enqueue latency: 9595.57 us
+Enqueue throughput: 0.0177165 10^5ops/s
+Total throughput: 0.00690095 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 49.613 us
-Dequeue throughput: 0.20156 10^5ops/s
-Enqueue latency: 641.21 us
-Enqueue throughput: 0.265124 10^5ops/s
-Total throughput: 0.396161 10^5ops/s
+Dequeue latency: 65.2976 us
+Dequeue throughput: 0.153145 10^5ops/s
+Enqueue latency: 879.047 us
+Enqueue throughput: 0.193391 10^5ops/s
+Total throughput: 0.290839 10^5ops/s
 19
 ---- Slotqueue ----
-Dequeue latency: 475.489 us
-Dequeue throughput: 0.021031 10^5ops/s
-Enqueue latency: 551.427 us
-Enqueue throughput: 0.326426 10^5ops/s
-Total throughput: 0.0422302 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 475.573 us
-Dequeue throughput: 0.0210273 10^5ops/s
-Enqueue latency: 501.613 us
-Enqueue throughput: 0.358842 10^5ops/s
-Total throughput: 0.0422228 10^5ops/s
+Dequeue latency: 570.952 us
+Dequeue throughput: 0.0175146 10^5ops/s
+Enqueue latency: 461.612 us
+Enqueue throughput: 0.389938 10^5ops/s
+Total throughput: 0.0351693 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 553.016 us
+Dequeue throughput: 0.0180826 10^5ops/s
+Enqueue latency: 378.146 us
+Enqueue throughput: 0.476007 10^5ops/s
+Total throughput: 0.03631 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 408.535 us
+Dequeue throughput: 0.0244777 10^5ops/s
+Enqueue latency: 940.544 us
+Enqueue throughput: 0.191379 10^5ops/s
+Total throughput: 0.0491512 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 144.532 us
+Dequeue throughput: 0.0691886 10^5ops/s
+Enqueue latency: 1432.78 us
+Enqueue throughput: 0.12563 10^5ops/s
+Total throughput: 0.138931 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 241.3 us
+Dequeue throughput: 0.0414423 10^5ops/s
+Enqueue latency: 421.033 us
+Enqueue throughput: 0.42752 10^5ops/s
+Total throughput: 0.0832161 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2437.06 us
-Dequeue throughput: 0.0041033 10^5ops/s
-Enqueue latency: 7796.52 us
-Enqueue throughput: 0.0230872 10^5ops/s
-Total throughput: 0.00823942 10^5ops/s
+Dequeue latency: 3149.69 us
+Dequeue throughput: 0.00317491 10^5ops/s
+Enqueue latency: 11025.1 us
+Enqueue throughput: 0.0163264 10^5ops/s
+Total throughput: 0.00637522 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 52.3324 us
-Dequeue throughput: 0.191086 10^5ops/s
-Enqueue latency: 726.301 us
-Enqueue throughput: 0.247831 10^5ops/s
-Total throughput: 0.374119 10^5ops/s
+Dequeue latency: 61.6008 us
+Dequeue throughput: 0.162336 10^5ops/s
+Enqueue latency: 893.274 us
+Enqueue throughput: 0.201506 10^5ops/s
+Total throughput: 0.307671 10^5ops/s
 20
 ---- Slotqueue ----
-Dequeue latency: 509.641 us
-Dequeue throughput: 0.0196217 10^5ops/s
-Enqueue latency: 872.503 us
-Enqueue throughput: 0.217764 10^5ops/s
-Total throughput: 0.0393807 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 490.087 us
-Dequeue throughput: 0.0204045 10^5ops/s
-Enqueue latency: 650.52 us
-Enqueue throughput: 0.292074 10^5ops/s
-Total throughput: 0.0409519 10^5ops/s
+Dequeue latency: 571.964 us
+Dequeue throughput: 0.0174836 10^5ops/s
+Enqueue latency: 452.641 us
+Enqueue throughput: 0.419759 10^5ops/s
+Total throughput: 0.0350896 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 556.121 us
+Dequeue throughput: 0.0179817 10^5ops/s
+Enqueue latency: 494.92 us
+Enqueue throughput: 0.3839 10^5ops/s
+Total throughput: 0.0360892 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 433.306 us
+Dequeue throughput: 0.0230784 10^5ops/s
+Enqueue latency: 1298.83 us
+Enqueue throughput: 0.146285 10^5ops/s
+Total throughput: 0.0463183 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 183.383 us
+Dequeue throughput: 0.0545308 10^5ops/s
+Enqueue latency: 1898.83 us
+Enqueue throughput: 0.100061 10^5ops/s
+Total throughput: 0.109443 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 298.776 us
+Dequeue throughput: 0.0334699 10^5ops/s
+Enqueue latency: 732.082 us
+Enqueue throughput: 0.259534 10^5ops/s
+Total throughput: 0.067174 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2686.44 us
-Dequeue throughput: 0.00372239 10^5ops/s
-Enqueue latency: 10169.8 us
-Enqueue throughput: 0.0186827 10^5ops/s
-Total throughput: 0.00747084 10^5ops/s
+Dequeue latency: 3372.88 us
+Dequeue throughput: 0.00296483 10^5ops/s
+Enqueue latency: 14451.4 us
+Enqueue throughput: 0.0131475 10^5ops/s
+Total throughput: 0.00595041 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 62.2146 us
-Dequeue throughput: 0.160734 10^5ops/s
-Enqueue latency: 944.862 us
-Enqueue throughput: 0.201088 10^5ops/s
-Total throughput: 0.311462 10^5ops/s
+Dequeue latency: 72.9774 us
+Dequeue throughput: 0.137029 10^5ops/s
+Enqueue latency: 1130.28 us
+Enqueue throughput: 0.1681 10^5ops/s
+Total throughput: 0.261725 10^5ops/s
 21
 ---- Slotqueue ----
-Dequeue latency: 491.945 us
-Dequeue throughput: 0.0203275 10^5ops/s
-Enqueue latency: 742.386 us
-Enqueue throughput: 0.269402 10^5ops/s
-Total throughput: 0.0410615 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 467.706 us
-Dequeue throughput: 0.0213809 10^5ops/s
-Enqueue latency: 701.234 us
-Enqueue throughput: 0.285211 10^5ops/s
-Total throughput: 0.0431895 10^5ops/s
+Dequeue latency: 512.061 us
+Dequeue throughput: 0.0195289 10^5ops/s
+Enqueue latency: 501.518 us
+Enqueue throughput: 0.39879 10^5ops/s
+Total throughput: 0.0394484 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 496.07 us
+Dequeue throughput: 0.0201584 10^5ops/s
+Enqueue latency: 491.787 us
+Enqueue throughput: 0.40668 10^5ops/s
+Total throughput: 0.0407201 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 407.246 us
+Dequeue throughput: 0.0245552 10^5ops/s
+Enqueue latency: 1336.32 us
+Enqueue throughput: 0.149665 10^5ops/s
+Total throughput: 0.0496014 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 135.88 us
+Dequeue throughput: 0.0735945 10^5ops/s
+Enqueue latency: 1231.71 us
+Enqueue throughput: 0.162376 10^5ops/s
+Total throughput: 0.148661 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 239.7 us
+Dequeue throughput: 0.0417188 10^5ops/s
+Enqueue latency: 478.463 us
+Enqueue throughput: 0.418005 10^5ops/s
+Total throughput: 0.084272 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2593.21 us
-Dequeue throughput: 0.00385623 10^5ops/s
-Enqueue latency: 9606.65 us
-Enqueue throughput: 0.0208189 10^5ops/s
-Total throughput: 0.00778958 10^5ops/s
+Dequeue latency: 3084.51 us
+Dequeue throughput: 0.00324201 10^5ops/s
+Enqueue latency: 12550 us
+Enqueue throughput: 0.0159362 10^5ops/s
+Total throughput: 0.00654886 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 61.7386 us
-Dequeue throughput: 0.161973 10^5ops/s
-Enqueue latency: 928.673 us
-Enqueue throughput: 0.215361 10^5ops/s
-Total throughput: 0.312598 10^5ops/s
+Dequeue latency: 75.132 us
+Dequeue throughput: 0.133099 10^5ops/s
+Enqueue latency: 1131.21 us
+Enqueue throughput: 0.176801 10^5ops/s
+Total throughput: 0.258883 10^5ops/s
 22
 ---- Slotqueue ----
-Dequeue latency: 465.097 us
-Dequeue throughput: 0.0215009 10^5ops/s
-Enqueue latency: 774.683 us
-Enqueue throughput: 0.271079 10^5ops/s
-Total throughput: 0.0431738 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 453.96 us
-Dequeue throughput: 0.0220284 10^5ops/s
-Enqueue latency: 704.849 us
-Enqueue throughput: 0.297936 10^5ops/s
-Total throughput: 0.044233 10^5ops/s
+Dequeue latency: 532.671 us
+Dequeue throughput: 0.0187733 10^5ops/s
+Enqueue latency: 492.462 us
+Enqueue throughput: 0.426429 10^5ops/s
+Total throughput: 0.0376968 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 505.444 us
+Dequeue throughput: 0.0197846 10^5ops/s
+Enqueue latency: 441.295 us
+Enqueue throughput: 0.475872 10^5ops/s
+Total throughput: 0.0397274 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 402.46 us
+Dequeue throughput: 0.0248472 10^5ops/s
+Enqueue latency: 1265.94 us
+Enqueue throughput: 0.165885 10^5ops/s
+Total throughput: 0.0498932 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 126.079 us
+Dequeue throughput: 0.0793151 10^5ops/s
+Enqueue latency: 1338.11 us
+Enqueue throughput: 0.156938 10^5ops/s
+Total throughput: 0.159265 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 239.588 us
+Dequeue throughput: 0.0417382 10^5ops/s
+Enqueue latency: 529.73 us
+Enqueue throughput: 0.396428 10^5ops/s
+Total throughput: 0.0838104 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2600.45 us
-Dequeue throughput: 0.00384549 10^5ops/s
-Enqueue latency: 11312.8 us
-Enqueue throughput: 0.018563 10^5ops/s
-Total throughput: 0.00772175 10^5ops/s
+Dequeue latency: 3159.75 us
+Dequeue throughput: 0.00316481 10^5ops/s
+Enqueue latency: 13105.5 us
+Enqueue throughput: 0.0160238 10^5ops/s
+Total throughput: 0.00635494 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 64.3666 us
-Dequeue throughput: 0.15536 10^5ops/s
-Enqueue latency: 1037.88 us
-Enqueue throughput: 0.202336 10^5ops/s
-Total throughput: 0.301451 10^5ops/s
+Dequeue latency: 61.8134 us
+Dequeue throughput: 0.161777 10^5ops/s
+Enqueue latency: 1013.92 us
+Enqueue throughput: 0.207118 10^5ops/s
+Total throughput: 0.308069 10^5ops/s
 23
 ---- Slotqueue ----
-Dequeue latency: 475.431 us
-Dequeue throughput: 0.0210335 10^5ops/s
-Enqueue latency: 962.137 us
-Enqueue throughput: 0.228658 10^5ops/s
-Total throughput: 0.0423195 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 459.596 us
-Dequeue throughput: 0.0217583 10^5ops/s
-Enqueue latency: 966.949 us
-Enqueue throughput: 0.22752 10^5ops/s
-Total throughput: 0.0437776 10^5ops/s
+Dequeue latency: 509.87 us
+Dequeue throughput: 0.0196128 10^5ops/s
+Enqueue latency: 474.015 us
+Enqueue throughput: 0.46412 10^5ops/s
+Total throughput: 0.039461 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 530.009 us
+Dequeue throughput: 0.0188676 10^5ops/s
+Enqueue latency: 645.305 us
+Enqueue throughput: 0.340924 10^5ops/s
+Total throughput: 0.0379616 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 438.331 us
+Dequeue throughput: 0.0228138 10^5ops/s
+Enqueue latency: 1538.18 us
+Enqueue throughput: 0.143026 10^5ops/s
+Total throughput: 0.0459014 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 132.812 us
+Dequeue throughput: 0.0752943 10^5ops/s
+Enqueue latency: 1474.69 us
+Enqueue throughput: 0.149184 10^5ops/s
+Total throughput: 0.151492 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 249.531 us
+Dequeue throughput: 0.0400752 10^5ops/s
+Enqueue latency: 521.3 us
+Enqueue throughput: 0.422022 10^5ops/s
+Total throughput: 0.0806313 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 3129.88 us
-Dequeue throughput: 0.00319501 10^5ops/s
-Enqueue latency: 18673.5 us
-Enqueue throughput: 0.0117814 10^5ops/s
-Total throughput: 0.00642837 10^5ops/s
+Dequeue latency: 3095.92 us
+Dequeue throughput: 0.00323006 10^5ops/s
+Enqueue latency: 12873.8 us
+Enqueue throughput: 0.017089 10^5ops/s
+Total throughput: 0.00649887 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 101.29 us
-Dequeue throughput: 0.0987264 10^5ops/s
-Enqueue latency: 1799.65 us
-Enqueue throughput: 0.122246 10^5ops/s
-Total throughput: 0.186652 10^5ops/s
+Dequeue latency: 75.2048 us
+Dequeue throughput: 0.13297 10^5ops/s
+Enqueue latency: 1286.17 us
+Enqueue throughput: 0.17105 10^5ops/s
+Total throughput: 0.260445 10^5ops/s
 24
 ---- Slotqueue ----
-Dequeue latency: 503.814 us
-Dequeue throughput: 0.0198486 10^5ops/s
-Enqueue latency: 1130.38 us
-Enqueue throughput: 0.203471 10^5ops/s
-Total throughput: 0.0399354 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 490.439 us
-Dequeue throughput: 0.0203899 10^5ops/s
-Enqueue latency: 1225.68 us
-Enqueue throughput: 0.187651 10^5ops/s
-Total throughput: 0.0410245 10^5ops/s
+Dequeue latency: 570.91 us
+Dequeue throughput: 0.0175159 10^5ops/s
+Enqueue latency: 601.48 us
+Enqueue throughput: 0.38239 10^5ops/s
+Total throughput: 0.035242 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 543.037 us
+Dequeue throughput: 0.0184149 10^5ops/s
+Enqueue latency: 480.836 us
+Enqueue throughput: 0.478333 10^5ops/s
+Total throughput: 0.0370509 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 421.846 us
+Dequeue throughput: 0.0237053 10^5ops/s
+Enqueue latency: 1396.17 us
+Enqueue throughput: 0.164736 10^5ops/s
+Total throughput: 0.0476951 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 127.752 us
+Dequeue throughput: 0.0782768 10^5ops/s
+Enqueue latency: 1396.73 us
+Enqueue throughput: 0.16467 10^5ops/s
+Total throughput: 0.157493 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 257.361 us
+Dequeue throughput: 0.0388559 10^5ops/s
+Enqueue latency: 476.234 us
+Enqueue throughput: 0.482956 10^5ops/s
+Total throughput: 0.0781781 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2862.03 us
-Dequeue throughput: 0.00349403 10^5ops/s
-Enqueue latency: 15654.7 us
-Enqueue throughput: 0.0146921 10^5ops/s
-Total throughput: 0.00702998 10^5ops/s
+Dequeue latency: 3241.14 us
+Dequeue throughput: 0.00308533 10^5ops/s
+Enqueue latency: 14097.9 us
+Enqueue throughput: 0.0163145 10^5ops/s
+Total throughput: 0.00620769 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 56.2268 us
-Dequeue throughput: 0.177851 10^5ops/s
-Enqueue latency: 1033.73 us
-Enqueue throughput: 0.222495 10^5ops/s
-Total throughput: 0.341641 10^5ops/s
+Dequeue latency: 63.0374 us
+Dequeue throughput: 0.158636 10^5ops/s
+Enqueue latency: 1161.88 us
+Enqueue throughput: 0.197956 10^5ops/s
+Total throughput: 0.30477 10^5ops/s
 25
 ---- Slotqueue ----
-Dequeue latency: 442.823 us
-Dequeue throughput: 0.0225824 10^5ops/s
-Enqueue latency: 870.573 us
-Enqueue throughput: 0.27568 10^5ops/s
-Total throughput: 0.0453454 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 432.124 us
-Dequeue throughput: 0.0231415 10^5ops/s
-Enqueue latency: 853.73 us
-Enqueue throughput: 0.281119 10^5ops/s
-Total throughput: 0.0464682 10^5ops/s
+Dequeue latency: 467.131 us
+Dequeue throughput: 0.0214073 10^5ops/s
+Enqueue latency: 418.188 us
+Enqueue throughput: 0.573905 10^5ops/s
+Total throughput: 0.0429858 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 456.003 us
+Dequeue throughput: 0.0219297 10^5ops/s
+Enqueue latency: 488.795 us
+Enqueue throughput: 0.491003 10^5ops/s
+Total throughput: 0.0440348 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 349.419 us
+Dequeue throughput: 0.028619 10^5ops/s
+Enqueue latency: 1122.93 us
+Enqueue throughput: 0.213726 10^5ops/s
+Total throughput: 0.0574669 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 114.632 us
+Dequeue throughput: 0.0872358 10^5ops/s
+Enqueue latency: 1258.33 us
+Enqueue throughput: 0.190729 10^5ops/s
+Total throughput: 0.17517 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 220.801 us
+Dequeue throughput: 0.0452897 10^5ops/s
+Enqueue latency: 458.3 us
+Enqueue throughput: 0.523675 10^5ops/s
+Total throughput: 0.0909417 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2831.14 us
-Dequeue throughput: 0.00353215 10^5ops/s
-Enqueue latency: 13871 us
-Enqueue throughput: 0.0173022 10^5ops/s
-Total throughput: 0.00709256 10^5ops/s
+Dequeue latency: 3058.76 us
+Dequeue throughput: 0.0032693 10^5ops/s
+Enqueue latency: 13210.8 us
+Enqueue throughput: 0.0181669 10^5ops/s
+Total throughput: 0.00656474 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 67.5384 us
-Dequeue throughput: 0.148064 10^5ops/s
-Enqueue latency: 1263.65 us
-Enqueue throughput: 0.189927 10^5ops/s
-Total throughput: 0.281672 10^5ops/s
+Dequeue latency: 76.1546 us
+Dequeue throughput: 0.131312 10^5ops/s
+Enqueue latency: 1409.87 us
+Enqueue throughput: 0.170229 10^5ops/s
+Total throughput: 0.252393 10^5ops/s
 26
 ---- Slotqueue ----
-Dequeue latency: 468.983 us
-Dequeue throughput: 0.0213227 10^5ops/s
-Enqueue latency: 840.851 us
-Enqueue throughput: 0.297318 10^5ops/s
-Total throughput: 0.0431785 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 446.704 us
-Dequeue throughput: 0.0223862 10^5ops/s
-Enqueue latency: 784.231 us
-Enqueue throughput: 0.318783 10^5ops/s
-Total throughput: 0.045332 10^5ops/s
+Dequeue latency: 509.006 us
+Dequeue throughput: 0.0196461 10^5ops/s
+Enqueue latency: 532.978 us
+Enqueue throughput: 0.469062 10^5ops/s
+Total throughput: 0.0397834 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 486.003 us
+Dequeue throughput: 0.020576 10^5ops/s
+Enqueue latency: 482.79 us
+Enqueue throughput: 0.517823 10^5ops/s
+Total throughput: 0.0416664 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 377.258 us
+Dequeue throughput: 0.0265071 10^5ops/s
+Enqueue latency: 1353.12 us
+Enqueue throughput: 0.184758 10^5ops/s
+Total throughput: 0.0536768 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 157.265 us
+Dequeue throughput: 0.063587 10^5ops/s
+Enqueue latency: 2005.44 us
+Enqueue throughput: 0.124661 10^5ops/s
+Total throughput: 0.128764 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 255.18 us
+Dequeue throughput: 0.0391881 10^5ops/s
+Enqueue latency: 675.203 us
+Enqueue throughput: 0.370259 10^5ops/s
+Total throughput: 0.0793559 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2590.23 us
-Dequeue throughput: 0.00386067 10^5ops/s
-Enqueue latency: 11493.8 us
-Enqueue throughput: 0.0217509 10^5ops/s
-Total throughput: 0.00781785 10^5ops/s
+Dequeue latency: 3182.24 us
+Dequeue throughput: 0.00314244 10^5ops/s
+Enqueue latency: 15751.9 us
+Enqueue throughput: 0.0158711 10^5ops/s
+Total throughput: 0.00636345 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 54.3944 us
-Dequeue throughput: 0.183842 10^5ops/s
-Enqueue latency: 1045.58 us
-Enqueue throughput: 0.239101 10^5ops/s
-Total throughput: 0.355277 10^5ops/s
+Dequeue latency: 101.388 us
+Dequeue throughput: 0.0986306 10^5ops/s
+Enqueue latency: 1978.04 us
+Enqueue throughput: 0.126388 10^5ops/s
+Total throughput: 0.18854 10^5ops/s
 27
 ---- Slotqueue ----
-Dequeue latency: 499.941 us
-Dequeue throughput: 0.0200024 10^5ops/s
-Enqueue latency: 1011.76 us
-Enqueue throughput: 0.256979 10^5ops/s
-Total throughput: 0.0402847 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 486.992 us
-Dequeue throughput: 0.0205342 10^5ops/s
-Enqueue latency: 899.197 us
-Enqueue throughput: 0.289147 10^5ops/s
-Total throughput: 0.0413559 10^5ops/s
+Dequeue latency: 518.447 us
+Dequeue throughput: 0.0192884 10^5ops/s
+Enqueue latency: 640.204 us
+Enqueue throughput: 0.40612 10^5ops/s
+Total throughput: 0.0388468 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 499.663 us
+Dequeue throughput: 0.0200135 10^5ops/s
+Enqueue latency: 606.675 us
+Enqueue throughput: 0.428566 10^5ops/s
+Total throughput: 0.0403072 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 399.143 us
+Dequeue throughput: 0.0250537 10^5ops/s
+Enqueue latency: 1666.43 us
+Enqueue throughput: 0.156022 10^5ops/s
+Total throughput: 0.0504582 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 158.688 us
+Dequeue throughput: 0.0630167 10^5ops/s
+Enqueue latency: 2151.45 us
+Enqueue throughput: 0.120849 10^5ops/s
+Total throughput: 0.126916 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 263.097 us
+Dequeue throughput: 0.0380089 10^5ops/s
+Enqueue latency: 744.019 us
+Enqueue throughput: 0.349453 10^5ops/s
+Total throughput: 0.0765498 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2836.49 us
-Dequeue throughput: 0.00352548 10^5ops/s
-Enqueue latency: 13209 us
-Enqueue throughput: 0.0196836 10^5ops/s
-Total throughput: 0.00710032 10^5ops/s
+Dequeue latency: 3391.39 us
+Dequeue throughput: 0.00294865 10^5ops/s
+Enqueue latency: 18856.2 us
+Enqueue throughput: 0.0137886 10^5ops/s
+Total throughput: 0.00593857 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 57.9464 us
-Dequeue throughput: 0.172573 10^5ops/s
-Enqueue latency: 1192.08 us
-Enqueue throughput: 0.218106 10^5ops/s
-Total throughput: 0.329737 10^5ops/s
+Dequeue latency: 74.5658 us
+Dequeue throughput: 0.13411 10^5ops/s
+Enqueue latency: 1549.65 us
+Enqueue throughput: 0.167779 10^5ops/s
+Total throughput: 0.254172 10^5ops/s
 28
 ---- Slotqueue ----
-Dequeue latency: 482.367 us
-Dequeue throughput: 0.0207311 10^5ops/s
-Enqueue latency: 981.473 us
-Enqueue throughput: 0.275097 10^5ops/s
-Total throughput: 0.0420012 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 469.764 us
-Dequeue throughput: 0.0212873 10^5ops/s
-Enqueue latency: 950.044 us
-Enqueue throughput: 0.284197 10^5ops/s
-Total throughput: 0.0431281 10^5ops/s
+Dequeue latency: 575.019 us
+Dequeue throughput: 0.0173907 10^5ops/s
+Enqueue latency: 896.321 us
+Enqueue throughput: 0.301231 10^5ops/s
+Total throughput: 0.0352336 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 521.97 us
+Dequeue throughput: 0.0191582 10^5ops/s
+Enqueue latency: 772.105 us
+Enqueue throughput: 0.349693 10^5ops/s
+Total throughput: 0.0388145 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 482.229 us
+Dequeue throughput: 0.020737 10^5ops/s
+Enqueue latency: 2465.48 us
+Enqueue throughput: 0.109512 10^5ops/s
+Total throughput: 0.0420132 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 165.422 us
+Dequeue throughput: 0.0604516 10^5ops/s
+Enqueue latency: 2342.2 us
+Enqueue throughput: 0.115276 10^5ops/s
+Total throughput: 0.122475 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 240.983 us
+Dequeue throughput: 0.0414967 10^5ops/s
+Enqueue latency: 616.879 us
+Enqueue throughput: 0.437687 10^5ops/s
+Total throughput: 0.0840723 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2786.23 us
-Dequeue throughput: 0.00358908 10^5ops/s
-Enqueue latency: 14711.7 us
-Enqueue throughput: 0.0183527 10^5ops/s
-Total throughput: 0.00727147 10^5ops/s
+Dequeue latency: 3249.11 us
+Dequeue throughput: 0.00307777 10^5ops/s
+Enqueue latency: 16437.8 us
+Enqueue throughput: 0.0164256 10^5ops/s
+Total throughput: 0.00623555 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 61.2434 us
-Dequeue throughput: 0.163283 10^5ops/s
-Enqueue latency: 1315.24 us
-Enqueue throughput: 0.205285 10^5ops/s
-Total throughput: 0.311979 10^5ops/s
+Dequeue latency: 68.1198 us
+Dequeue throughput: 0.1468 10^5ops/s
+Enqueue latency: 1483.29 us
+Enqueue throughput: 0.182028 10^5ops/s
+Total throughput: 0.276691 10^5ops/s
 29
 ---- Slotqueue ----
-Dequeue latency: 464.734 us
-Dequeue throughput: 0.0215177 10^5ops/s
-Enqueue latency: 935.501 us
-Enqueue throughput: 0.299305 10^5ops/s
-Total throughput: 0.0432075 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 454.903 us
-Dequeue throughput: 0.0219827 10^5ops/s
-Enqueue latency: 934.994 us
-Enqueue throughput: 0.299467 10^5ops/s
-Total throughput: 0.0441413 10^5ops/s
+Dequeue latency: 514.35 us
+Dequeue throughput: 0.019442 10^5ops/s
+Enqueue latency: 639.227 us
+Enqueue throughput: 0.438029 10^5ops/s
+Total throughput: 0.0390395 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 502.076 us
+Dequeue throughput: 0.0199173 10^5ops/s
+Enqueue latency: 591.112 us
+Enqueue throughput: 0.473683 10^5ops/s
+Total throughput: 0.0399939 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 427.067 us
+Dequeue throughput: 0.0234155 10^5ops/s
+Enqueue latency: 1849.96 us
+Enqueue throughput: 0.151355 10^5ops/s
+Total throughput: 0.0470184 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 140.026 us
+Dequeue throughput: 0.0714155 10^5ops/s
+Enqueue latency: 1962.6 us
+Enqueue throughput: 0.142668 10^5ops/s
+Total throughput: 0.143402 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 275.394 us
+Dequeue throughput: 0.0363116 10^5ops/s
+Enqueue latency: 764.839 us
+Enqueue throughput: 0.36609 10^5ops/s
+Total throughput: 0.0729136 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2658.04 us
-Dequeue throughput: 0.00376218 10^5ops/s
-Enqueue latency: 13682.3 us
-Enqueue throughput: 0.0204643 10^5ops/s
-Total throughput: 0.00755445 10^5ops/s
+Dequeue latency: 3376.31 us
+Dequeue throughput: 0.00296181 10^5ops/s
+Enqueue latency: 21362.6 us
+Enqueue throughput: 0.013107 10^5ops/s
+Total throughput: 0.00594731 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 56.0096 us
-Dequeue throughput: 0.178541 10^5ops/s
-Enqueue latency: 1229.39 us
-Enqueue throughput: 0.227756 10^5ops/s
-Total throughput: 0.337004 10^5ops/s
+Dequeue latency: 80.9218 us
+Dequeue throughput: 0.123576 10^5ops/s
+Enqueue latency: 1797.24 us
+Enqueue throughput: 0.155794 10^5ops/s
+Total throughput: 0.231144 10^5ops/s
 30
 ---- Slotqueue ----
-Dequeue latency: 457.704 us
-Dequeue throughput: 0.0218482 10^5ops/s
-Enqueue latency: 1020.18 us
-Enqueue throughput: 0.284264 10^5ops/s
-Total throughput: 0.0440241 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 457.509 us
-Dequeue throughput: 0.0218575 10^5ops/s
-Enqueue latency: 984.559 us
-Enqueue throughput: 0.294548 10^5ops/s
-Total throughput: 0.0440429 10^5ops/s
+Dequeue latency: 523.951 us
+Dequeue throughput: 0.0190858 10^5ops/s
+Enqueue latency: 735.797 us
+Enqueue throughput: 0.39413 10^5ops/s
+Total throughput: 0.0384578 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 495.769 us
+Dequeue throughput: 0.0201707 10^5ops/s
+Enqueue latency: 749.817 us
+Enqueue throughput: 0.386761 10^5ops/s
+Total throughput: 0.0406439 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 434.885 us
+Dequeue throughput: 0.0229946 10^5ops/s
+Enqueue latency: 2282.11 us
+Enqueue throughput: 0.127075 10^5ops/s
+Total throughput: 0.0463341 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 172.023 us
+Dequeue throughput: 0.0581318 10^5ops/s
+Enqueue latency: 2489.83 us
+Enqueue throughput: 0.116474 10^5ops/s
+Total throughput: 0.117135 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 269.443 us
+Dequeue throughput: 0.0371135 10^5ops/s
+Enqueue latency: 890.731 us
+Enqueue throughput: 0.325575 10^5ops/s
+Total throughput: 0.0747838 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2648.97 us
-Dequeue throughput: 0.00377505 10^5ops/s
-Enqueue latency: 14790.5 us
-Enqueue throughput: 0.0196072 10^5ops/s
-Total throughput: 0.00760672 10^5ops/s
+Dequeue latency: 3194.44 us
+Dequeue throughput: 0.00313044 10^5ops/s
+Enqueue latency: 20564.4 us
+Enqueue throughput: 0.014102 10^5ops/s
+Total throughput: 0.00630784 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 56.0178 us
-Dequeue throughput: 0.178515 10^5ops/s
-Enqueue latency: 1287.19 us
-Enqueue throughput: 0.225296 10^5ops/s
-Total throughput: 0.3369 10^5ops/s
+Dequeue latency: 53.9566 us
+Dequeue throughput: 0.185334 10^5ops/s
+Enqueue latency: 1236.95 us
+Enqueue throughput: 0.234447 10^5ops/s
+Total throughput: 0.350175 10^5ops/s
 31
 ---- Slotqueue ----
-Dequeue latency: 475.326 us
-Dequeue throughput: 0.0210382 10^5ops/s
-Enqueue latency: 1168.14 us
-Enqueue throughput: 0.256819 10^5ops/s
-Total throughput: 0.0424971 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 451 us
-Dequeue throughput: 0.0221729 10^5ops/s
-Enqueue latency: 1098.73 us
-Enqueue throughput: 0.273042 10^5ops/s
-Total throughput: 0.0447893 10^5ops/s
+Dequeue latency: 510.836 us
+Dequeue throughput: 0.0195758 10^5ops/s
+Enqueue latency: 767.562 us
+Enqueue throughput: 0.390848 10^5ops/s
+Total throughput: 0.0395431 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 488.025 us
+Dequeue throughput: 0.0204907 10^5ops/s
+Enqueue latency: 635.131 us
+Enqueue throughput: 0.472343 10^5ops/s
+Total throughput: 0.0413913 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 378.985 us
+Dequeue throughput: 0.0263863 10^5ops/s
+Enqueue latency: 1654.89 us
+Enqueue throughput: 0.181281 10^5ops/s
+Total throughput: 0.0533003 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 125.602 us
+Dequeue throughput: 0.0796167 10^5ops/s
+Enqueue latency: 1858.95 us
+Enqueue throughput: 0.161381 10^5ops/s
+Total throughput: 0.160826 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 263.241 us
+Dequeue throughput: 0.037988 10^5ops/s
+Enqueue latency: 872.513 us
+Enqueue throughput: 0.343835 10^5ops/s
+Total throughput: 0.0767358 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2658.48 us
-Dequeue throughput: 0.00376155 10^5ops/s
-Enqueue latency: 16555.3 us
-Enqueue throughput: 0.0181211 10^5ops/s
-Total throughput: 0.00759833 10^5ops/s
+Dequeue latency: 3229.11 us
+Dequeue throughput: 0.00309682 10^5ops/s
+Enqueue latency: 20551.1 us
+Enqueue throughput: 0.0145978 10^5ops/s
+Total throughput: 0.00625559 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 58.7764 us
-Dequeue throughput: 0.170136 10^5ops/s
-Enqueue latency: 1415.5 us
-Enqueue throughput: 0.211939 10^5ops/s
-Total throughput: 0.31974 10^5ops/s
+Dequeue latency: 78.836 us
+Dequeue throughput: 0.126846 10^5ops/s
+Enqueue latency: 1912.88 us
+Enqueue throughput: 0.156832 10^5ops/s
+Total throughput: 0.237619 10^5ops/s
 32
 ---- Slotqueue ----
-Dequeue latency: 451.946 us
-Dequeue throughput: 0.0221266 10^5ops/s
-Enqueue latency: 1087.29 us
-Enqueue throughput: 0.285112 10^5ops/s
-Total throughput: 0.044762 10^5ops/s
----- SlotqueueV2 ----
-Dequeue latency: 448.002 us
-Dequeue throughput: 0.0223213 10^5ops/s
-Enqueue latency: 1100.69 us
-Enqueue throughput: 0.281641 10^5ops/s
-Total throughput: 0.0451561 10^5ops/s
+Dequeue latency: 564.437 us
+Dequeue throughput: 0.0177168 10^5ops/s
+Enqueue latency: 1038.65 us
+Enqueue throughput: 0.298465 10^5ops/s
+Total throughput: 0.035841 10^5ops/s
+---- SlotqueueV2a ----
+Dequeue latency: 519.635 us
+Dequeue throughput: 0.0192443 10^5ops/s
+Enqueue latency: 1001.01 us
+Enqueue throughput: 0.309686 10^5ops/s
+Total throughput: 0.0389311 10^5ops/s
+---- SlotqueueV2b ----
+Dequeue latency: 388.967 us
+Dequeue throughput: 0.0257091 10^5ops/s
+Enqueue latency: 1938.58 us
+Enqueue throughput: 0.159911 10^5ops/s
+Total throughput: 0.0520096 10^5ops/s
+---- SlotqueueV2bc ----
+Dequeue latency: 143.686 us
+Dequeue throughput: 0.0695964 10^5ops/s
+Enqueue latency: 2229.7 us
+Enqueue throughput: 0.139032 10^5ops/s
+Total throughput: 0.140794 10^5ops/s
+---- SlotqueueV2c ----
+Dequeue latency: 252.786 us
+Dequeue throughput: 0.0395592 10^5ops/s
+Enqueue latency: 799.027 us
+Enqueue throughput: 0.387972 10^5ops/s
+Total throughput: 0.0800282 10^5ops/s
 ---- LTQueue ----
-Dequeue latency: 2629.16 us
-Dequeue throughput: 0.0038035 10^5ops/s
-Enqueue latency: 16529.7 us
-Enqueue throughput: 0.0187541 10^5ops/s
-Total throughput: 0.00769448 10^5ops/s
+Dequeue latency: 3266.22 us
+Dequeue throughput: 0.00306164 10^5ops/s
+Enqueue latency: 22811.5 us
+Enqueue throughput: 0.0135896 10^5ops/s
+Total throughput: 0.00619369 10^5ops/s
 ---- FastQueue ----
-Dequeue latency: 55.9774 us
-Dequeue throughput: 0.178644 10^5ops/s
-Enqueue latency: 1409.81 us
-Enqueue throughput: 0.219888 10^5ops/s
-Total throughput: 0.334522 10^5ops/s
+Dequeue latency: 71.3148 us
+Dequeue throughput: 0.140223 10^5ops/s
+Enqueue latency: 1841.98 us
+Enqueue throughput: 0.168297 10^5ops/s
+Total throughput: 0.256612 10^5ops/s
