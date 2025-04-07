@@ -820,7 +820,7 @@ To enqueue a value, `enqueue` first obtains a timestamp by FAA-ing the distribut
   ],
 ) <slotqueue-refresh-enqueue>
 
-`refreshEnqueue`'s responsibility is to refresh the timestamp stores in the enqueuer's slot to potentially notify the dequeuer of its newly-enqueued element. If it finds that the front element's timestamp is different from the timestamp `ts` it returns `true` immediately (line 9-13). Otherwise, it reads its slot's old timestamp (line 14) and re-reads the current front element in the SPSC (line 16). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, the front element's timestamp (line 17). Note that `refreshEnqueue` immediately succeeds if the new timestamp is different from the timestamp `ts` of the element it enqueues (line 19). Otherwise, it tries to CAS its slot's timestamp with the new timestamp (line 20).
+`refreshEnqueue`'s responsibility is to refresh the timestamp stores in the enqueuer's slot to potentially notify the dequeuer of its newly-enqueued element. It first reads the current front element (line 10). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, the front element's timestamp (line 11). If it finds that the front element's timestamp is different from the timestamp `ts` it returns `true` immediately (line 9-13). Otherwise, it reads its slot's old timestamp (line 14) and re-reads the current front element in the SPSC (line 16) to update the new timstamp. Note that similar to line 13, `refreshEnqueue` immediately succeeds if the new timestamp is different from the timestamp `ts` of the element it enqueues (line 19). Otherwise, it tries to CAS its slot's timestamp with the new timestamp (line 20).
 
 The dequeuer operations are given as follows.
 
