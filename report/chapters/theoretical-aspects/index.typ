@@ -31,7 +31,7 @@ In this section, we introduce some terminology that we will use throughout our p
 
 == Formalization
 
-In this section, we formalize the notion of correct concurrent algorithms and harmless ABA problem. We will base our proofs on these formalisms to prove their correctness.
+In this section, we formalize the notion of correct concurrent algorithms and harmless ABA problem. We will base our proofs on these formalisms to prove their correctness. We also provide a simple way to theoretically model our queues' performance.
 
 === Linearizability
 
@@ -135,6 +135,8 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
   - After reordering, all method calls' response events on the concurrent object $S$ stay the same.
 ]
 
+=== Performance model
+
 == Theoretical proofs of the distributed SPSC
 
 In this section, we focus on the correctness and progress guarantee of the simple distributed SPSC established in @distributed-spsc.
@@ -206,6 +208,8 @@ There's no CAS instruction in our simple distributed SPSC, so there's no potenti
 === Memory reclamation
 
 There's no dynamic memory allocation and deallocation in our simple distributed SPSC, so it is memory-safe.
+
+=== Performance model
 
 == Theoretical proofs of dLTQueue
 
