@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os
 
 # Ensure the output directory exists
-output_dir = "non-rdma-cluster"
+output_dir = "non-rdma-cluster/all"
 os.makedirs(output_dir, exist_ok=True)
 
 # Data for processors and queue types - expanded to include processors 2-32
@@ -1237,8 +1237,8 @@ queue_styles = {
     "LTQueue": {"color": "red", "marker": "s"},
     "FastQueue": {"color": "green", "marker": "^"},
     "SlotqueueV2a": {"color": "purple", "marker": "d", "linestyle": "--"},
-    "SlotqueueV2b": {"color": "yellow", "marker": "o", "linestyle": "--"},
-    "SlotqueueV2bc": {"color": "cyan", "marker": "s", "linestyle": "--"},
+    "SlotqueueV2b": {"color": "pink", "marker": "o", "linestyle": "--"},
+    "SlotqueueV2bc": {"color": "black", "marker": "s", "linestyle": "--"},
     "SlotqueueV2c": {"color": "orange", "marker": "^", "linestyle": "--"},
 }
 
@@ -1277,7 +1277,50 @@ for metric in metrics:
     plt.savefig(filename, dpi=300)
     plt.close()  # Close the figure to free up memory
 
-print("All comparative plots have been generated in the 'non-rdma-cluster' folder.")
+print("All comparative plots have been generated in the 'non-rdma-cluster/all' folder.")
+
+# Ensure the output directory exists
+output_dir = "non-rdma-cluster/no-ltqueue"
+os.makedirs(output_dir, exist_ok=True)
+
+# Generate merged plots for each metric
+for metric in metrics:
+    # Create a new figure for each metric
+    plt.figure(figsize=(14, 8))
+
+    # Plot data for each queue
+    for queue_name, queue_metrics in queue_data.items():
+        if queue_name != "LTQueue":
+          style = queue_styles[queue_name]
+          plt.plot(
+              processors,
+              queue_metrics[metric],
+              color=style["color"],
+              marker=style["marker"],
+              linestyle=style.get("linestyle", "-"),
+              label=f"{queue_name}{'*' if queue_name == 'SlotqueueV2a' else ''}",
+          )
+
+    # Set title and labels
+    title, unit = metric_labels[metric]
+    plt.title(f"Comparative {title} Across Queue Implementations (2-32 Processors)")
+    plt.xlabel("Number of Processors")
+    plt.ylabel(f"{title} ({unit})")
+
+    # Add grid and legend
+    plt.grid(True)
+    plt.legend(title="Queue Types", loc="best")
+
+    # Add x-axis ticks for every processor count
+    plt.xticks(processors)
+
+    # Save the plot
+    filename = f"{output_dir}/{metric}_comparison.png"
+    plt.savefig(filename, dpi=300)
+    plt.close()  # Close the figure to free up memory
+
+print("All comparative plots have been generated in the 'non-rdma-cluster/no-ltqueue' folder.")
+
 print(
     "Note: SlotqueueV2a is marked with an asterisk (*) in the legend to indicate it is experimental."
 )
