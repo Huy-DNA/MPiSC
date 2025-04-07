@@ -820,16 +820,16 @@ Both `CAS`es target some slot in the `Slots` array.
 
 #proof[This is trivial as a dequeue can only read out at most one value, so it can only match at most one enqueue.]
 
-#theorem[If an enqueue $e$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` or `refreshDequeue` on $r a n k(e)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-enqueue-theorem>
+#theorem[If an enqueue $e$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` that either doesn't execute its *CAS sequence* or starts and ends its *CAS-sequence* between $t_0$ and $t_1$  or a successful `refreshDequeue` on $r a n k(e)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-enqueue-theorem>
 
 #proof[
   If one of the two `refreshEnqueue`s succeeds, then the theorem obviously holds.
 
   Consider the case where both fail.
 
-  The first `refreshEnqueue` fails because there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the first `refreshEnqueue`'s *CAS-sequence*.
+  The first `refreshEnqueue` fails because it tries to execute its *CAS-sequence* but there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the first `refreshEnqueue`'s *CAS-sequence*.
 
-  The second `refreshEnqueue` fails because there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the second `refreshEnqueue`'s *CAS-sequence*. This another `refreshDequeue` must start its *CAS-sequence* after the end of the first successful `refreshDequeue`, due to @slotqueue-one-enqueuer-one-dequeuer-theorem. In other words, this another `refreshDequeue` starts and successfully ends its *CAS-sequence* between $t_0$ and $t_1$.
+  The second `refreshEnqueue` fails because it tries to execute its *CAS-sequence* but there's another `refreshDequeue` executing its *slot-modification instruction* successfully after $t_0$ but before the end of the second `refreshEnqueue`'s *CAS-sequence*. This another `refreshDequeue` must start its *CAS-sequence* after the end of the first successful `refreshDequeue`, due to @slotqueue-one-enqueuer-one-dequeuer-theorem. In other words, this another `refreshDequeue` starts and successfully ends its *CAS-sequence* between $t_0$ and $t_1$.
 
   We have proved the theorem.
 ]
@@ -845,9 +845,9 @@ Both `CAS`es target some slot in the `Slots` array.
 #proof[
   Take $t'$ to be the time $e$'s `spsc_enqueue` takes effect.
 
-  By @slotqueue-refresh-enqueue-theorem, there must be a successful refresh call that observes the effect of `spsc_enqueue` happening at $t''$, $t'' in [t', t_0]$.
+  At some point after $t'$, $e$ must enter its *slot-refresh phase*. By @slotqueue-refresh-enqueue-theorem, there must be a successful refresh call after $t'$. If this refresh call executes a *CAS-sequence* at $t'' gt.eq t'$, $t'' in [t', t_0]$, this *CAS-sequence* must observe the effect of `spsc_enqueue`. Therefore, $s l o t (r, t'') lt.eq c$. If this refresh call doesn't execute a *CAS-sequence*, it must be a `refreshEnqueue` seeing that the front timestamp is different from the enqueued timestamp at $t''$, $t'' in [t', t_0]$. Because $e$ is unmatched up until $t_1$ and due to @slotqueue-spsc-timestamp-monotonicity-theorem, $s l o t (r, t'') lt.eq c$.
 
-  By the same reasoning as in @aba-safe-slotqueue-theorem, any successful slot-modification instructions happening after $t''$ must observe the effect of `spsc_enqueue`. However, because $e$ is never matched between $t''$ and $t_1$, the timestamp $c$ is in the local SPSC the whole timespan $[t'', t_1]$. Therefore, any slot-modification instructions during $[t'', t_1]$ must set the slot's value to some value not greater than $c$.
+  By the same reasoning as in @aba-safe-slotqueue-theorem, any successful slot-modification instructions happening after $t''$ must observe the effect of $e$'s `spsc_enqueue`. However, because $e$ is never matched between $t''$ and $t_1$, the timestamp $c$ is in the local SPSC the whole timespan $[t'', t_1]$. Therefore, any slot-modification instructions during $[t'', t_1]$ must set the slot's value to some value not greater than $c$.
 ]
 
 #theorem[In Slotqueue, if an enqueue $e$ precedes another dequeue $d$, then either:
