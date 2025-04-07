@@ -735,21 +735,15 @@ Both `CAS`es target some slot in the `Slots` array.
 )[Assume that the 64-bit distributed counter never overflows, dequeue (@slotqueue-dequeue) is ABA-safe.] <slotqueue-aba-safe-dequeue-theorem>
 
 #proof[
-  Consider a *successful CAS-sequence* on slot `s` by a dequeue $d$.
-
-  Denote $t_d$ as the value this CAS-sequence observes.
-
-  Due to @slotqueue-one-enqueuer-one-dequeuer-theorem, there can only be at most one enqueue at one point in time within $d$.
+  Consider a *successful CAS-sequence* on slot `s` by a dequeue $d$. Denote $t_d$ as the value this CAS-sequence observes.
 
   If there's no *successful slot-modification instruction* on slot `s` by an enqueue $e$ within $d$'s *successful CAS-sequence*, then this dequeue is ABA-safe.
 
-  Suppose the enqueue $e$ executes the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*. Denote $t_e$ to be the value that $e$ sets `s`.
+  Suppose the enqueue $e$ executes the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*. Denote $t_e$ to be the value that $e$ sets `s` $(*)$.
 
-  If $t_e != t_d$, this CAS-sequence of $d$ cannot be successful, which is a contradiction.
+  If $t_e != t_d$, this CAS-sequence of $d$ cannot be successful, which is a contradiction. Therefore, $t_e = t_d$.
 
-  Therefore, $t_e = t_d$.
-
-  Note that $e$ can only set `s` to the timestamp of the item it enqueues. That means, $e$ must have enqueued a value with timestamp $t_d$. However, by definition, $t_d$ is read before $e$ executes the CAS. This means another process (dequeuer/enqueuer) has seen the value $e$ enqueued and CAS `s` for $e$ before $t_d$. By @slotqueue-one-enqueuer-one-dequeuer-theorem, this "another process" must be another dequeuer $d'$ that precedes $d$ because it overlaps with $e$.
+  Note that $e$ can only set `s` to the timestamp of the item it enqueues. That means, $e$ must have enqueued a value with timestamp $t_d$. However, by definition $(*)$, $t_d$ is read before $e$ executes the CAS, so $d$ cannot observe $t_d$ because $e$ has CAS-ed slot `s`. This means another process (dequeuer/enqueuer) has seen the value $e$ enqueued and CAS `s` for $e$ before $t_d$. By @slotqueue-one-enqueuer-one-dequeuer-theorem, this "another process" must be another dequeuer $d'$ that precedes $d$ because it overlaps with $e$.
 
   Because $d'$ and $d$ cannot overlap, while $e$ overlaps with both $d'$ and $d$, $e$ must be the _first_ enqueue on `s` that overlaps with $d$. Combining with @slotqueue-one-enqueuer-one-dequeuer-theorem and the fact that $e$ executes the _last_ *successful slot-modification instruction* on slot `s` within $d$'s *successful CAS-sequence*, $e$ must be the only enqueue that executes a *successful slot-modification instruction* on `s` within $d$'s *successful CAS-sequence*.
 
@@ -996,7 +990,7 @@ Both `CAS`es target some slot in the `Slots` array.
   - If $X$ overlaps with $Y$, because in $H'$, all enqueues are matched, then, $X$ matches $d_x$ and $d_y$. Because $d_x$ either precedes or succeeds $d_y$, Applying $(3)$, we obtain either $X arrow.double$#sub($H'$)$Y$ or $Y arrow.double$#sub($H'$)$X$ and there's no way to obtain the other.
   Therefore, exactly one of $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ is true. $(***)$
 
-  From $(*)$, $(**)$, $(***)$, we have proved that $=>$#sub($H'$) is a strict total ordering that is consistent with $->$#sub($H'$). In other words, we can order method calls in $H'$ in a sequential manner. We will prove that this sequential order is consistent with FIFO semantics: 
+  From $(*)$, $(**)$, $(***)$, we have proved that $=>$#sub($H'$) is a strict total ordering that is consistent with $->$#sub($H'$). In other words, we can order method calls in $H'$ in a sequential manner. We will prove that this sequential order is consistent with FIFO semantics:
   - An enqueue can only be matched by one dequeue: This follows from @slotqueue-unique-match-enqueue.
   - A dequeue can only be matched by one enqueue: This follows from @slotqueue-unique-match-dequeue.
   - The order of item dequeues is the same as the order of item enqueues: Suppose there are two enqueues $e_1$, $e_2$ such that $e_1 arrow.double$#sub($H'$)$e_2$ and suppose they match $d_1$ and $d_2$. Then we have obtained $e_1 arrow.double$#sub($H'$)$e_2$ either because:
