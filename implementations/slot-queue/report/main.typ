@@ -382,7 +382,7 @@ We can now turn to our interested problem in this section.
   Each `enqueue` would `FAA` the global counter (line 1 in @slotqueue-enqueue) and enqueue into the local SPSC an item with the timestamp obtained from the counter. Applying @slotqueue-one-enqueuer-one-dequeuer-lemma, we know that items are enqueued one at a time into the SPSC. Therefore, later items are enqueued by later `enqueue`s, which obtain increasing values by `FAA`-ing the shared counter. The theorem holds.
 ]
 
-#lemma[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only changes a slot to a value other than `MAX`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX-lemma>
+#lemma[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only change a slot to a value other than `MAX`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX-lemma>
 
 #proof[
   For `refreshEnqueue` to change the slot's value, the condition on line 11 must be false. Then `new-timestamp` must equal to `ts`, which is not `MAX`. It's obvious that the `CAS` on line 13 changes the slot to a value other than `MAX`.

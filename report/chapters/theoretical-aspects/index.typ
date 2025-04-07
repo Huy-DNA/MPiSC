@@ -672,7 +672,7 @@ Each enqueuer hosts an SPSC that can only accessed by itself and the dequeuer. T
 
 We apply some domain knowledge of Slotqueue algorithm to the definitions introduced in @ABA-safety.
 
-#definition[A *CAS-sequence* on a slot `s` of an enqueue that affects `s` is the sequence of instructions from line 14 to line 20 of its `refreshEnqueue` (@slotqueue-refresh-enqueue).]
+#definition[A *CAS-sequence* on a slot `s` of an enqueue that affects `s` is the sequence of instructions from line 15 to line 20 of its `refreshEnqueue` (@slotqueue-refresh-enqueue).]
 
 #definition[A *slot-modification instruction* on a slot `s` of an enqueue that affects `s` is line 20 of `refreshEnqueue` (@slotqueue-refresh-enqueue).]
 
@@ -680,7 +680,7 @@ We apply some domain knowledge of Slotqueue algorithm to the definitions introdu
 
 #definition[A *slot-modification instruction* on a slot `s` of a dequeue that affects `s` is line 54 of `refreshDequeue` (@slotqueue-refresh-dequeue).]
 
-#definition[A *CAS-sequence* of a dequeue/enqueue is said to *observe a slot value of $s_0$* if it loads $s_0$ at line 14 of `refreshEnqueue` or line 50 of `refreshDequeue`.]
+#definition[A *CAS-sequence* of a dequeue/enqueue is said to *observe a slot value of $s_0$* if it loads $s_0$ at line 15 of `refreshEnqueue` or line 50 of `refreshDequeue`.]
 
 The followings are some other definitions that will be used throughout our proof.
 
