@@ -2,7 +2,7 @@
 
 = Background <background>
 
-== Irregular applications
+== Irregular applications <irregular-applications>
 
 Irregular applications are a class of programs particularly interesting in distributed computing. They are characterized by:
 - Unpredictable memory access: Before the program is actually run, we cannot know which data it will need to access. We can only know that at run time.
