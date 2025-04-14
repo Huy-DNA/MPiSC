@@ -49,8 +49,6 @@ We further decompose this question into smaller subquestions:
 
 == Thesis overview
 
-
-
 == Objective <objective>
 
 This thesis aims to:
@@ -63,9 +61,10 @@ This thesis aims to:
 
 == Scope <scope>
 
-- For related works on shared-memory MPSC queues, we only focus on linearizable MPSC queues that support at least lock-free `enqueue` and `dequeue` operations.
+- Theoretically, regarding correctness, we're concerned ourselves with the linearizability correctness conditions; regarding progress guarantee, we're concerned ourselves with lock-freedom and wait-freedom (@progress-guarantee).
+- For related works, regarding shared-memory MPSC queues, we only focus on linearizable MPSC queues that support at least lock-free `enqueue` and `dequeue` operations; regarding distributed MPSC queues, we look at any linearizable FIFO queues that can be easily adapted for MPSC use cases.
 - Any implementation details, benchmarking and optimizations assume MPI-3 settings.
-- For optimizations, we focus on performance-related metrics, e.g. time-complexity (theoretically), throughput (empirically).
+- For benchmarking and optimization purposes, we focus on performance-related metrics, e.g. time-complexity (theoretically), throughput & latency (empirically).
 
 == Structure <structure>
 
