@@ -9,9 +9,11 @@ Irregular applications are a class of programs particularly interesting in distr
 - Data-dependent control flow: The decision of what to do next (such as which data tp accessed next) is highly dependent on the values of the data already accessed. Hence the unpredictable memory access property because we cannot statically analyze the program to know which data it will access. The control flow is inherently engraved in the data, which is not known until runtime.
 Irregular applications are interesting because they demand special techniques to achieve high performance. One specific challenge is that this type of applications is hard to model in traditional MPI APIs using the Send/Receive interface. This is specifically because using this interface requires a programmer to have already anticipated communication among pairs of processes before runtime, which is difficult with irregular applications. The introduction of MPI remote memory access (RMA) in MPI-2 and its improvement in MPI-3 has significantly improved MPI's capability to express irregular applications comfortably.
 
-=== The pattern (?)
+=== Actor model as an irregular application
 
-=== Multiple-producer, single-consumer (MPSC) queue
+=== Fan-out/Fan-in pattern as an irregular application
+
+== MPSC queue
 
 Multiple-producer, single-consumer (MPSC) queue is a specialized concurrent first-in first-out (FIFO) data structure. A FIFO is a container data structure where items can be inserted into or taken out of, with the constraint that the items that are inserted earlier are taken out of earlier. Hence, it's also known as the queue data structure. The process that performs item insertion into the FIFO is called the producer and the process that performs items deletion (and retrieval) is called the consumer. In concurrent queues, multiple producers and consumers can run in parallel. Concurrent queues have many important applications, namely event handling, scheduling, etc. One class of concurrent FIFOs is MPSC queue, where one consumer may run in parallel with multiple producers. The reasons we're interested in MPSC queues instead of the more general multiple-producer, multiple-consumer queue data structures (MPMC queues) are that (1) high-performance and high-scalability MPSC queues are much simpler to design than MPMCs while (2) MPSC queues are powerful enough to solve certain problems. Thus, MPSC queues can see many use cases like MPMCs while being easily scalable and performant.
 
@@ -267,7 +269,7 @@ In *passive target synchronization*, any RMA communication calls must be within 
 //
 // Historically, MPI as a message passing framework is often used in combination with other shared-memory frameworks such as OpenMP or pthreads to optimize communication within processes in a node. MPI-3 SHM (shared memory) is a capability introduced in MPI-3 to optimize intra-node communication within MPI RMA windows. This leads to the rise of MPI+MPI approach in distributed programming @zhou. In MPI-3, *shared-memory windows* can be created via `MPI_Win_allocate_shared`. Shared memory windows can be used for both one-sided communication and shared memory access. Besides using MPI-RMA facilities for communication and synchronization in these *shared-memory windows*, other communication and synchronization mechanisms provided by other shared-memory frameworks such as C++11 atomics can also be used. Typically, C++11 atomics allows for much more efficient communication and synchronization compared to MPI-RMA. Therefore, MPI-3 SHM can be used as an optimization for intra-node communication within MPI RMA programs. A general approach in using shared memory windows with tradition MPI RMA is discussed further in @zhou.
 //
-== Pure MPI - A porting approach of shared memory algorithms
+== Pure MPI - A porting approach of shared memory algorithms to distributed algorithms
 
 // === Pure MPI
 
