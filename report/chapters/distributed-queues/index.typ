@@ -24,11 +24,11 @@ Based on the MPSC queue algorithms we have surveyed in @related-works[], we prop
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of our proposed distributed MPSC queues. $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*],
+  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*],
   table(
     columns: (1.3fr, 1fr, 1fr),
     table.header(
-      [*MPSC queue*],
+      [*MPSC queues*],
       [*dLTQueue*],
       [*Slotqueue*],
     ),
@@ -36,17 +36,16 @@ Based on the MPSC queue algorithms we have surveyed in @related-works[], we prop
     [Correctness], [Linearizable], [Linearizable],
     [Progress guarantee of dequeue], [Wait-free], [Wait-free],
     [Progress guarantee of enqueue], [Wait-free], [Wait-free],
-    [Worst-case time complexity of dequeue],
-    [$O(log n)$ R + $O(log n)$ A],
-    [constant R + $O(n)$ A],
+    [],
+    [],
+    [],
 
-    [Worst-case time complexity of enqueue],
-    [$O(log n)$ R + $O(log n)$ A],
-    [constant R + constant A],
+    [],
+    [],
+    [],
 
-    [ABA solution], [Unique timestamp], [No harmful #linebreak() ABA problem],
+    [ABA solution], [Unique timestamp], [ABA-safe by default],
     [Memory reclamation], [Custom scheme], [Custom scheme],
-    [Number of elements], [Unbounded], [Unbounded],
   ),
 ) <summary-of-distributed-mpscs>
 
