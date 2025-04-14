@@ -40,7 +40,12 @@ Lock-free MPSC queues and other FIFO variants, such as multi-producer multi-cons
 
 We revolve our research effort around this main question:
 
-#quote()[How to utilize shared-memory programming techniques to model and design distributed MPSC queue algorithms in a fault-tolerant and high-performance manner?]
+#quote()[How to utilize shared-memory programming techniques to model and design distributed MPSC queue algorithms in a fault-tolerant and performant manner?]
+
+We further decompose this question into smaller subquestions:
++ Which factor contributes to the fault-tolerance and performance of a distributed MPSC queue algorithms?
++ Which shared-memory programming technique is relevant in modeling and designing distributed MPSC queue algorithms in a fault-tolerant and performant manner?
++ Which shared-memory programming technique needs to be modified to more effectively model and design distributed MPSC queue algorithms in a fault-tolerant and performant manner?
 
 == Thesis overview
 
