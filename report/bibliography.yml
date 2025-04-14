@@ -145,6 +145,21 @@ art-of-multiprocessor-programming:
   date: 2012
   publisher: Morgan Kaufmann
 
+herlihy-linearizability:
+  type: article
+  author: ["Herlihy, Maurice P.", "Wing, Jeannette M."]
+  title: "Linearizability: a correctness condition for concurrent objects"
+  date: 1990
+  publisher: "Association for Computing Machinery"
+  address: "New York, NY, USA"
+  volume: 12
+  serial-number:
+    issn: 0164-0925
+    doi: 10.1145/78969.78972
+  journal: "ACM Trans. Program. Lang. Syst."
+  page-range: 463–492
+  page-total: 30
+
 herlihy-hierarchy:
   type: article
   author: ["Herlihy, Maurice"]
