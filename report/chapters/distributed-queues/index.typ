@@ -54,7 +54,7 @@ In this section, we present our proposed distributed MPSC queues in detail. Any 
 
 In our description, we assume that each process in our program is assigned a unique number as an identifier, which is termed as its *rank*. The numbers are taken from the range of `[0, size - 1]`, with `size` being the number of processes in our program.
 
-== Distributed primitives in pseudocode
+== Distributed one-sided-communication primitives in our distributed algorithm specification
 
 Although we use MPI-3 RMA to implement these algorithms, the algorithm specifications themselves are not inherently tied to MPI-3 RMA interfaces. For clarity and convenience in specification, we define the following distributed primitives used in our pseudocode.
 
@@ -84,7 +84,7 @@ Although we use MPI-3 RMA to implement these algorithms, the algorithm specifica
 
 `T fetch_and_add_sync(remote<T> dest, T inc)`: Issue a synchronous fetch-and-add operation on the distributed variable `dest`. The operation atomically adds the value `inc` to the current value of `dest`, returning the original value of `dest` (before the addition) to the calling process. The update to `dest` is guaranteed to be completed and visible to all processes when the function returns. The type `T` must be an integral type with a size of `1`, `2`, `4`, or `8` bytes.
 
-== A simple distributed SPSC <distributed-spsc>
+== A simple baseline distributed SPSC <distributed-spsc>
 
 The two algorithms we propose here both utilize a distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
 
@@ -228,11 +228,13 @@ The procedures of the dequeuer are given as follows.
 `spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
 
 
-== dLTQueue - Modified LTQueue without LL/SC <naive-LTQueue>
+== dLTQueue - Modified distributed LTQueue without LL/SC <naive-LTQueue>
 
 This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSC queues, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
 
-=== Structure
+=== Data structure & Algorithm overview
+
+=== Data structure
 
 The structure of our dLTQueue is shown as in @modified-ltqueue-tree.
 
@@ -264,7 +266,7 @@ Placement-wise:
 - All the *tree nodes* are hosted at the *dequeuer*.
 - The distributed counter, which the enqueuers use to timestamp their enqueued value, is hosted at the *dequeuer*.
 
-=== Pseudocode
+=== Algorithm
 
 Below is the types utilized in dLTQueue.
 
@@ -684,7 +686,9 @@ Even though the straightforward dLTQueue algorithm we have ported in @naive-LTQu
 
 Therefore, to be more suitable for distributed context, we propose a new algorithm that's inspired by LTQueue, in which both `enqueue` and `dequeue` only perform a constant number of remote operations, at the cost of `dequeue` having to perform $Theta(n)$ local operations, where $n$ is the number of enqueuers. Because remote operations are much more expensive, this might be a worthy tradeoff.
 
-=== Structure
+=== Data structure & Algorithm overview
+
+=== Data structure
 
 The structure of Slotqueue is shown as in @slotqueue-structure.
 
@@ -697,7 +701,7 @@ Additionally, the dequeuer hosts an array whose entries each corresponds with an
   caption: [Basic structure of Slotqueue],
 ) <slotqueue-structure>
 
-=== Pseudocode
+=== Algorithm
 
 We first introduce the types and shared variables utilized in Slotqueue.
 
