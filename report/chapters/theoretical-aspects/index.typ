@@ -17,17 +17,17 @@
 #show: theorem-rules
 #show: definition-rules
 
-This section discusses the correctness and progress guarantee properties of the distributed MPSC algorithms introduced in @distributed-queues[]. We also provide a theoretical performance model of these algorithms to predict how well they scale to multiple nodes.
+This section discusses the correctness and progress guarantee properties of the distributed MPSC queue algorithms introduced in @distributed-queues[]. We also provide a theoretical performance model of these algorithms to predict how well they scale to multiple nodes.
 
 == Terminology
 
 In this section, we introduce some terminology that we will use throughout our proofs.
 
-#definition[In an SPSC/MPSC, an enqueue operation $e$ is said to *match* a dequeue operation $d$ if $d$ returns the value that $e$ enqueues. Similarly, $d$ is said to *match* $e$. In this case, both $e$ and $d$ are said to be *matched*.]
+#definition[In an SPSC/MPSC queue, an enqueue operation $e$ is said to *match* a dequeue operation $d$ if $d$ returns the value that $e$ enqueues. Similarly, $d$ is said to *match* $e$. In this case, both $e$ and $d$ are said to be *matched*.]
 
-#definition[In an SPSC/MPSC, an enqueue operation $e$ is said to be *unmatched* if no dequeue operation *matches* it.]
+#definition[In an SPSC/MPSC queue, an enqueue operation $e$ is said to be *unmatched* if no dequeue operation *matches* it.]
 
-#definition[In an SPSC/MPSC, a dequeue operation $d$ is said to be *unmatched* if no enqueue operation *matches* it, in other word, $d$ returns `false`.]
+#definition[In an SPSC/MPSC queue, a dequeue operation $d$ is said to be *unmatched* if no enqueue operation *matches* it, in other word, $d$ returns `false`.]
 
 == Formalization
 
@@ -95,13 +95,13 @@ Our SPSC supports 3 methods:
   - A read-front would return `true` and the first element in the queue is read out.
 ] <linearizable-spsc>
 
-==== Linearizable MPSC
+==== Linearizable MPSC queue
 
-An MPSC supports 2 methods:
+An MPSC queue supports 2 methods:
 - `enqueue` which accepts an input parameter and returns a boolean.
 - `dequeue` which accepts an output parameter and returns a boolean.
 
-#definition[An MPSC is *linearizable* if and only if any history produced from the MPSC that does not have overlapping dequeue method calls is _linearizable_ according to the following _sequential specification_:
+#definition[An MPSC queue is *linearizable* if and only if any history produced from the MPSC queue that does not have overlapping dequeue method calls is _linearizable_ according to the following _sequential specification_:
   - An enqueue can only be matched by one dequeue.
   - A dequeue can only be matched by one enqueue.
   - The order of item dequeues is the same as the order of item enqueues.
@@ -487,7 +487,7 @@ We immediately obtain the following result.
 
   Suppose $e$ obtains a timestamp of $c$ and $e'$ obtains a timestamp of $c'$.
 
-  Because $e$ precedes $d$ and because an MPSC does not allow multiple dequeues, from the start of $d$ at $t_0$ until after line 4 of dequeue (@ltqueue-dequeue) at $t_1$, $e$ has finished and there's no dequeue running that has _actually performed `spsc_dequeue`_. Also by $t_0$ and $t_1$, $e$ is still unmatched due to $(1)$.
+  Because $e$ precedes $d$ and because an MPSC queue does not allow multiple dequeues, from the start of $d$ at $t_0$ until after line 4 of dequeue (@ltqueue-dequeue) at $t_1$, $e$ has finished and there's no dequeue running that has _actually performed `spsc_dequeue`_. Also by $t_0$ and $t_1$, $e$ is still unmatched due to $(1)$.
 
   Applying @ltqueue-unmatched-enqueue-corollary, $m i n \- s p s c \- t s(r a n k(r o o t, t_x), t_y) lt.eq c$ for $t_x, t_y in [t_0, t_1]$. Therefore, $d$ reads out a rank $r$ such that $m i n \- s p s c \- t s(r, t) lt.eq c$ for $t in [t_0, t_1]$. Consequently, $d$ dequeues out a value with a timestamp not greater than $c$. Because $d$ matches $e'$, $c' lt.eq c$. However, $e' eq.not e$ so $c' lt c$.
 

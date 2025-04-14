@@ -1,4 +1,4 @@
-= Distributed MPSCs <distributed-queues>
+= Distributed MPSC queues <distributed-queues>
 
 #import "@preview/lovelace:0.3.0": *
 #import "@preview/lemmify:0.1.7": *
@@ -17,18 +17,18 @@
 #show: theorem-rules
 #show: definition-rules
 
-Based on the MPSC algorithms we have surveyed in @related-works[], we propose two wait-free distributed MPSC algorithms:
+Based on the MPSC queue algorithms we have surveyed in @related-works[], we propose two wait-free distributed MPSC queue algorithms:
 - dLTQueue (@naive-LTQueue) is a direct modification of the original LTQueue @ltqueue without any usage of LL/SC, adapted for distributed environment.
 - Slotqueue (@slotqueue) is inspired by the timestamp-refreshing idea of LTQueue @ltqueue and repeated-rescan of Jiffy @jiffy. Although it still bears some resemblance to LTQueue, we believe it to be more optimized for distributed context.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of our proposed distributed MPSCs. $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*],
+  caption: [Characteristic summary of our proposed distributed MPSC queues. $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*],
   table(
     columns: (1.3fr, 1fr, 1fr),
     table.header(
-      [*MPSC*],
+      [*MPSC queue*],
       [*dLTQueue*],
       [*Slotqueue*],
     ),
@@ -50,7 +50,7 @@ Based on the MPSC algorithms we have surveyed in @related-works[], we propose tw
   ),
 ) <summary-of-distributed-mpscs>
 
-In this section, we present our proposed distributed MPSCs in detail. Any other discussions about theoretical aspects of these algorithms such as linearizability, progress guarantee, time complexity are deferred to @theoretical-aspects[].
+In this section, we present our proposed distributed MPSC queues in detail. Any other discussions about theoretical aspects of these algorithms such as linearizability, progress guarantee, time complexity are deferred to @theoretical-aspects[].
 
 In our description, we assume that each process in our program is assigned a unique number as an identifier, which is termed as its *rank*. The numbers are taken from the range of `[0, size - 1]`, with `size` being the number of processes in our program.
 
@@ -230,7 +230,7 @@ The procedures of the dequeuer are given as follows.
 
 == dLTQueue - Modified LTQueue without LL/SC <naive-LTQueue>
 
-This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSCs, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
+This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSC queues, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
 
 === Structure
 
@@ -570,7 +570,7 @@ The followings are the dequeuer procedures.
   ],
 ) <ltqueue-dequeue>
 
-To dequeue a value, `dequeue` reads the rank stored inside the root node (line 62). If the rank is `DUMMY_RANK`, the MPSC is treated as empty and failure is signaled (line 64). Otherwise, we invoke `spsc_dequeue` on the SPSC of the enqueuer with the obtained rank (line 66). We then extract out the real data and set it to `output` (line 68). We finally propagate the dequeue from the enqueuer node that corresponds to the obtained rank (line 69) and signal success (line 70).
+To dequeue a value, `dequeue` reads the rank stored inside the root node (line 62). If the rank is `DUMMY_RANK`, the MPSC queue is treated as empty and failure is signaled (line 64). Otherwise, we invoke `spsc_dequeue` on the SPSC of the enqueuer with the obtained rank (line 66). We then extract out the real data and set it to `output` (line 68). We finally propagate the dequeue from the enqueuer node that corresponds to the obtained rank (line 69) and signal success (line 70).
 
 #figure(
   kind: "algorithm",
