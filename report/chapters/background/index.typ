@@ -100,13 +100,27 @@ An algorithm is said to be *non-blocking* if a failure or slow-down in one proce
 
 ==== Lock-free algorithms
 
-Lock-free algorithms provide the following guarantee: Even if some processes are suspended, the remaining processes are ensured to make global progress and complete in bounded time. This property is invaluable in distributed computing, one dead or suspended process will not block the whole program, providing fault-tolerance. Designing lock-free algorithms requires careful use of atomic instructions, such as Fetch-and-add (FAA), Compare-and-swap (CAS), etc.
+Lock-free algorithms provide the following guarantee: Even if some processes are suspended, the remaining processes are ensured to make global progress and complete in bounded time. In other words, a process cannot cause hinderance to the global progress of the program. This property is invaluable in distributed computing, one dead or suspended process will not block the whole program, providing fault-tolerance. Designing lock-free algorithms requires careful use of atomic instructions, such as Fetch-and-add (FAA), Compare-and-swap (CAS), etc which will be explained in @atomic-instructions.
+
+#figure(
+  image(width: 200pt, "../../static/images/lock-freedom.png"),
+  caption: [
+    Lock-free algorithm: All the live processes together always finish in a finite amount of steps.
+  ],
+) <lock-free-algorithms>
 
 ==== Wait-free algorithms
 
-Wait-freedom is a stronger progress guarantee than lock-freedom. While lock-freedom ensures that at least one of the alive processes will make progress, wait-freedom guarantees that any alive processes will finish in bounded time. Wait-freedom is useful to have because it prevents starvation. Lock-freedom still allows the possibility of one process having to wait for another indefinitely, as long as some still makes progress.
+Wait-freedom offers the strongest degree of progress guarantee. It mandates that no process can cause constant hinderance to any running process. While lock-freedom ensures that at least one of the alive processes will make progress, wait-freedom guarantees that any alive processes will finish in finite number of steps. Wait-freedom can be desirable because it prevents starvation. Lock-freedom still allows the possibility of one process having to wait for another indefinitely, as long as some still makes progress.
 
-== Popular atomic instructions in designing non-blocking algorithms
+#figure(
+  image(width: 200pt, "../../static/images/wait-freedom.png"),
+  caption: [
+    Wait-free algorithm: Any live process always finishes in a finite amount of steps.
+  ],
+) <wait-free-algorithms>
+
+== Popular atomic instructions in designing non-blocking algorithms <atomic-instructions>
 
 === Fetch-and-add (FAA)
 === Compare-and-swap (CAS)
