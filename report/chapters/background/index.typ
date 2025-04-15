@@ -200,7 +200,6 @@ As a reminder, here's how CAS is often utilized in non-blocking concurrent algor
 1. Read the current value `old value = read(memory location)`.
 2. Compute `new value` from `old value` by manipulating some resources associated with `old value` and allocating new resources for `new value`.
 3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up the resources we have allocated for `new value` because `old value` is no longer there, so its associated resources are not valid.
-This scheme is, however, susceptible to ABA problem, which will be discussed in @ABA-problem.
 
 As hinted, this scheme is susceptible to the notorious ABA problem. The following scenario illustrate and example of ABA problem:
 1. Process 1 reads the current value of `memory location` and reads out `A`.
