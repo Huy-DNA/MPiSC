@@ -239,7 +239,7 @@ ABA problem arises fundamentally because most algorithms assume a memory locatio
 
 A specific case of ABA problem is given in @ABA-problem-case.
 
-To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls CAS on that location, there's no possibility another process has CAS-ed the memory location to the same value. Some notable schemes are *monotonic version tag* (@michael-scott) and *hazard pointer* (@hazard-pointer).
+To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls CAS on that location, there's no possibility another process has CAS-ed the memory location to the same value. Some notable schemes are *monotonic version tag* @michael-scott and *hazard pointer* @hazard-pointer.
 
 === Safe memory reclamation problem
 
