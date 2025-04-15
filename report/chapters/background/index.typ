@@ -171,7 +171,9 @@ Non-blocking concurrent algorithms often utilize CAS as follows. The steps 1-3 a
 3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up the resources we have allocated for `new value` because `old value` is no longer there, so its associated resources are not valid.
 This scheme is, however, susceptible to ABA problem, which will be discussed in @ABA-problem.
 
-=== Load-linked/Store-conditional (LL/SC)
+=== Load-link/Store-conditional (LL/SC)
+
+
 
 == Common issues when designing non-blocking algorithms
 
