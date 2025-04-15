@@ -69,17 +69,25 @@ Linearizability is widely used as a correctness condition because of (1) its com
 
 == Progress guarantee of concurrent algorithms <progress-guarantee>
 
+Progress guarantee is a criteria that only arises in the context of concurrent algorithms. Informally, it's the degree of hinderance one process imposes on another process from completing its task. In the context of sequential algorithm, this is irrelevant because there's only ever one process. Progress guarantee has an implication on an algorithm's performance and fault-tolerance, especially in adverse situations, as we will explain in the following sections.
+
 === Blocking algorithms
 
-Many concurrent algorithms are based on locks to create mutual exclusion, in which only some processes that have acquired the locks are able to act, while the others have to wait. While lock-based algorithms are simple to read, write and verify, these algorithms are said to be blocking: One slow process may slow down the other faster processes, for example, if the slow process successfully acquires a lock and then the operating system (OS) decides to suspends it to schedule another one, this means until the process is awaken, the other processes that contend for the lock cannot continue. Lock-based algorithms introduces many problems such as:
+Many concurrent algorithms are based on locks to create mutual exclusion, in which only some processes that have acquired the locks are able to act, while the others have to wait. While lock-based algorithms are simple to read, write and verify, these algorithms are said to be *blocking*: One slow process may slow down the other faster processes, for example, if the slow process successfully acquires a lock and then the operating system (OS) decides to suspends it to schedule another one, this means until the process is awaken, the other processes that contend for the lock cannot continue.
+
+Blocking is the weakest progress guarantee one algorithm can offer, it allows one process to impose arbitrary impedance to any other processes.
+
+Blocking algorithms introduces many problems such as:
 - Deadlock: There's a circular lock-wait dependencies among the processes, effectively prevent any processes from making progress.
 - Convoy effect: One long process holding the lock will block other shorter processes contending for the lock.
 - Priority inversion: A higher-priority process effectively has very low priority because it has to wait for another low priority process.
 Furthermore, if a process that holds the lock dies, this will halt the whole program. This consideration holds even more weight in distributed computing because of a lot more failure modes, such as network failures, node falures, etc.
 
-Therefore, while lock-based algorithms are easy to write, they do not provide *progress guarantee* because *deadlock* or *livelock* can occur and its use of mutual exclusion is unnecessarily restrictive. These algorithms are said to be *blocking*. An algorithm is said to be *non-blocking* if a failure or slow-down in one process cannot cause the failure or slow-down in another process. Lock-free and wait-free algorithms are to especially interesting subclasses of non-blocking algorithms. Unlike lock-based algorithms, they provide *progress guarantee*.
+Therefore, while blocking algorithms, especially those using locks, are easy to write, they do not provide *progress guarantee* because *deadlock* or *livelock* can occur and its use of mutual exclusion is unnecessarily restrictive. Forturnately, there are other class of algorithms which offer stronger progress guarantees.
 
 === Non-blocking algorithms
+
+An algorithm is said to be *non-blocking* if a failure or slow-down in one process cannot cause the failure or slow-down in another process. Lock-free and wait-free algorithms are two especially interesting subclasses of non-blocking algorithms. Unlike blocking algorithms, they provide stronger degrees of progress guarantees.
 
 ==== Lock-free algorithms
 
