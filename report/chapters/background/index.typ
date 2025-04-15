@@ -122,6 +122,8 @@ Wait-freedom offers the strongest degree of progress guarantee. It mandates that
 
 == Popular atomic instructions in designing non-blocking algorithms <atomic-instructions>
 
+In non-blocking algorithms, finer-grained synchronization primitives than simple locks are required, which manifest themselves as atomic instructions. Therefore, it's necessary to get familiar with the semantics of these atomic instructions and common programming patterns associated with them.
+
 === Fetch-and-add (FAA)
 === Compare-and-swap (CAS)
 === Load-linked/Store-conditional (LL/SC)
