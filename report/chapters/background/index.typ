@@ -125,18 +125,65 @@ Wait-freedom offers the strongest degree of progress guarantee. It mandates that
 In non-blocking algorithms, finer-grained synchronization primitives than simple locks are required, which manifest themselves as atomic instructions. Therefore, it's necessary to get familiar with the semantics of these atomic instructions and common programming patterns associated with them.
 
 === Fetch-and-add (FAA)
+
+Fetch-and-add (FAA) is a simple atomic instruction with the following semantics: It atomically increments a value at a memory location $x$ by $a$ and returns the previous value just before the increment. Informally, FAA's effect is equivalent to the function in @FAA-function, assuming that the function is executed atomically.
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    booktabs: true,
+    numbered-title: [`int fetch_and_add(int* x, int a)`],
+  )[
+    + `old_value = *x                                                         `
+    + `*x = *x + a`
+    + *return* `old_value`
+  ],
+) <FAA-function>
+
+Fetch-and-add can be used to create simple distributed counters.
+
 === Compare-and-swap (CAS)
+
+Compare-and-swap (CAS) is probably the most popular atomic operation instruction. The reason for its popularity is (1) CAS is a *universal atomic instruction* with the *concensus number* of $infinity$, which means it's the most powerful atomic instruction @herlihy-hierarchy (2) CAS is implemented in most hardware (3) some concurrent lock-free data structures such as MPSC queues are more easily expressed using a powerful atomic instruction such as CAS.
+
+The semantics of CAS is as follows. Given the instruction `CAS(memory location, old value, new value)`, atomically compares the value at `memory location` to see if it equals `old value`; if so, sets the value at `memory location` to `new value` and returns true; otherwise, leaves the value at `memory location` unchanged and returns false. Informally, its effect is equivalent to the function in @CAS-function.
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    booktabs: true,
+    numbered-title: [`bool compare_and_swap(int* x, int old_val, int new_val)`],
+  )[
+    + *if* `(*x == old_val)                                                         `
+      + `*x = new_val`
+      + *return* `true`
+    + *return* `false`
+  ],
+) <CAS-function>
+
+Compare-and-swap is very powerful and consequently, pervasive in concurrent algorithms and data structure.
+
+Non-blocking concurrent algorithms often utilize CAS as follows. The steps 1-3 are retried until success.
+1. Read the current value `old value = read(memory location)`.
+2. Compute `new value` from `old value` by manipulating some resources associated with `old value` and allocating new resources for `new value`.
+3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up the resources we have allocated for `new value` because `old value` is no longer there, so its associated resources are not valid.
+This scheme is, however, susceptible to ABA problem, which will be discussed in @ABA-problem.
+
 === Load-linked/Store-conditional (LL/SC)
 
 == Common issues when designing non-blocking algorithms
 
-=== ABA problem
+=== ABA problem <ABA-problem>
 
-In implementing concurrent non-blocking algorithms, hardware atomic instructions are utilized to achieve linearizability. The most popular atomic operation instruction is compare-and-swap (CAS). The reason for its popularity is (1) CAS is a *universal atomic instruction* - it has the *concensus number* of $infinity$ - which means it's the most powerful atomic instruction @herlihy-hierarchy (2) CAS is implemented in most hardware (3) some concurrent lock-free data structures such as MPSC queues are more easily expressed using a powerful atomic instruction such as CAS. The semantic of CAS is as follows. Given the instruction `CAS(memory location, old value, new value)`, atomically compares the value at `memory location` to see if it equals `old value`; if so, sets the value at `memory location` to `new value` and returns true; otherwise, leaves the value at `memory location` unchanged and returns false. Concurrent algorithms often utilize CAS as follows:
+ABA problem is a notorious problem associated with the compare-and-swap atomic instruction. As a reminder, here's how CAS is often utilized in non-blocking concurrent algorithms: The steps 1-3 are retried until success.
 1. Read the current value `old value = read(memory location)`.
 2. Compute `new value` from `old value` by manipulating some resources associated with `old value` and allocating new resources for `new value`.
-3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up `new value` because `old value` is no longer there, so its associated resources are not valid.
-This scheme is susceptible to the notorious ABA problem:
+3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up the resources we have allocated for `new value` because `old value` is no longer there, so its associated resources are not valid.
+This scheme is, however, susceptible to ABA problem, which will be discussed in @ABA-problem.
+
+As hinted, this scheme is susceptible to the notorious ABA problem. Imagine the following scenario:
 1. Process 1 reads the current value of `memory location` and reads out `A`.
 2. Process 1 manipulates resources associated with `A`, and allocates resources based on these resources.
 3. Process 1 suspends.
@@ -145,7 +192,7 @@ This scheme is susceptible to the notorious ABA problem:
 6. Process 3 `CAS(memory location, B, A)` and allocates new resources associated with `A`.
 7. Process 1 continues and `CAS(memory location, A, new value)` relying on the fact that the old resources associated with `A` are still valid while in fact they aren't.
 
-To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls `CAS` on that location, there's no possibility another process has `CAS` the memory location to the same value. Some notable schemes are *monotonic version tag* (@michael-scott) and *hazard pointer* (@hazard-pointer).
+To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls CAS on that location, there's no possibility another process has CAS-ed the memory location to the same value. Some notable schemes are *monotonic version tag* (@michael-scott) and *hazard pointer* (@hazard-pointer).
 
 === Safe memory reclamation problem
 
