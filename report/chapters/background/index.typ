@@ -201,6 +201,32 @@ As a reminder, here's how CAS is often utilized in non-blocking concurrent algor
 2. Compute `new value` from `old value` by manipulating some resources associated with `old value` and allocating new resources for `new value`.
 3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up the resources we have allocated for `new value` because `old value` is no longer there, so its associated resources are not valid.
 
+#subpar.grid(
+  figure(
+    image("../../static/images/ABA-problem-1.png"),
+    caption: [Process X enqueues a value 0, observes $"Tail"_A = 0$ then suspends],
+  ),
+  <ABA-problem-case-1>,
+  figure(
+    image("../../static/images/ABA-problem-2.png"),
+    caption: [Another enqueuer enqueues a value 1 and another dequeuer dequeues the value 0],
+  ),
+  <ABA-problem-case-2>,
+  figure(
+    image("../../static/images/ABA-problem-3.png"),
+    caption: [Another enqueue enqueues a value 2. Process X continues and #linebreak() performs `CAS(&`$"Tail"$`, `$"Tail"_A$`, 1)`],
+  ),
+  <ABA-problem-case-3>,
+  figure(
+    image("../../static/images/ABA-problem-4.png"),
+    caption: [Process X successfully performs the CAS and the queue looks as if it's empty, which is incorrect],
+  ),
+  <ABA-problem-case-4>,
+  columns: (1fr, 1fr),
+  caption: [ABA problem in a 2-entry circular queue with $"Head"$ and $"Tail"$ pointers],
+  label: <ABA-problem-case>,
+)
+
 As hinted, this scheme is susceptible to the notorious ABA problem. The following scenario illustrate and example of ABA problem:
 1. Process 1 reads the current value of `memory location` and reads out `A`.
 2. Process 1 manipulates resources associated with `A`, and allocates resources based on these resources.
@@ -210,6 +236,8 @@ As hinted, this scheme is susceptible to the notorious ABA problem. The followin
 6. Process 3 `CAS(memory location, B, A)` and allocates new resources associated with `A`.
 7. Process 1 continues and `CAS(memory location, A, new value)` relying on the fact that the old resources associated with `A` are still valid while in fact they aren't.
 ABA problem arises fundamentally because most algorithms assume a memory location is not accessed if its value is unchanged.
+
+A specific case of ABA problem is given in @ABA-problem-case.
 
 To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls CAS on that location, there's no possibility another process has CAS-ed the memory location to the same value. Some notable schemes are *monotonic version tag* (@michael-scott) and *hazard pointer* (@hazard-pointer).
 
