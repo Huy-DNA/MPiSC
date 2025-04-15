@@ -169,23 +169,40 @@ Non-blocking concurrent algorithms often utilize CAS as follows. The steps 1-3 a
 1. Read the current value `old value = read(memory location)`.
 2. Compute `new value` from `old value` by manipulating some resources associated with `old value` and allocating new resources for `new value`.
 3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up the resources we have allocated for `new value` because `old value` is no longer there, so its associated resources are not valid.
-This scheme is, however, susceptible to ABA problem, which will be discussed in @ABA-problem.
+This scheme is, however, susceptible to the ABA problem, which will be discussed in @ABA-problem.
 
 === Load-link/Store-conditional (LL/SC)
 
+Load-link/Store-conditional is actually a pair of atomic instructions for synchronization.
 
+Semantically, load-link returns a value currently located at a memory location $x$ while store-conditional sets the memory location $x$ to a value $v$ if there's no other writes to $x$ since the last load-link call, otherwise, the store-conditional call would fail.
+
+Intuitively, LL/SC provides an easier synchronization primitive than CAS: LL/SC ensures that a store-conditional can only succeed if there's no access to a memory location, while CAS can still succeed in this case if the value at the memory location does not change. Due to this property, LL/SC is not vulnerable to the ABA problem (see @ABA-problem). However, CAS is in fact as powerful as LL/SC, condersing that they can implement each other @herlihy-hierarchy.
+
+Practically, store-conditional can still fail even if there's no writes to the same memory location since the last load-link call. This is called a spurious failure. For example, consider the following generic sequence of events:
++ Thread X calls load-link on $x$ and loads out $v$.
++ Thread X computes a new value $v'$.
++ Some _exceptional event_ happens (discussed below). Assume that no other threads access $x$ during this time.
++ Thread X calls store-conditional to store $v'$ to $x$. It _should succeed_ but _fails_ anyways.
+Exceptional events that can cause the store-conditional to fail spuriously include:
+- Cache line flushing: If the cache line that caches the memory location $x$ is written back to memory, logically, the memory location $x$ has been accessed and therefore, the store-conditional fails.
+- Context switch: If thread $x$ is swapped out by the OS, cache lines may be invalidated and flushed out, which consequently leads to the first scenario.
+
+LL/SC even though as powerful as CAS, is not as widespread as CAS, in fact, as of MPI-3, only CAS is supported.
 
 == Common issues when designing non-blocking algorithms
 
 === ABA problem <ABA-problem>
 
-ABA problem is a notorious problem associated with the compare-and-swap atomic instruction. As a reminder, here's how CAS is often utilized in non-blocking concurrent algorithms: The steps 1-3 are retried until success.
+ABA problem is a notorious problem associated with the compare-and-swap atomic instruction. Because CAS is so widely used in non-blocking algorithms, ABA problem almost has to always be accounted for.
+
+As a reminder, here's how CAS is often utilized in non-blocking concurrent algorithms: The steps 1-3 are retried until success.
 1. Read the current value `old value = read(memory location)`.
 2. Compute `new value` from `old value` by manipulating some resources associated with `old value` and allocating new resources for `new value`.
 3. Call `CAS(memory location, old value, new value)`. If that succeeds, the new resources for `new value` remain valid because it was computed using valid resources associated with `old value`, which has not been modified since the last read. Otherwise, free up the resources we have allocated for `new value` because `old value` is no longer there, so its associated resources are not valid.
 This scheme is, however, susceptible to ABA problem, which will be discussed in @ABA-problem.
 
-As hinted, this scheme is susceptible to the notorious ABA problem. Imagine the following scenario:
+As hinted, this scheme is susceptible to the notorious ABA problem. The following scenario illustrate and example of ABA problem:
 1. Process 1 reads the current value of `memory location` and reads out `A`.
 2. Process 1 manipulates resources associated with `A`, and allocates resources based on these resources.
 3. Process 1 suspends.
@@ -193,6 +210,7 @@ As hinted, this scheme is susceptible to the notorious ABA problem. Imagine the 
 5. Process 2 `CAS(memory location, A, B)` so that resources associated with `A` are no longer valid.
 6. Process 3 `CAS(memory location, B, A)` and allocates new resources associated with `A`.
 7. Process 1 continues and `CAS(memory location, A, new value)` relying on the fact that the old resources associated with `A` are still valid while in fact they aren't.
+ABA problem arises fundamentally because most algorithms assume a memory location is not accessed if its value is unchanged.
 
 To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls CAS on that location, there's no possibility another process has CAS-ed the memory location to the same value. Some notable schemes are *monotonic version tag* (@michael-scott) and *hazard pointer* (@hazard-pointer).
 
