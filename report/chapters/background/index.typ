@@ -11,11 +11,47 @@ Irregular applications are interesting because they demand special techniques to
 
 === Actor model as an irregular application
 
+#figure(
+  image(width: 200pt, "/static/images/actor_model.png"),
+  caption: [Actor model visualization],
+) <remind-actor-model>
+
+Actor model in actuality is a type of irregular application supported by the concurrent MPSC queue data structure.
+
+Each actor can be a process or a compute node in the cluster, carrying out a specific responsibility in the system. From time to time, there's a need for the actors to communicate with each other. For this purpose, the actor model offers a mailbox local to each actor. This mailbox exhibits MPSC queue behaviors: Other actors can send messages to the mailbox to notify the owner actor and the owner actor at their leisure repeatedly reads extracted message from its mailbox. The actor model provide a simple programming model for concurrent processing.
+
+The reasons why the actor model being an irregular application are straightforward to see:
+- Unpredictable memory access: The cases in which one actor can anticipate which one of the other actors can send it a message are pretty rare and application-specific. As a general framework, in an actor model, the usual assumption is that any number of actors can try to communicate with an actor at some arbitrary time. By this nature, the communication pattern is unpredictable.
+- Data-dependent control-flow: If an actor A sends a message to another actor B, and when B reads this message, B decides to send another message to another actor C. As we can see, the control-flow is highly engraved in the messages, or in other words, the messages drive the program flow, which can only be known at runtime.
+
 === Fan-out/Fan-in pattern as an irregular application
+
+#figure(
+  image(width: 200pt, "/static/images/fan-out_fan-in.png"),
+  caption: [Fan-out/Fan-in pattern visualization],
+) <remind-fan-out-fan-in-model>
+
+The fan-out/fan-in pattern is another type of irregular application supported by the concurrent MPSC queue data structure.
+
+In this pattern, there's a big task that can be splitted into subtasks to be executed concurrently on some work nodes. In the execution process, each worker produces a result set, each enqueued back to a result queue located on an aggregation node. The aggregation node can then dequeue from this result queue to perform further processing. Clearly, this result queue exhibits MPSC behavior.
+
+The fan-out/fan-in pattern exhibits less irregularity than the actor model, however. Usually, the worker nodes and the aggregation node are known in advance. The aggregation node can anticipate Send calls from the worker nodes. Still, there's a degree of irregularity that this pattern exhibit: How can the aggregation node know how many Send calls a worker nodes will issue? This is highly driven by the task and the data involved in this task, hence, we have the data-dependent control-flow property. One can still statically calculate or predict how many Send calls a worker node will issue, however, this is problem-specific. Therefore, the memory access pattern is somewhat unpredictable. Notice that if supported by a concurrent MPSC queue data structure, the fan-out/fan-in pattern is free from this burden of organizing the right amount of Send/Receive calls. Thus, combining with the MPSC queue, the fan-out/fan-in pattern becomes more general and easier to program.
+
+#linebreak()
+
+We have seen the role the MPSC queue plays in supporting irregular applications. It's important to understand what really comprises an MPSC queue data structure.
 
 == MPSC queue
 
-Multiple-producer, single-consumer (MPSC) queue is a specialized concurrent first-in first-out (FIFO) data structure. A FIFO is a container data structure where items can be inserted into or taken out of, with the constraint that the items that are inserted earlier are taken out of earlier. Hence, it's also known as the queue data structure. The process that performs item insertion into the FIFO is called the producer and the process that performs items deletion (and retrieval) is called the consumer. In concurrent queues, multiple producers and consumers can run in parallel. Concurrent queues have many important applications, namely event handling, scheduling, etc. One class of concurrent FIFOs is MPSC queue, where one consumer may run in parallel with multiple producers. The reasons we're interested in MPSC queues instead of the more general multiple-producer, multiple-consumer queue data structures (MPMC queues) are that (1) high-performance and high-scalability MPSC queues are much simpler to design than MPMCs while (2) MPSC queues are powerful enough to solve certain problems. Thus, MPSC queues can see many use cases like MPMCs while being easily scalable and performant.
+Multiple-producer, single-consumer (MPSC) queue is a specialized concurrent first-in first-out (FIFO) data structure. A FIFO is a container data structure where items can be inserted into or taken out of, with the constraint that the items that are inserted earlier are taken out of earlier. Hence, it's also known as the queue data structure. The process that performs item insertion into the FIFO is called the producer and the process that performs items deletion (and retrieval) is called the consumer.
+
+In concurrent queues, multiple producers and consumers can run concurrently. One class of concurrent FIFOs is the MPSC queue, where one consumer may run in parallel with multiple producers.
+
+The reasons we're interested in MPSC queues instead of the more general multiple-producer, multiple-consumer (MPMC) queue data structures are that (1) high-performance and high-scalability MPSC queues are much simpler to design than MPMCs while (2) MPSC queues are powerful enough to solve certain problems, as demonstrated in @irregular-applications. The MPSC queue in actuality is an irregular application in and out of itself:
+- Unpredictable memory access: As a general data structure, the MPSC queue allows any process to be a producer or a consumer. By nature, its memory access patern is unpredictable.
+- Data-dependent control-flow: The consumer's behavior is entirely dependent on whether and which data is available in the MPSC queue. The execution paths of MPSC queues can vary, based on the queue contention i.e. some processes may backoff or retry some failed operations, this scenario often arise in lock-free data structures.
+As an implication, some irregular applications can actually "push" the "irregularity burden" to the distributed MPSC queue, which is already designed for high-performance and fault tolerance. This provides a comfortable level of abstraction for programmers that need to deal with irregular applications.
+
 
 == Correctness condition of concurrent algorithms - Linearizability
 
