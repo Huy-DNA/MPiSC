@@ -150,10 +150,12 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
 
 == Distributed FIFO queues
 
+@summary-of-dMPSCs summarizes to the best of our knowledge all distributed FIFO queues that can be fairly used oradapted for MPSC use cases.
+
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of existing distributed FIFO queues. #linebreak() *R* stands for remote operations and *A* stands for atomic operations #linebreak() (1) the *baseline SPSC* refers to the SPSC we introduce in @distributed-spsc, the reason we have to qualify *dLTQueue* and *Slotqueue* with a specific SPSC implementation because *dLTQueue* and *Slotqueue* are in fact "SPSC wrappers" that turn any SPSCs to MPSCs. #linebreak() (2) The "bounded" property is not inherent for *dLTQueue* and *Slotqueue* "wrappers", they are bounded because the *baseline SPSC* is bounded.],
+  caption: [Characteristic summary of existing distributed FIFO queues. #linebreak() *R* stands for remote operations and *A* stands for atomic operations #linebreak() (1) the *baseline SPSC* refers to the SPSC we introduce in @distributed-spsc, the reason we have to qualify *dLTQueue* and *Slotqueue* with a specific SPSC implementation is that *dLTQueue* and *Slotqueue* are in fact "SPSC wrappers" that can turn any SPSCs to MPSCs. #linebreak() (2) The "bounded" property is not inherent for *dLTQueue* and *Slotqueue* "wrappers", they are bounded because the *baseline SPSC* is bounded.],
   table(
     columns: (1.2fr, 1fr, 1fr, 1fr),
     table.header(
@@ -198,6 +200,21 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
   ),
 ) <summary-of-dMPSCs>
 
-=== Fastqueue - BCL's MP/MC FIFO data structure
+FastQueue @bcl is a wait-free multi-producer or multiple-consumer (MP/MC) queue data structure that's part of the Berkeley Container Library (BCL). FastQueue's data is entirely hosted on a process. Its structure is simple, as demonstrated in @original-fastqueue-structure. Note that this figure assumes that all data is hosted on a dequeuer, as well as the $"First"$ and $"Last"$ indices.
 
-=== dLTQueue & Slotqueue
+#figure(
+  image("/static/images/original-fastqueue.png"),
+  caption: [FastQueue structure.],
+) <original-fastqueue-structure>
+
+The queue is represented as a circular array, with $"First"$ and $"Last"$ indices. These indices point to entries in the array when taking modulo $"Capacity"$, with $"Capacity"$ being the maximum size of the array.
+
+Multiple enqueuers or multiple dequeuers can run concurrently. However, enqueues and dequeues must not overlap.
+
+To enqueue, each enqueuer reserves a slot in the queue by FAA-ing the $"Last"$ index and then writes its data value at its leisure.
+
+To dequeue, each dequeuer reserves a slot in the queue by FAA-ing the $"First"$ pointer and read out the value at the obtain index.
+
+To avoid refetching $"First"$ and $"Last"$ indices on every enqueue or dequeue operation, FastQueue uttilizes a caching strategy. That is, each time $"First"$ and $"Last"$ have to be refetched, the values are saved locally. Of course, over time, these cached values can become out-of-sync with the real values. FastQueue lazily updates these cached values, precisely, a dequeuer when based on these cached values finds that the queue is empty, it performs a refetch and similarly an enqueuer when based on these cached values finds that the queue is full, it performs a refetch. This idea of caching inspires our two new MPSC queue algorithms: dLTQueue and Slotqueue.
+
+dLTQueue and Slotqueue although seem to have higher costs for enqueue and dequeue operations, directly support MPSC use cases. These data structures are explained further in @distributed-queues[].
