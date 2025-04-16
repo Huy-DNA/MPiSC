@@ -29,7 +29,7 @@ In this section, we introduce some terminology that we will use throughout our p
 
 #definition[In an SPSC/MPSC queue, a dequeue operation $d$ is said to be *unmatched* if no enqueue operation *matches* it, in other word, $d$ returns `false`.]
 
-== System model
+== Preliminaries
 
 In this section, we formalize the notion of correct concurrent algorithms and harmless ABA problem. We will base our proofs on these formalisms to prove their correctness. We also provide a simple way to theoretically model our queues' performance.
 
