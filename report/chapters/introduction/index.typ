@@ -36,7 +36,7 @@ In the actor model, each process or compute node is represented as an actor. Eac
 
 A desirable distributed MPSC queue algorithms should possess two favorable characteristics (1) scalability, the ability of an algorithm to utilize the highly concurrent nature of distributed clusters (2) fault-tolerance, the ability of an algorithm to continue running despite the failure of some compute nodes. Scalability is important for any concurrent algorithms, as one would never want to add more compute nodes just for performance to drop. Fault-tolerance, on the other hand, is especially more important in distributed computing, as failures can happen more frequently, such as network failures, node failures, etc. Fault-tolerance is concerned with a class of properties arisen in concurrent algorithms known as progress guarantee (@progress-guarantee). Specifically, lock-freedom is one such property that allows an algorithm to keep running even when there's some suspended processes.
 
-Lock-free MPSC queues and other FIFO variants, such as multi-producer multi-consumer (MPMC), concurrent single-producer single-consumer (SPSC), have been heavily studied in the shared memory literature, dating back from the 1980s-1990s @valois @lamport-leslie @michael-scott and more recently @ltqueue @jiffy. It comes as no surprise that lock-free algorithms in this domain are highly developed and optimized for performance and scalability. However, most research about distributed algorithms and data structures in general completely disregard the available state-of-the-art algorithms in the shared memory literature. Because shared-memory algorithms can now be straightforwardly ported to distributed context using this programming model, this presents an opportunity to make use of the highly accumulated research in the shared memory literature, which if adapted and mapped properly to the distributed context, may produce comparable results to algorithms exclusively devised within the distributed computing domain. Therefore, we decide to take this novel route to developing new non-blocking MPSC queue algorithms: Utilizing shared-memory programming techniques, adapting potential lock-free shared-memory MSPCs to design fault-tolerant and performant distribute MPSC queue algorithms. If this approach proves to be effective, a huge intellectual reuse of the shared-memory literature into the distributed domain is possible. Consequently, there may be no need to develop distributed MPSC queue algorithms from the ground up.
+Lock-free MPSC queues and other FIFO variants, such as multi-producer multi-consumer (MPMC), concurrent single-producer single-consumer (SPSC), have been heavily studied in the shared memory literature, dating back from the 1980s-1990s @valois @lamport-leslie @michael-scott and more recently @ltqueue @jiffy. It comes as no surprise that lock-free algorithms in this domain are highly developed and optimized for performance and scalability. However, most research about distributed algorithms and data structures in general completely disregard the available state-of-the-art algorithms in the shared memory literature. Because shared-memory algorithms can now be straightforwardly ported to distributed context using this programming model, this presents an opportunity to make use of the highly accumulated research in the shared memory literature, which if adapted and mapped properly to the distributed context, may produce comparable results to algorithms exclusively devised within the distributed computing domain. Therefore, we decide to take this novel route to developing new non-blocking MPSC queue algorithms: Utilizing shared-memory programming techniques, adapting potential lock-free shared-memory MSPCs to design fault-tolerant and performant distributed MPSC queue algorithms. If this approach proves to be effective, a huge intellectual reuse of the shared-memory literature into the distributed domain is possible. Consequently, there may be no need to develop distributed MPSC queue algorithms from the ground up.
 
 == Research question
 
@@ -47,22 +47,21 @@ We further decompose this question into smaller subquestions:
 + Which shared-memory programming principle is relevant in modeling and designing distributed MPSC queue algorithms in a fault-tolerant and performant manner?
 + Which shared-memory programming principle needs to be modified to more effectively model and design distributed MPSC queue algorithms in a fault-tolerant and performant manner?
 
-
 == Objective <objective>
 
 Based on what we have listed out in the previous section, we aim to:
-- Investigate the design principles underpinning the shared-memory literature.
+- Investigate the principles underpinning the design of fault-tolerant and performant shared-memory algorithms.
 - Investigate state-of-the-art shared-memory MPSC queue algorithms as case studies to support our design of distributed MPSC queue algorithms.
 - Investigate existing distributed FIFO algorithms that can be adapted for MPSC use cases to serve as a comparison baseline.
 - Model and design distributed MPSC queue algorithms using techniques from the shared-memory literature.
 - Utilize the shared-memory programming model to evaluate various theoretical aspects of distributed MPSC queue algorithms: correctness and progress guarantee.
 - Model the theoretical performance of distributed MPSC queue algorithms that are designed using techniques from the shared-memory literature.
-- Collect empirical results on distributed MPSCC queue algorithms and discuss important factors that affect these results.
+- Collect empirical results on distributed MPSC queue algorithms and discuss important factors that affect these results.
 
 == Scope <scope>
 
 The following narrows down what we're going to investigate in the shared-memory literature and which theoretical and empirical aspects we're interested in our distributed algorithms:
-- Regarding the investigation of the design principles in the shared-memory literature, we focus on concurrent algorithm design using atomic operations and common problems that often arise, namely, ABA problem and safe memory reclamation problem.
+- Regarding the investigation of the design principles in the shared-memory literature, we focus on fault-tolerant and performant concurrent algorithm design using atomic operations and common problems that often arise in this area, namely, ABA problem and safe memory reclamation problem.
 - Regarding the investigation of shared-memory MPSC queues currently in the literature, we focus on linearizable MPSC queues that support at least lock-free `enqueue` and `dequeue` operations.
 - Regarding correctness, we're concerned ourselves with the linearizability correctness condition.
 - Regarding fault-tolerance, we're concerned ourselves with the concept of progress guarantee, that is, the ability of the system to continue to make forward process despite the failure of one or more components of the system.
@@ -71,7 +70,14 @@ The following narrows down what we're going to investigate in the shared-memory 
 
 == Thesis overview
 
-An overview of this thesis is summarized in @thesis-overview.
+An overview of this thesis is given in @thesis-overview.
+
+This thesis explores the shared-memory programming model to design fault-tolerant and performant concurrent algorithms using atomic operations. Traditionally, in this aspect, two notorious problems often arise: ABA problem and safe memory reclamation. We investigate the traditional techniques used in the shared-memory literature to resolve these problems and appropriately adapt them to solve similar issues when designing fault-tolerant and performant distributed MPSC queues.
+
+This thesis contributes two new distributed wait-free distributed MPSC queue algorithms. Theoretically, we're concerned ourselves with their correctness (linearizability), progress guarantee (lock-freedom and wait-freedom) which has an implication on their fault-tolerance and their performance model, specifically, the latency and throughput models as they scale to multiple nodes.
+
+This thesis concludes with an empirical analysis of our novel algorithms to see if their actual behavior matches our theoretical performance model, interpret these results and discuss its implication.
+
 #place(
   center + top,
   float: true,
