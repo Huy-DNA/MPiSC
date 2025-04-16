@@ -13,7 +13,7 @@ Irregular applications are interesting because they demand special techniques to
 
 #figure(
   image(width: 200pt, "/static/images/actor_model.png"),
-  caption: [Actor model visualization],
+  caption: [Actor model visualization.],
 ) <remind-actor-model>
 
 Actor model in actuality is a type of irregular application supported by the concurrent MPSC queue data structure.
@@ -28,7 +28,7 @@ The reasons why the actor model being an irregular application are straightforwa
 
 #figure(
   image(width: 200pt, "/static/images/fan-out_fan-in.png"),
-  caption: [Fan-out/Fan-in pattern visualization],
+  caption: [Fan-out/Fan-in pattern visualization.],
 ) <remind-fan-out-fan-in-model>
 
 The fan-out/fan-in pattern is another type of irregular application supported by the concurrent MPSC queue data structure.
@@ -62,7 +62,7 @@ Then, linerizability means that if we have $l_1 < l_2 < ... < l_n$, the effect o
 
 #figure(
   image("/static/images/linearizability.png"),
-  caption: [Linerization points of method 1, method 2, method 3, method 4 happens at $t_1 < t_2 < t_3 < t_4$, therefore, their effects will be observed in this order as if we call method 1, method 2, method 3, method 4 sequentially],
+  caption: [Linerization points of method 1, method 2, method 3, method 4 happens at $t_1 < t_2 < t_3 < t_4$, therefore, their effects will be observed in this order as if we call method 1, method 2, method 3, method 4 sequentially.],
 )
 
 Linearizability is widely used as a correctness condition because of (1) its composability @herlihy-linearizability (if every component in the system is linearizable, the whole system is linearizable), which promotes modularity and ease of proof (2) its compatibility with human intuition, i.e. linearizability respects real-time order @herlihy-linearizability. Naturally, we choose linearizability to be the only correctness condition for our algorithms.
@@ -82,7 +82,7 @@ Blocking is the weakest progress guarantee one algorithm can offer, it allows on
 #figure(
   image(width: 200pt, "../../static/images/blocking.png"),
   caption: [
-    Blocking algorithm visualization: When a process is suspended, it can potentially block other processes from making further progress
+    Blocking algorithm visualization: When a process is suspended, it can potentially block other processes from making further progress.
   ],
 ) <blocking-algorithms>
 
@@ -204,12 +204,12 @@ As a reminder, here's how CAS is often utilized in non-blocking concurrent algor
 #subpar.grid(
   figure(
     image("../../static/images/ABA-problem-1.png"),
-    caption: [Process X enqueues a value 0, observes $"Tail"_A = 0$ then suspends],
+    caption: [Process X enqueues a value 0, observes $"Tail"_A = 0$ then suspends.],
   ),
   <ABA-problem-case-1>,
   figure(
     image("../../static/images/ABA-problem-2.png"),
-    caption: [Another enqueuer enqueues a value 1 and another dequeuer dequeues the value 0],
+    caption: [Another enqueuer enqueues a value 1 and another dequeuer dequeues the value 0.],
   ),
   <ABA-problem-case-2>,
   figure(
@@ -239,7 +239,7 @@ ABA problem arises fundamentally because most algorithms assume a memory locatio
 
 A specific case of ABA problem is given in @ABA-problem-case.
 
-To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls CAS on that location, there's no possibility another process has CAS-ed the memory location to the same value. Some notable schemes are *monotonic version tag* @michael-scott and *hazard pointer* @hazard-pointer.
+To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls CAS on that location, there's no possibility another process has CAS-ed the memory location to the same value.
 
 === Safe memory reclamation problem
 
@@ -263,7 +263,7 @@ An example of unsafe memory reclamation is given in @unsafe-memory-reclamation-c
   label: <unsafe-memory-reclamation-case>,
 )
 
-Solutions to this problem must ensure that memory is only freed when no other processes are holding references to it. In garbage-collected programming environments, this problem can be conveniently push to the garbage collector. In non-garbage-collected programming environments, however, custom schemes must be utilized. Examples include using a reference counter to count the number of processes holding a reference to some memory and *hazard pointer* @hazard-pointer to announce to other processes that some memory is not to be freed.
+Solutions to this problem must ensure that memory is only freed when no other processes are holding references to it. In garbage-collected programming environments, this problem can be conveniently push to the garbage collector. In non-garbage-collected programming environments, however, custom schemes must be utilized.
 
 // == C++11 concurrency
 //

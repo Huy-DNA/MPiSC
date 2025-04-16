@@ -24,7 +24,7 @@ Based on the MPSC queue algorithms we have surveyed in @related-works[], we prop
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*],
+  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*.],
   table(
     columns: (1.3fr, 1fr, 1fr),
     table.header(
@@ -254,7 +254,7 @@ Note that if a local SPSC is empty, the `min_timestamp` variable of the correspo
       supplement: "Image",
       image("/static/images/modified-ltqueue.png"),
       caption: [
-        dLTQueue's structure
+        dLTQueue's structure.
       ],
     ) <modified-ltqueue-tree>
   ],
@@ -697,7 +697,7 @@ Additionally, the dequeuer hosts an array whose entries each corresponds with an
 
 #figure(
   image("/static/images/slotqueue.png"),
-  caption: [Basic structure of Slotqueue],
+  caption: [Basic structure of Slotqueue.],
 ) <slotqueue-structure>
 
 === Algorithm

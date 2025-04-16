@@ -176,21 +176,6 @@ herlihy-hierarchy:
   page-range: 124–149
   page-total: 26
 
-hazard-pointer:
-  type: article
-  author: ["Michael, Maged M."]
-  title: "Hazard Pointers: Safe Memory Reclamation for Lock-Free Objects"
-  date: 2004
-  publisher: "IEEE Press"
-  volume: 15
-  serial-number:
-    issn: 1045-9219
-    doi: 10.1109/TPDS.2004.8
-  journal:
-    value: "IEEE Trans. Parallel Distrib. Syst."
-  page-range: 491–504
-  page-total: 14
-
 bcl:
   type: article
   author: ["Brock, Benjamin", "Buluç, Aydın", "Yelick, Katherine"]
