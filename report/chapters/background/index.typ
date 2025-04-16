@@ -7,7 +7,7 @@
 Irregular applications are a class of programs particularly interesting in distributed computing. They are characterized by:
 - Unpredictable memory access: Before the program is actually run, we cannot know which data it will need to access. We can only know that at run time.
 - Data-dependent control flow: The decision of what to do next (such as which data to access next) is highly dependent on the values of the data already accessed. Hence the unpredictable memory access property because we cannot statically analyze the program to know which data it will access. The control flow is inherently engraved in the data, which is not known until runtime.
-Irregular applications are interesting because they demand special techniques to achieve high performance. One specific challenge is that this type of applications is hard to model in traditional MPI APIs using the Send/Receive interface. This is specifically because using this interface requires a programmer to have already anticipated communication within pairs of processes before runtime, which is difficult with irregular applications. The introduction of MPI remote memory access (RMA) in MPI-2 and its improvement in MPI-3 has significantly improved MPI's capability to express irregular applications comfortably.
+Irregular applications are interesting because they demand special techniques to achieve high performance. One specific challenge is that this type of applications is hard to model in traditional MPI APIs using the Send/Receive interface. This is specifically because using this interface requires a programmer to have already anticipated communication within pairs of processes before runtime, which is difficult with irregular applications. The introduction of MPI remote memory access (RMA) in MPI-2 and its improvement in MPI-3 has significantly improved MPI's capability to express irregular applications comfortably. This will be explained further in @mpi.
 
 === Actor model as an irregular application
 
@@ -420,7 +420,7 @@ Solutions to this problem must ensure that memory is only freed when no other pr
 //
 // In conclusion, atomic operations avoid undefined behavior on concurrent accesses to the same memory location while memory orders help us enforce ordering of operations accross threads, which can be used to reason about the program.
 
-== MPI-3 - A popular distributed programming library interface specifcation
+== MPI-3 - A popular distributed programming library interface specifcation <mpi>
 
 MPI stands for message passing interface, which is a *message-passing library interface specification*. Design goals of MPI includes high availability across platforms, efficient communication, thread-safety, reliable and convenient communication interface while still allowing hardware-specific accelerated mechanisms to be exploited @mpi-3.1.
 
