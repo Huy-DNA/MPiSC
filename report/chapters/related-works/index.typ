@@ -110,7 +110,23 @@ Still, we can still see that the pattern of maintaining a local buffer inside ea
 
 === WRLQueue
 
-WRLQueue @wrlqueue is a lock-free MPSC queue for embedded real-time system. Its main purpose is to avoid excessive modification of storage space. WRLQueue is simplfy a pair of buffer, one is worked on by multiple enqueuers and the other is work on by the dequeuer. The enqueuers batch their enqueues and write multiple elements onto the buffer once at a time. The dequeuer upon invocation will swap its buffer with the enqueuer's buffers to dequeue from it. However, this requires the dequeuer to wait for all enqueue operations to complete in their buffer. If an enqueue suspends or dies, the dequeuer will have to wait forever, this clearly violates the property of non-blocking.
+WRLQueue @wrlqueue is a lock-free MPSC queue specifically designed for embedded real-time system. Its main purpose is to avoid excessive modification of storage space.
+
+WRLQueue is simply a pair of buffers, one is worked on by multiple enqueuers and the other is worked on by the dequeuer. The structure of WRLQueue is shown in @original-wrlqueue-structure.
+
+#figure(
+  image("/static/images/WRLQueue.png"),
+  caption: [WRLQueue structure],
+) <original-wrlqueue-structure>
+
+The enqueuers batch their enqueues and write multiple elements onto the buffer at once. They use the usual scheme of FFA-ing the tail index (`write_pos` in @original-wrlqueue-structure) to reserve their slots and write data items at their leisure.
+
+The dequeuer upon invocation will swap its buffer with the enqueuer's buffers to dequeue from it, as in @wrlqueue-dequeue-operation. However, WRLQueue explicitly states that the dequeuer has to wait for all enqueue operations to complete in the other buffer before swapping. If an enqueue suspends or dies, the dequeuer will experience a slow-down, this clearly violates the property of non-blocking. Therefore, we believe that WRLQueue is blocking, concerning its dequeue operation.
+
+#figure(
+  image("/static/images/WRLQueue-dequeue.png"),
+  caption: [WRLQueue dequeue operation],
+) <wrlqueue-dequeue-operation>
 
 === Jiffy
 
