@@ -239,6 +239,8 @@ A specific case of ABA problem is given in @ABA-problem-case.
 
 To safe-guard against ABA problem, one must ensure that between the time a process reads out a value from a shared memory location and the time it calls CAS on that location, there's no possibility another process has CAS-ed the memory location to the same value.
 
+A simple scheme that's widely used practically and also in this thesis is the *unique timestamp* scheme. This scheme's idea is simple: for each shared memory location that is affected by CAS operations, we reserve some bits of this memory location for a monotonic counter. Each time a CAS operation is carried out, this counter is incremented. Theoretically, ABA problem would never happen because combining with this counter, the value of this memory location is always unique, due to the counter never repeats itself. However, practically, the counter can overflow and wrap-around to the same value and ABA problem would happen in this case. Therefore, the counter's range must be big enough so that this scenario can't virtually happen. Empirically, a counter of 32-bit should be enough. The drawback of this approach is that we have wasted 32 meaningful bits to avoid ABA problem.
+
 === Safe memory reclamation problem
 
 The problem of safe memory reclamation often arises in concurrent algorithms that dynamically allocate memory. In such algorithms, dynamically-allocated memory must be freed at some point. However, there's a good chance that while a process is freeing memory, other processes contending for the same memory are keeping a reference to that memory. Therefore, deallocated memory can potentially be accessed, which is erroneous.
