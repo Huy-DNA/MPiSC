@@ -53,6 +53,7 @@ We further decompose this question into smaller subquestions:
 Based on what we have listed out in the previous section, we aim to:
 - Investigate the design principles underpinning the shared-memory literature.
 - Investigate state-of-the-art shared-memory MPSC queue algorithms as case studies to support our design of distributed MPSC queue algorithms.
+- Investigate existing distributed FIFO algorithms that can be adapted for MPSC use cases to serve as a comparison baseline.
 - Model and design distributed MPSC queue algorithms using techniques from the shared-memory literature.
 - Utilize the shared-memory programming model to evaluate various theoretical aspects of distributed MPSC queue algorithms: correctness and progress guarantee.
 - Model the theoretical performance of distributed MPSC queue algorithms that are designed using techniques from the shared-memory literature.
@@ -90,14 +91,14 @@ An overview of this thesis is summarized in @thesis-overview.
 
 The rest of this report is structured as follows:
 
-@background[] discusses the theoretical foundation this thesis is based on and the technical terminology that's heavily utilized in this domain. As mentioned, this thesis investigates state-of-the-art shared-memory MPSC queues. Therefore, we discuss the theory related to the design of concurrent algorithms such as lock-freedom and linearizability, the practical challenges such as the ABA problem and safe memory reclamation problem. We then explore the utilities offered by C++11 to implement concurrent algorithms and MPI-3 to port shared memory algorithms.
+@background[] discusses the theoretical foundation this thesis is based on. As mentioned, this thesis investigates the principles of shared-memory programming and the existing state-of-the-art shared-memory MPSC queues. We then explore the utilities offered by MPI-3 to implement distributed algorithms modeled by shared-memory programming techniques.
 
-@related-works[] surveys the shared-memory literature for state-of-the-art queue algorithms, specifically MPSC queues. We specifically focus on algorithms that have the potential to be ported efficiently to distributed context, such as NUMA-aware or can be made to be NUMA-aware. We then conclude with a comparison of the most potential shared-memory queue algorithms.
+@related-works[] surveys the shared-memory literature for state-of-the-art queue algorithms, specifically MPSC queues. We specifically focus on non-blocking shared-memory algorithms that have the potential to be adapted efficiently for distributed environment. This chapter additionally surveys existing distributed FIFO algorithms to serve as a comparison baseline for our novel distributed MPSC queue algorithms.
 
-@distributed-queues[] documents distributed-versions of potential shared-memory MPSC queue algorithms surveys in @related-works[]. It specifically presents our adaptation efforts of existing algorithms in the shared-memory literature to make their distributed implementations feasible.
+@distributed-queues[] introduces our novel distributed MPSC queue algorithms, designed using shared-memory programming techniques and inpsired by the selected shared-memory MPSC queue algorithms surveyed in @related-works[]. It specifically presents our adaptation efforts of existing algorithms in the shared-memory literature to make their distributed implementations feasible and efficient. This chapter also introduces existing FIFO queues in the literature adapted for MPSC use cases. We aim to keep the adaptation as least intrusive as possible for fairness.
 
 @theoretical-aspects[] discusses various interesting theoretical aspects of our distributed MPSC queue algorithms in @distributed-queues[], specifically correctness (linearizability), progress guarantee (lock-freedom and wait-freedom), performance model. Our analysis of performance model helps back our empirical findings in @result[], together, they work hand-in-hand to help us discover optimization opportunities.
 
-@result[] introduces our benchmarking setup, including metrics, environments, benchmark/microbenchmark suites and conducting methods. We aim to demonstrate some preliminary results on how well ported shared-memory MPSC queues can compare to existing distributed MPSC queues. Finally, we discuss important factors that affect the runtime properties distributed MPSC queue algorithm, which have partly been explained by our theoretical analysis in @theoretical-aspects[].
+@result[] details our benchmarking metrics and elaborates our benchmarking setup. We aim to demonstrate some preliminary results on how well our novel MPSC queue algorithms, additionally compared to existing distributed FIFO queues. Finally, we discuss important factors that affect the runtime properties distributed MPSC queue algorithm, which have partly been explained by our theoretical analysis in @theoretical-aspects[].
 
 @conclusion[] concludes what we have accomplished in this thesis and considers future possible improvements to our research.
