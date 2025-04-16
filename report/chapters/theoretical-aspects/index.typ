@@ -230,7 +230,7 @@ As a reminder, the bottom rectangular nodes are called the *enqueuer nodes* and 
       supplement: "Image",
       image("/static/images/modified-ltqueue.png"),
       caption: [
-        dLTQueue's structure
+        dLTQueue's structure.
       ],
     ) <remind-modified-ltqueue-tree>
   ],
@@ -673,7 +673,7 @@ As a refresher, @remind-slotqueue-structure shows the structure of Slotqueue.
 
 #figure(
   image("/static/images/slotqueue.png"),
-  caption: [Basic structure of Slotqueue],
+  caption: [Basic structure of Slotqueue.],
 ) <remind-slotqueue-structure>
 
 Each enqueuer hosts an SPSC that can only accessed by itself and the dequeuer. The dequeuer hosts an array of slots, each slot corresponds to an enqueuer, containing its SPSC's minimum timestamp.

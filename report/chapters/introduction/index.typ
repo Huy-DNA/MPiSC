@@ -16,19 +16,19 @@ Concurrent multi-producer single-consumer (MPSC) queue is one of those data stru
   figure(
     image("../../static/images/actor_model.png"),
     caption: [
-      Actor model
+      Actor model.
     ],
   ),
   <actor-model>,
   figure(
     image("../../static/images/fan-out_fan-in.png"),
     caption: [
-      Fan-out/Fan-in pattern
+      Fan-out/Fan-in pattern.
     ],
   ),
   <fan-out-fan-in-pattern>,
   columns: (1fr, 1fr),
-  caption: [Some programming patterns involving the MPSC queue data structure],
+  caption: [Some programming patterns involving the MPSC queue data structure.],
   label: <mpsc-patterns>,
 )
 

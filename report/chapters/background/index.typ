@@ -212,16 +212,16 @@ As a reminder, here's how CAS is often utilized in non-blocking concurrent algor
   <ABA-problem-case-2>,
   figure(
     image("../../static/images/ABA-problem-3.png"),
-    caption: [Another enqueue enqueues a value 2. Process X continues and #linebreak() performs `CAS(&`$"Tail"$`, `$"Tail"_A$`, 1)`],
+    caption: [Another enqueue enqueues a value 2. Process X continues and #linebreak() performs `CAS(&`$"Tail"$`, `$"Tail"_A$`, 1)`.],
   ),
   <ABA-problem-case-3>,
   figure(
     image("../../static/images/ABA-problem-4.png"),
-    caption: [Process X successfully performs the CAS and the queue looks as if it's empty, which is incorrect],
+    caption: [Process X successfully performs the CAS and the queue looks as if it's empty, which is incorrect.],
   ),
   <ABA-problem-case-4>,
   columns: (1fr, 1fr),
-  caption: [ABA problem in a 2-entry circular queue with $"Head"$ and $"Tail"$ pointers],
+  caption: [ABA problem in a 2-entry circular queue with $"Head"$ and $"Tail"$ pointers.],
   label: <ABA-problem-case>,
 )
 
@@ -248,16 +248,16 @@ An example of unsafe memory reclamation is given in @unsafe-memory-reclamation-c
 #subpar.grid(
   figure(
     image("../../static/images/safe-memory-reclamation-1.png"),
-    caption: [Process X about to push a value onto the stack, already reading the top pointer but suspended],
+    caption: [Process X about to push a value onto the stack, already reading the top pointer but suspended.],
   ),
   <unsafe-memory-reclamation-1>,
   figure(
     image("../../static/images/safe-memory-reclamation-2.png"),
-    caption: [The top node is popped, the reference X holds is no longer valid. When X resumes, a freed memory location will be accessed],
+    caption: [The top node is popped, the reference X holds is no longer valid. When X resumes, a freed memory location will be accessed.],
   ),
   <unsafe-memory-reclamation-2>,
   columns: (1fr, 1fr),
-  caption: [Unsafe memory reclamation in a LIFO stack],
+  caption: [Unsafe memory reclamation in a LIFO stack.],
   label: <unsafe-memory-reclamation-case>,
 )
 
@@ -296,7 +296,7 @@ Solutions to this problem must ensure that memory is only freed when no other pr
 // #figure(
 //   kind: "algorithm",
 //   supplement: "Listing",
-//   caption: "Example memory locations for a user-defined struct",
+//   caption: "Example memory locations for a user-defined struct.",
 //   [
 //     ```cpp
 //     struct S {
@@ -325,7 +325,7 @@ Solutions to this problem must ensure that memory is only freed when no other pr
 // #figure(
 //   kind: "table",
 //   supplement: "Table",
-//   caption: [Supported atomic operations on `std::atomic_flag` (C++17)],
+//   caption: [Supported atomic operations on `std::atomic_flag` (C++17).],
 //   table(
 //     columns: (1fr, auto),
 //     table.header([*Operation*], [*Usage*]),
@@ -342,7 +342,7 @@ Solutions to this problem must ensure that memory is only freed when no other pr
 // #figure(
 //   kind: "table",
 //   supplement: "Table",
-//   caption: [Available atomic operations on atomic types (C++17)],
+//   caption: [Available atomic operations on atomic types (C++17).],
 //   table(
 //     columns: (1fr, 1fr, 1fr, 1fr, 1fr),
 //     table.header(
@@ -442,7 +442,7 @@ In *passive target synchronization*, any RMA communication calls must be within 
 
 #figure(
   image("/static/images/passive_target_synchronization.png"),
-  caption: [An illustration of passive target communication. Dashed arrows represent synchronization (source: @mpi-3.1)],
+  caption: [An illustration of passive target communication. Dashed arrows represent synchronization (source: @mpi-3.1).],
 )
 
 // === MPI-3 SHM
@@ -466,7 +466,7 @@ In the MPI-3 specification @mpi-3.1, these functions are specified as follows:
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Specification of `MPI_Win_lock_all` and `MPI_Win_unlock_all`],
+  caption: [Specification of `MPI_Win_lock_all` and `MPI_Win_unlock_all`.],
   table(
     columns: (1fr, 2.5fr),
     table.header([*Operation*], [*Usage*]),
@@ -488,7 +488,7 @@ An example of our pure MPI approach with `MPI_Win_lock_all`/`MPI_Win_unlock_all`
 #figure(
   kind: "algorithm",
   supplement: "Listing",
-  caption: "An example snippet showcasing our synchronization approach in MPI RMA",
+  caption: "An example snippet showcasing our synchronization approach in MPI RMA.",
   [
     ```cpp
     MPI_Win_lock_all(0, win);
@@ -512,7 +512,7 @@ An example of our pure MPI approach with `MPI_Win_lock_all`/`MPI_Win_unlock_all`
 
 #figure(
   image("/static/images/mpi_win_lock_all.png"),
-  caption: [An illustration of our synchronization approach in MPI RMA],
+  caption: [An illustration of our synchronization approach in MPI RMA.],
 )
 
 // === MPI+MPI

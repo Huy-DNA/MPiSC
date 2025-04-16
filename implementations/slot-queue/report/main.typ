@@ -69,7 +69,7 @@ Each enqueuer will have a local SPSC as in LTQueue @ltqueue that supports `deque
 
 #figure(
   image("/assets/structure.png"),
-  caption: [Basic structure of slot queue],
+  caption: [Basic structure of slot queue.],
 )
 
 = Pseudocode

@@ -7,7 +7,7 @@ There exists numerous research into the design of lock-free shared memory MPMCs 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of existing shared memory MPSC queues. The cell marked with (\*) indicates that our evaluation contradicts with the authors's claims],
+  caption: [Characteristic summary of existing shared memory MPSC queues. The cell marked with (\*) indicates that our evaluation contradicts with the authors's claims.],
   table(
     columns: (1.5fr, 1fr, 1fr, 1fr, 1fr),
     table.header(
@@ -60,7 +60,7 @@ The purpose of timestamping is to determine the order to dequeue the items from 
 
 #figure(
   image("/static/images/ltqueue.png"),
-  caption: [LTQueue structure],
+  caption: [LTQueue structure.],
 ) <original-ltqueue-structure>
 
 To dequeue, the dequeuer simply looks at the root node to determine the rank of the enqueuer to dequeue its SPSC.
@@ -73,7 +73,7 @@ Notice that due to contention, the timestamp-refreshing procedure can fail. In t
 
 #figure(
   image("/static/images/double-refresh.png"),
-  caption: [LTQueue structure],
+  caption: [LTQueue structure.],
 ) <original-ltqueue-refresh-correctness>
 
 The LTQueue algorithm avoids ABA entirely by utilizing load-link/store-conditional. This represents a challenge to directly implementing this algorithm in distributed environment.
@@ -90,7 +90,7 @@ The basic structure of DQueue is demonstrated in @original-dqueue-structure.
 
 #figure(
   image("/static/images/dqueue.png"),
-  caption: [DQueue structure],
+  caption: [DQueue structure.],
 ) <original-dqueue-structure>
 
 The global queue where data is represented as a linked list of segments. A segment is simply a contiguous array of data items. This design allows for unbounded queue capacity while still allowing a fair degree of random access within a segment. This allows us to use indices to index elements in the queue, thus permitting the use of inexpensive FAA instructions to swing the head and tail indices.
@@ -115,7 +115,7 @@ WRLQueue is simply a pair of buffers, one is worked on by multiple enqueuers and
 
 #figure(
   image("/static/images/WRLQueue.png"),
-  caption: [WRLQueue structure],
+  caption: [WRLQueue structure.],
 ) <original-wrlqueue-structure>
 
 The enqueuers batch their enqueues and write multiple elements onto the buffer at once. They use the usual scheme of FFA-ing the tail index (`write_pos` in @original-wrlqueue-structure) to reserve their slots and write data items at their leisure.
@@ -133,7 +133,7 @@ Jiffy @jiffy is a fast and memory-efficient wait-free MPSC queue by avoiding exc
 
 #figure(
   image("/static/images/jiffy.png"),
-  caption: [Jiffy structure],
+  caption: [Jiffy structure.],
 ) <original-jiffy-structure>
 
 Like DQueue, Jiffy represents the queue as a doubly-linked list of segments as in @original-jiffy-structure. This design again allows Jiffy to be unbounded while using head and tail indices to index elements. Each segment contains a pointer to a dynamically allocated array of slots, instead of directly storing the array. Each slot in the segment contains the data item and a state of that slot (`state_t` in the figure). There are 3 states: `SET`, `EMPTY` and `HANDLED`. Initially, all slots are `EMPTY`. Instead of keeping a global head index, there are per-segment Head indices pointing to the first non-`HANDLED` slot. However, there is still one global Tail index shared by all the processes.
