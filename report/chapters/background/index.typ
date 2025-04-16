@@ -37,8 +37,6 @@ In this pattern, there's a big task that can be splitted into subtasks to be exe
 
 The fan-out/fan-in pattern exhibits less irregularity than the actor model, however. Usually, the worker nodes and the aggregation node are known in advance. The aggregation node can anticipate Send calls from the worker nodes. Still, there's a degree of irregularity that this pattern exhibit: How can the aggregation node know how many Send calls a worker nodes will issue? This is highly driven by the task and the data involved in this task, hence, we have the data-dependent control-flow property. One can still statically calculate or predict how many Send calls a worker node will issue, however, this is problem-specific. Therefore, the memory access pattern is somewhat unpredictable. Notice that if supported by a concurrent MPSC queue data structure, the fan-out/fan-in pattern is free from this burden of organizing the right amount of Send/Receive calls. Thus, combining with the MPSC queue, the fan-out/fan-in pattern becomes more general and easier to program.
 
-#linebreak()
-
 We have seen the role the MPSC queue plays in supporting irregular applications. It's important to understand what really comprises an MPSC queue data structure.
 
 == MPSC queue

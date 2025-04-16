@@ -9,16 +9,15 @@ There exists numerous research into the design of lock-free shared memory MPMCs 
   supplement: "Table",
   caption: [Characteristic summary of existing shared memory MPSC queues. The cell marked with (\*) indicates that our evaluation contradicts with the authors's claims],
   table(
-    columns: (2.5fr, 1fr, 1fr, 1fr, 1fr),
+    columns: (1.5fr, 1fr, 1fr, 1fr, 1fr),
     table.header(
       [*MPSC queues*],
-      [*LTQueue*],
-      [*DQueue*],
-      [*WRLQueue*],
-      [*Jiffy*],
+      [*LTQueue* @ltqueue],
+      [*DQueue* @dqueue],
+      [*WRLQueue* @wrlqueue],
+      [*Jiffy* @jiffy],
     ),
 
-    [Source], [@ltqueue], [@dqueue], [@wrlqueue], [@jiffy],
     [ABA solution],
     [Load-link/Store-conditional],
     [Incorrect custom scheme (\*)],
@@ -159,12 +158,11 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
     columns: (1.2fr, 1fr, 1fr, 1fr),
     table.header(
       [*FIFO queues*],
-      [*FastQueue*],
+      [*FastQueue* @bcl],
       [*dLTQueue* + *baseline SPSC* (1)],
       [*Slotqueue* + *baseline SPSC* (1)],
     ),
 
-    [Source], [@bcl], [@naive-LTQueue], [@slotqueue],
     [Supported patterns],
     [Multi-producer or Multi-consumer],
     [Multi-producer Single-consumer],
