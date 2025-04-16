@@ -2,6 +2,8 @@
 
 #import "@preview/subpar:0.2.2"
 
+This chapter details the motivation for our research topic: "Studying and developing nonblocking distributed MPSC queues", based on which we come to the formulation of our research question. Based on this question, we set out the objectives and the scope of our research. We end this chapter with an overview of the thesis and the structure of the rest of this document.
+
 == Motivation
 
 The demand for computation power has always been increasing relentlessly. Increasingly complex computation problems arise and accordingly more computation power is required to solve them. Much engineering efforts have been put forth towards obtaining more computation power. A popular topic in this regard is distributed computing: The combined power of clusters of commodity hardware can surpass that of a single powerful machine. To fully take advantage of the potential of distributed computing, specialized distributed algorithms and data structures need to be devised. Hence, there exists a variety of programming environments and frameworks that directly support the execution and development of distribute algorithms and data structures, one of which is the Message Passing Interface (MPI).
@@ -38,33 +40,35 @@ Lock-free MPSC queues and other FIFO variants, such as multi-producer multi-cons
 
 == Research question
 
-We revolve our research effort around this main question:
-
-#quote()[How to utilize shared-memory programming techniques to model and design distributed MPSC queue algorithms in a fault-tolerant and performant manner?]
+#quote()[How to utilize shared-memory programming principles to model and design distributed MPSC queue algorithms in a fault-tolerant and performant manner?]
 
 We further decompose this question into smaller subquestions:
 + Which factor contributes to the fault-tolerance and performance of a distributed MPSC queue algorithms?
-+ Which shared-memory programming technique is relevant in modeling and designing distributed MPSC queue algorithms in a fault-tolerant and performant manner?
-+ Which shared-memory programming technique needs to be modified to more effectively model and design distributed MPSC queue algorithms in a fault-tolerant and performant manner?
++ Which shared-memory programming principle is relevant in modeling and designing distributed MPSC queue algorithms in a fault-tolerant and performant manner?
++ Which shared-memory programming principle needs to be modified to more effectively model and design distributed MPSC queue algorithms in a fault-tolerant and performant manner?
 
-== Thesis overview
 
 == Objective <objective>
 
-This thesis aims to:
-- Investigate state-of-the-art shared-memory MPSC queues.
-- Select and appropriately modify potential MPSC queue algorithms so they can be implemented in popular distributed programming environments.
-- Port MPSC queue algorithms using MPI-3 RMA.
-- Evaluate various theoretical aspects of ported MPSC queue algorithms: Correctness, progress guarantee, time complexity analysis.
-- Benchmark the ported MPSC queue algorithms and compare them with current distributed MPSC queues in the literature.
-- Discover distributed-environment-specific optimization opportunities for ported MPSC queue algorithms.
+Based on what we have listed out in the previous section, we aim to:
+- Investigate the design principles underpinning the shared-memory literature.
+- Investigate state-of-the-art shared-memory MPSC queue algorithms as case studies to support our design of distributed MPSC queue algorithms.
+- Model and design distributed MPSC queue algorithms using techniques from the shared-memory literature.
+- Utilize the shared-memory programming model to evaluate various theoretical aspects of distributed MPSC queue algorithms: correctness and progress guarantee.
+- Model the theoretical performance of distributed MPSC queue algorithms that are designed using techniques from the shared-memory literature.
+- Collect empirical results on distributed MPSCC queue algorithms and discuss important factors that affect these results.
 
 == Scope <scope>
 
-- Theoretically, regarding correctness, we're concerned ourselves with the linearizability correctness conditions; regarding progress guarantee, we're concerned ourselves with lock-freedom and wait-freedom (@progress-guarantee).
-- For related works, regarding shared-memory MPSC queues, we only focus on linearizable MPSC queues that support at least lock-free `enqueue` and `dequeue` operations; regarding distributed MPSC queues, we look at any linearizable FIFO queues that can be easily adapted for MPSC use cases.
-- Any implementation details, benchmarking and optimizations assume MPI-3 settings.
-- For benchmarking and optimization purposes, we focus on performance-related metrics, e.g. time-complexity (theoretically), throughput & latency (empirically).
+The following narrows down what we're going to investigate in the shared-memory literature and which theoretical and empirical aspects we're interested in our distributed algorithms:
+- Regarding the investigation of the design principles in the shared-memory literature, we focus on concurrent algorithm design using atomic operations and common problems that often arise, namely, ABA problem and safe memory reclamation problem.
+- Regarding the investigation of shared-memory MPSC queues currently in the literature, we focus on linearizable MPSC queues that support at least lock-free `enqueue` and `dequeue` operations.
+- Regarding correctness, we're concerned ourselves with the linearizability correctness condition.
+- Regarding fault-tolerance, we're concerned ourselves with the concept of progress guarantee, that is, the ability of the system to continue to make forward process despite the failure of one or more components of the system.
+- Regarding algorithm prototyping, benchmarking and optimizations, we assume an MPI-3 setting.
+- Regarding empirical results, we focus on performance-related metrics, e.g. throughput and latency.
+
+== Thesis overview
 
 == Structure <structure>
 
