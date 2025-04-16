@@ -70,6 +70,22 @@ The following narrows down what we're going to investigate in the shared-memory 
 
 == Thesis overview
 
+An overview of this thesis is summarized in @thesis-overview.
+#place(
+  center + top,
+  float: true,
+  scope: "parent",
+  [#figure(
+      kind: "image",
+      supplement: "Image",
+      image("/static/images/thesis-overview.png"),
+      caption: [
+        An overview of this thesis.
+      ],
+    ) <thesis-overview>
+  ],
+)
+
 == Structure <structure>
 
 The rest of this report is structured as follows:
