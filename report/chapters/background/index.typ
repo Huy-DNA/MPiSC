@@ -52,7 +52,7 @@ The reasons we're interested in MPSC queues instead of the more general multiple
 - Data-dependent control-flow: The consumer's behavior is entirely dependent on whether and which data is available in the MPSC queue. The execution paths of MPSC queues can vary, based on the queue contention i.e. some processes may backoff or retry some failed operations, this scenario often arise in lock-free data structures.
 As an implication, some irregular applications can actually "push" the "irregularity burden" to the distributed MPSC queue, which is already designed for high-performance and fault tolerance. This provides a comfortable level of abstraction for programmers that need to deal with irregular applications.
 
-== Correctness condition of concurrent algorithms - Linearizability
+== Correctness condition of concurrent algorithms
 
 Correctness of concurrent algorithms is hard to defined, regarding the semantics of concurrent data structures like MPSC queues. One effort to formalize the correctness of concurrent data structures is the definition of *linearizability*. A method call on the FIFO can be visualized as an interval spanning two points in time. The starting point is called the *invocation event* and the ending point is called the *response event*. *Linearizability* informally states that each method call should appear to take effect instantaneously at some moment between its invocation event and response event @art-of-multiprocessor-programming. The moment the method call takes effect is termed the *linearization point*. Specifically, suppose the followings:
 - We have $n$ concurrent method calls $m_1$, $m_2$, ..., $m_n$.
