@@ -153,7 +153,7 @@ Although we use MPI-3 RMA to implement these algorithms, the algorithm specifica
 
 For prototyping, the two MPSC queue wrapper algorithms we propose here both utilize a baseline distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
 
-Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
+Placement-wise, all queue data in this SPSC is hosted on the enqueuer while the control variables i.e. `First` and `Last`, are hosted on the dequeuer.
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
@@ -164,9 +164,9 @@ Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
   #pseudocode-list(line-numbering: none)[
     + *Shared variables*
       + `First`: `remote<uint64_t>`
-        + The index of the last undequeued entry. Hosted at the enqueuer.
+        + The index of the last undequeued entry. Hosted at the dequeuer.
       + `Last`: `remote<uint64_t>`
-        + The index of the last unenqueued entry. Hosted at the enqueuer.
+        + The index of the last unenqueued entry. Hosted at the dequeuer.
       + `Data`: `remote<data_t*>`
         + An array of `data_t` of some known capacity. Hosted at the enqueuer.
   ]
