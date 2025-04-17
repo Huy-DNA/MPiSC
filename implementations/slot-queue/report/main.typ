@@ -76,7 +76,7 @@ Each enqueuer will have a local SPSC as in LTQueue @ltqueue that supports `deque
 
 == SPSC
 
-The SPSC of @ltqueue is kept in tact, except that we change it into a circular buffer implementation.
+The SPSC of @ltqueue is kept intact, except that we change it into a circular buffer implementation.
 
 #pseudocode-list(line-numbering: none)[
   + *Types*

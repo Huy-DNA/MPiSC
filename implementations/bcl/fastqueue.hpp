@@ -246,13 +246,12 @@ public:
 #endif
 
     MPI_Aint old_head;
-    fetch_and_add_sync(&old_head, 1, 0, this->_host, this->_head_win);
+    read_sync(&old_head, 0, this->_host, this->_head_win);
     MPI_Aint new_head = old_head + 1;
 
     if (new_head > this->_tail_buf) {
       aread_sync(&this->_tail_buf, 0, this->_host, this->_tail_win);
       if (new_head > this->_tail_buf) {
-        fetch_and_add_sync(&old_head, -1, 0, this->_host, this->_head_win);
         return false;
       }
     }
@@ -265,6 +264,11 @@ public:
 
     aread_sync(output, old_head % this->_capacity, this->_host,
                this->_data_win);
+
+    bool unset = false;
+    write_sync(&unset, old_head % this->_capacity, this->_host,
+               this->_flag_win);
+    write_sync(&new_head, 0, this->_host, this->_head_win);
 
     return true;
   }

@@ -151,7 +151,16 @@ Although we use MPI-3 RMA to implement these algorithms, the algorithm specifica
 
 == FastQueue - An adaptation of BCL's FastQueue as a baseline blocking distributed MPSC
 
+This section presents our straightforward adaptation of BCL's FastQueue to support MPSC use cases. This implementation is used as a comparison baseline for our other algorithms. For fairness, we aim to introduce least possible overhead on the original FastQueue, which is optimized for performance, but not fault-tolerance.
+
 === Overview
+
+#figure(
+  image("/static/images/fastqueue.png"),
+  caption: [Adapted FastQueue structure.],
+) <fastqueue-structure>
+
+The structure of FastQueue is largely kept intact, except that each entry now holds an additional flag. All data and control variables are hosted at the dequeuer. Enqueuer enqueues an item by FAA-ing the `Last` index to reserve a slot, then it writes the enqueued data and sets the slot's flag to true. The dequeuer dequeues items in the circular buffer in order starting from `First`, but it has to wait for the `is_set` flag to be set to safely dequeue the item. When it has successfully read the value, it unsets the slot's flag and FAA the `First` index. This spinning makes the dequeue operation blocking.
 
 === Data structure
 
@@ -299,7 +308,6 @@ The procedures of the dequeuer are given as follows.
 ) <spsc-dequeue-readFront>
 
 `spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
-
 
 == dLTQueue - Modified distributed LTQueue without LL/SC <naive-LTQueue>
 
