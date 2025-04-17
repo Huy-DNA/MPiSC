@@ -21,6 +21,19 @@ Based on the MPSC queue algorithms we have surveyed in @related-works[], we prop
 - dLTQueue (@naive-LTQueue) is a direct modification of the original LTQueue @ltqueue without any usage of LL/SC, adapted for distributed environment.
 - Slotqueue (@slotqueue) is inspired by the timestamp-refreshing idea of LTQueue @ltqueue and repeated-rescan of Jiffy @jiffy. Although it still bears some resemblance to LTQueue, we believe it to be more optimized for distributed context.
 
+In actuality, dLTQueue and Slotqueue are more than simple MPSC algorithms. As hinted in @dfifo-related-works, they are "MPSC queue wrappers", that is, given an SPSC queue implementation, they yield an MPSC implementation. There's one additional constraint: The SPSC interface must support an additional `readFront` operation, which returns the first data item currently in the SPSC queue.
+
+This fact has an important implication: when we're talking about the characteristics (correctness, progress guarantee, performance model, ABA solution and safe memory reclamation scheme) of an MPSC queue wrapper, we're talking about the correctness, progress guarantee, performance model, ABA solution and safe memory reclamation scheme of the wrapper that turns an SPSC queue to an MPSC queue:
+- If the underlying SPSC queue is linearizable (which is composable), the resulting MPSC queue is linearizable.
+- The resulting MPSC queue's progress guarantee is the weaker guarantee between the wrapper's and the underlying SPSC's.
+- If the underlying SPSC queue is safe against ABA problem and memory reclamation, the resulting MPSC queue is also safe against these problems.
+- To highlight specifically the performance of "MPSC queue wrappers", we define the theoretical *wrapping overhead*. Roughly speaking:
+  - Theoretical performance of the MPSC queue's `enqueue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `enqueue` + Theoretical performance of the SPSC queue's `enqueue` operation.
+  - Theoretical performance of the MPSC queue's `dequeue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `dequeue` + Theoretical performance of the SPSC queue's `dequeue` operation.
+
+
+The characteristics of these MPSC queue wrappers are summarized in @summary-of-distributed-mpscs.
+
 #figure(
   kind: "table",
   supplement: "Table",
@@ -36,20 +49,20 @@ Based on the MPSC queue algorithms we have surveyed in @related-works[], we prop
     [Correctness], [Linearizable], [Linearizable],
     [Progress guarantee of dequeue], [Wait-free], [Wait-free],
     [Progress guarantee of enqueue], [Wait-free], [Wait-free],
-    [],
-    [],
-    [],
+    [Dequeue wrapping overhead],
+    [$Theta(log n) R$ + $Theta(log n) A$],
+    [$Theta(n) A$],
 
-    [],
-    [],
-    [],
+    [Enqueue wrapping overhead],
+    [$Theta(log n) R$ + $Theta(log n) A$],
+    [$Theta(1) R$ + $Theta(1) A$],
 
     [ABA solution], [Unique timestamp], [ABA-safe by default],
     [Memory reclamation], [Custom scheme], [Custom scheme],
   ),
 ) <summary-of-distributed-mpscs>
 
-In this section, we present our proposed distributed MPSC queues in detail. Any other discussions about theoretical aspects of these algorithms such as linearizability, progress guarantee, time complexity are deferred to @theoretical-aspects[].
+In the following sections, we present first the one-sided-communication primitives that we assume will be available and then our proposed distributed MPSC queue wrappers in detail. Any other discussions about theoretical aspects of these algorithms such as linearizability, progress guarantee, performance model are deferred to @theoretical-aspects[].
 
 In our description, we assume that each process in our program is assigned a unique number as an identifier, which is termed as its *rank*. The numbers are taken from the range of `[0, size - 1]`, with `size` being the number of processes in our program.
 
