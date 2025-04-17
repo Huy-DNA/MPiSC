@@ -137,6 +137,14 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 
 === Performance model
 
+== Theoretical proofs of FastQueue
+
+=== Correctness
+
+=== Progress guarantee
+
+=== Performance model
+
 == Theoretical proofs of the distributed SPSC
 
 In this section, we focus on the correctness and progress guarantee of the simple distributed SPSC established in @distributed-spsc.

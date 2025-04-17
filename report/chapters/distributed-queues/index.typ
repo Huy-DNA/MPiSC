@@ -149,6 +149,14 @@ Although we use MPI-3 RMA to implement these algorithms, the algorithm specifica
     + Issue a synchronous fetch-and-add operation on the distributed variable `dest`. The operation atomically adds the value `inc` to the current value of `dest`, returning the original value of `dest` (before the addition) to the calling process. The update to `dest` is guaranteed to be completed and visible to all processes when the function returns. The type `T` must be an integral type with a size of `1`, `2`, `4`, or `8` bytes.
 ]
 
+== FastQueue - An adaptation of BCL's FastQueue as a baseline blocking distributed MPSC
+
+=== Overview
+
+=== Data structure
+
+=== Algorithm
+
 == A simple baseline distributed SPSC <distributed-spsc>
 
 For prototyping, the two MPSC queue wrapper algorithms we propose here both utilize a baseline distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
