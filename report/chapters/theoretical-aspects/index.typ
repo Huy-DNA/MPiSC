@@ -17,19 +17,19 @@
 #show: theorem-rules
 #show: definition-rules
 
-This section discusses the correctness and progress guarantee properties of the distributed MPSC algorithms introduced in @distributed-queues[]. We also provide a theoretical performance model of these algorithms to predict how well they scale to multiple nodes.
+This section discusses the correctness and progress guarantee properties of the distributed MPSC queue algorithms introduced in @distributed-queues[]. We also provide a theoretical performance model of these algorithms to predict how well they scale to multiple nodes.
 
 == Terminology
 
 In this section, we introduce some terminology that we will use throughout our proofs.
 
-#definition[In an SPSC/MPSC, an enqueue operation $e$ is said to *match* a dequeue operation $d$ if $d$ returns the value that $e$ enqueues. Similarly, $d$ is said to *match* $e$. In this case, both $e$ and $d$ are said to be *matched*.]
+#definition[In an SPSC/MPSC queue, an enqueue operation $e$ is said to *match* a dequeue operation $d$ if $d$ returns the value that $e$ enqueues. Similarly, $d$ is said to *match* $e$. In this case, both $e$ and $d$ are said to be *matched*.]
 
-#definition[In an SPSC/MPSC, an enqueue operation $e$ is said to be *unmatched* if no dequeue operation *matches* it.]
+#definition[In an SPSC/MPSC queue, an enqueue operation $e$ is said to be *unmatched* if no dequeue operation *matches* it.]
 
-#definition[In an SPSC/MPSC, a dequeue operation $d$ is said to be *unmatched* if no enqueue operation *matches* it, in other word, $d$ returns `false`.]
+#definition[In an SPSC/MPSC queue, a dequeue operation $d$ is said to be *unmatched* if no enqueue operation *matches* it, in other word, $d$ returns `false`.]
 
-== Formalization
+== Preliminaries
 
 In this section, we formalize the notion of correct concurrent algorithms and harmless ABA problem. We will base our proofs on these formalisms to prove their correctness. We also provide a simple way to theoretically model our queues' performance.
 
@@ -95,13 +95,13 @@ Our SPSC supports 3 methods:
   - A read-front would return `true` and the first element in the queue is read out.
 ] <linearizable-spsc>
 
-==== Linearizable MPSC
+==== Linearizable MPSC queue
 
-An MPSC supports 2 methods:
+An MPSC queue supports 2 methods:
 - `enqueue` which accepts an input parameter and returns a boolean.
 - `dequeue` which accepts an output parameter and returns a boolean.
 
-#definition[An MPSC is *linearizable* if and only if any history produced from the MPSC that does not have overlapping dequeue method calls is _linearizable_ according to the following _sequential specification_:
+#definition[An MPSC queue is *linearizable* if and only if any history produced from the MPSC queue that does not have overlapping dequeue method calls is _linearizable_ according to the following _sequential specification_:
   - An enqueue can only be matched by one dequeue.
   - A dequeue can only be matched by one enqueue.
   - The order of item dequeues is the same as the order of item enqueues.
@@ -141,7 +141,17 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 
 In this section, we focus on the correctness and progress guarantee of the simple distributed SPSC established in @distributed-spsc.
 
-=== Linearizability
+=== Correctness
+
+==== ABA problem
+
+There's no CAS instruction in our simple distributed SPSC, so there's no potential for ABA problem.
+
+==== Memory reclamation
+
+There's no dynamic memory allocation and deallocation in our simple distributed SPSC, so it is memory-safe.
+
+==== Linearizability
 
 We prove that our simple distributed SPSC is linearizable.
 
@@ -201,19 +211,11 @@ Our simple distributed SPSC is wait-free:
 - `spsc_readFront`#sub(`e`) (@spsc-enqueue-readFront) does not execute any loops or wait for any other method calls.
 - `spsc_readFront`#sub(`d`) (@spsc-dequeue-readFront) does not execute any loops or wait for any other method calls.
 
-=== ABA problem
-
-There's no CAS instruction in our simple distributed SPSC, so there's no potential for ABA problem.
-
-=== Memory reclamation
-
-There's no dynamic memory allocation and deallocation in our simple distributed SPSC, so it is memory-safe.
-
 === Performance model
 
 == Theoretical proofs of dLTQueue
 
-=== Notation
+=== Proof-specific notations
 
 The structure of dLTQueue is presented again in @remind-modified-ltqueue-tree.
 
@@ -228,7 +230,7 @@ As a reminder, the bottom rectangular nodes are called the *enqueuer nodes* and 
       supplement: "Image",
       image("/static/images/modified-ltqueue.png"),
       caption: [
-        dLTQueue's structure
+        dLTQueue's structure.
       ],
     ) <remind-modified-ltqueue-tree>
   ],
@@ -268,7 +270,9 @@ We will refer `propagate`#sub(`e`) and `propagate`#sub(`d`) as `propagate` if th
 
 #definition[`refreshLeaf`#sub(`d`) (@ltqueue-dequeue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 109. `refreshLeaf`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 114.]
 
-=== ABA problem
+=== Correctness
+
+==== ABA problem
 
 We use CAS instructions on:
 - Line 34 and line 36 of `refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp).
@@ -280,7 +284,11 @@ We use CAS instructions on:
 
 Notice that at these locations, we increase the associated version tags of the CAS-ed values. These version tags are 32-bit in size, therefore, practically, ABA problem can't virtually occur. It's safe to assume that there's no ABA problem in dLTQueue.
 
-=== Linearizability
+==== Memory reclamation
+
+Notice that Slotqueue pushes the memory reclamation problem to the underlying SPSC. Because the underlying SPSC is memory-safe, Slotqueue is also memory-safe.
+
+==== Linearizability
 
 #theorem[In dLTQueue, an enqueue can only match at most one dequeue.] <ltqueue-unique-match-enqueue>
 
@@ -487,7 +495,7 @@ We immediately obtain the following result.
 
   Suppose $e$ obtains a timestamp of $c$ and $e'$ obtains a timestamp of $c'$.
 
-  Because $e$ precedes $d$ and because an MPSC does not allow multiple dequeues, from the start of $d$ at $t_0$ until after line 4 of dequeue (@ltqueue-dequeue) at $t_1$, $e$ has finished and there's no dequeue running that has _actually performed `spsc_dequeue`_. Also by $t_0$ and $t_1$, $e$ is still unmatched due to $(1)$.
+  Because $e$ precedes $d$ and because an MPSC queue does not allow multiple dequeues, from the start of $d$ at $t_0$ until after line 4 of dequeue (@ltqueue-dequeue) at $t_1$, $e$ has finished and there's no dequeue running that has _actually performed `spsc_dequeue`_. Also by $t_0$ and $t_1$, $e$ is still unmatched due to $(1)$.
 
   Applying @ltqueue-unmatched-enqueue-corollary, $m i n \- s p s c \- t s(r a n k(r o o t, t_x), t_y) lt.eq c$ for $t_x, t_y in [t_0, t_1]$. Therefore, $d$ reads out a rank $r$ such that $m i n \- s p s c \- t s(r, t) lt.eq c$ for $t in [t_0, t_1]$. Consequently, $d$ dequeues out a value with a timestamp not greater than $c$. Because $d$ matches $e'$, $c' lt.eq c$. However, $e' eq.not e$ so $c' lt c$.
 
@@ -655,21 +663,17 @@ We immediately obtain the following result.
 
 Notice that every loop in dLTQueue is bounded, and no method have to wait for another. Therefore, dLTQueue is wait-free.
 
-=== Memory reclamation
-
-Notice that dLTQueue pushes the memory reclamation problem to the underlying SPSC. Because the underlying SPSC is memory-safe, dLTQueue is also memory-safe.
-
 === Performance model
 
 == Theoretical proofs of Slotqueue
 
-=== Notation
+=== Proof-specific notations
 
 As a refresher, @remind-slotqueue-structure shows the structure of Slotqueue.
 
 #figure(
   image("/static/images/slotqueue.png"),
-  caption: [Basic structure of Slotqueue],
+  caption: [Basic structure of Slotqueue.],
 ) <remind-slotqueue-structure>
 
 Each enqueuer hosts an SPSC that can only accessed by itself and the dequeuer. The dequeuer hosts an array of slots, each slot corresponds to an enqueuer, containing its SPSC's minimum timestamp.
@@ -700,7 +704,9 @@ The followings are some other definitions that will be used throughout our proof
 
 #definition[For a dequeue, *slot-scan phase* refer to its execution of line 31-47 of @slotqueue-read-minimum-rank.]
 
-=== ABA problem
+=== Correctness
+
+==== ABA problem
 
 Noticeably, we use no scheme to avoid ABA problem in Slotqueue. In actuality, ABA problem does not adversely affect our algorithm's correctness, except in the extreme case that the 64-bit distributed counter overflows, which is unlikely.
 
@@ -814,7 +820,9 @@ Both `CAS`es target some slot in the `Slots` array.
   This follows from @slotqueue-aba-safe-enqueue-theorem and @slotqueue-aba-safe-dequeue-theorem.
 ]
 
-=== Linearizability
+==== Memory reclamation
+
+==== Linearizability
 
 #theorem[In Slotqueue, an enqueue can only match at most one dequeue.] <slotqueue-unique-match-enqueue>
 
@@ -824,7 +832,7 @@ Both `CAS`es target some slot in the `Slots` array.
 
 #proof[This is trivial as a dequeue can only read out at most one value, so it can only match at most one enqueue.]
 
-#theorem[If an enqueue $e$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` that either doesn't execute its *CAS sequence* or starts and ends its *CAS-sequence* between $t_0$ and $t_1$  or a successful `refreshDequeue` on $r a n k(e)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-enqueue-theorem>
+#theorem[If an enqueue $e$ begins its *slot-refresh phase* at time $t_0$ and finishes at time $t_1$, there's always at least one successful `refreshEnqueue` that either doesn't execute its *CAS sequence* or starts and ends its *CAS-sequence* between $t_0$ and $t_1$ or a successful `refreshDequeue` on $r a n k(e)$ starting and ending its *CAS-sequence* between $t_0$ and $t_1$.] <slotqueue-refresh-enqueue-theorem>
 
 #proof[
   If one of the two `refreshEnqueue`s succeeds, then the theorem obviously holds.
@@ -1011,10 +1019,5 @@ Both `CAS`es target some slot in the `Slots` array.
 === Progress guarantee
 
 Notice that every loop in Slotqueue is bounded, and no method have to wait for another. Therefore, Slotqueue is wait-free.
-
-=== Memory reclamation
-
-Notice that Slotqueue pushes the memory reclamation problem to the underlying SPSC. Because the underlying SPSC is memory-safe, Slotqueue is also memory-safe.
-
 
 === Performance model

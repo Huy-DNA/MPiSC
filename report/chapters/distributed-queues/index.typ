@@ -1,4 +1,4 @@
-= Distributed MPSCs <distributed-queues>
+= Distributed MPSC queues <distributed-queues>
 
 #import "@preview/lovelace:0.3.0": *
 #import "@preview/lemmify:0.1.7": *
@@ -17,18 +17,31 @@
 #show: theorem-rules
 #show: definition-rules
 
-Based on the MPSC algorithms we have surveyed in @related-works[], we propose two wait-free distributed MPSC algorithms:
+Based on the MPSC queue algorithms we have surveyed in @related-works[], we propose two wait-free distributed MPSC queue algorithms:
 - dLTQueue (@naive-LTQueue) is a direct modification of the original LTQueue @ltqueue without any usage of LL/SC, adapted for distributed environment.
 - Slotqueue (@slotqueue) is inspired by the timestamp-refreshing idea of LTQueue @ltqueue and repeated-rescan of Jiffy @jiffy. Although it still bears some resemblance to LTQueue, we believe it to be more optimized for distributed context.
+
+In actuality, dLTQueue and Slotqueue are more than simple MPSC algorithms. As hinted in @dfifo-related-works, they are "MPSC queue wrappers", that is, given an SPSC queue implementation, they yield an MPSC implementation. There's one additional constraint: The SPSC interface must support an additional `readFront` operation, which returns the first data item currently in the SPSC queue.
+
+This fact has an important implication: when we're talking about the characteristics (correctness, progress guarantee, performance model, ABA solution and safe memory reclamation scheme) of an MPSC queue wrapper, we're talking about the correctness, progress guarantee, performance model, ABA solution and safe memory reclamation scheme of the wrapper that turns an SPSC queue to an MPSC queue:
+- If the underlying SPSC queue is linearizable (which is composable), the resulting MPSC queue is linearizable.
+- The resulting MPSC queue's progress guarantee is the weaker guarantee between the wrapper's and the underlying SPSC's.
+- If the underlying SPSC queue is safe against ABA problem and memory reclamation, the resulting MPSC queue is also safe against these problems.
+- If the underlying SPSC queue is unbounded, the resulting MPSC queue is also unbounded.
+- To highlight specifically the performance of "MPSC queue wrappers", we define the theoretical *wrapping overhead*. Roughly speaking:
+  - Theoretical performance of the MPSC queue's `enqueue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `enqueue` + Theoretical performance of the SPSC queue's `enqueue` operation.
+  - Theoretical performance of the MPSC queue's `dequeue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `dequeue` + Theoretical performance of the SPSC queue's `dequeue` operation.
+
+The characteristics of these MPSC queue wrappers are summarized in @summary-of-distributed-mpscs.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of our proposed distributed MPSCs. $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*],
+  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*.],
   table(
     columns: (1.3fr, 1fr, 1fr),
     table.header(
-      [*MPSC*],
+      [*MPSC queues*],
       [*dLTQueue*],
       [*Slotqueue*],
     ),
@@ -36,57 +49,83 @@ Based on the MPSC algorithms we have surveyed in @related-works[], we propose tw
     [Correctness], [Linearizable], [Linearizable],
     [Progress guarantee of dequeue], [Wait-free], [Wait-free],
     [Progress guarantee of enqueue], [Wait-free], [Wait-free],
-    [Worst-case time complexity of dequeue],
-    [$O(log n)$ R + $O(log n)$ A],
-    [constant R + $O(n)$ A],
+    [Dequeue wrapping overhead],
+    [$Theta(log n) R$ + $Theta(log n) A$],
+    [$Theta(n) A$],
 
-    [Worst-case time complexity of enqueue],
-    [$O(log n)$ R + $O(log n)$ A],
-    [constant R + constant A],
+    [Enqueue wrapping overhead],
+    [$Theta(log n) R$ + $Theta(log n) A$],
+    [$Theta(1) R$ + $Theta(1) A$],
 
-    [ABA solution], [Unique timestamp], [No harmful #linebreak() ABA problem],
+    [ABA solution], [Unique timestamp], [ABA-safe by default],
     [Memory reclamation], [Custom scheme], [Custom scheme],
-    [Number of elements], [Unbounded], [Unbounded],
   ),
 ) <summary-of-distributed-mpscs>
 
-In this section, we present our proposed distributed MPSCs in detail. Any other discussions about theoretical aspects of these algorithms such as linearizability, progress guarantee, time complexity are deferred to @theoretical-aspects[].
+In the following sections, we present first the one-sided-communication primitives that we assume will be available in our distributed algorithm specification and then our proposed distributed MPSC queue wrappers in detail. Any other discussions about theoretical aspects of these algorithms such as linearizability, progress guarantee, performance model are deferred to @theoretical-aspects[].
 
 In our description, we assume that each process in our program is assigned a unique number as an identifier, which is termed as its *rank*. The numbers are taken from the range of `[0, size - 1]`, with `size` being the number of processes in our program.
 
-== Distributed primitives in pseudocode
+== Distributed one-sided-communication primitives in our distributed algorithm specification
 
 Although we use MPI-3 RMA to implement these algorithms, the algorithm specifications themselves are not inherently tied to MPI-3 RMA interfaces. For clarity and convenience in specification, we define the following distributed primitives used in our pseudocode.
 
-`remote<T>`: A distributed shared variable of type T. The process that physically stores the variable in its local memory is referred to as the *host*. This represents data that can be accessed or modified remotely by other processes.
+#pseudocode-list(line-numbering: none)[
+  + *`remote<T>`*
+    + A distributed shared variable of type T. The process that physically stores the variable in its local memory is referred to as the *host*. This represents data that can be accessed or modified remotely by other processes.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`void aread_sync(remote<T> src, T* dest)`*
+    + Issue a synchronous read of the distributed variable `src` and stores its value into the local memory location pointed to by `dest`. The read is guaranteed to be completed when the function returns.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`void aread_sync(remote<T*> src, int index, T* dest)`*
+    + Issue a synchronous read of the element at position `index` within the distributed array `src` (where `src` is a pointer to a remotely hosted array of type `T`) and stores the value into the local memory location pointed to by `dest`. The read is guaranteed to be completed when the function returns.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`void awrite_sync(remote<T> dest, T* src)`*
+    + Issue a synchronous write of the value at the local memory location pointed to by `src` into the distributed variable `dest`. The write is guaranteed to be completed when the function returns.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`void awrite_sync(remote<T*> dest, int index, T* src)`*
+    + Issue a synchronous write of the value at the local memory location pointed to by `src` into the element at position `index` within the distributed array `dest` (where `dest` is a pointer to a remotely hosted array of type `T`). The write is guaranteed to be completed when the function returns.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`void aread_async(remote<T> src, T* dest)`*
+    + Issue an asynchronous read of the distributed variable `src` and initiate the transfer of its value into the local memory location pointed to by `dest`. The operation may not be completed when the function returns.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`void aread_async(remote<T*> src, int index, T* dest)`*
+    + Issue an asynchronous read of the element at position `index` within the distributed array `src` (where `src` is a pointer to a remotely hosted array of type `T`) and initiate the transfer of its value into the local memory location pointed to by `dest`. The operation may not be completed when the function returns.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`void awrite_async(remote<T> dest, T* src)`*
+    + Issue an asynchronous write of the value at the local memory location pointed to by `src` into the distributed variable `dest`. The operation may not be completed when the function returns.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`void awrite_async(remote<T*> dest, int index, T* src)`*
+    + Issue an asynchronous write of the value at the local memory location pointed to by `src` into the element at position `index` within the distributed array `dest` (where `dest` is a pointer to a remotely hosted array of type `T`). The operation may not be completed when the function returns.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`void flush(remote<T> src)`*
+    + Ensure that all read and write operations on the distributed variable `src` (or its associated array) issued before this function call are fully completed by the time the function returns.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`bool compare_and_swap_sync(remote<T> dest, T old_value, T new_value)`*
+    + Issue a synchronous compare-and-swap operation on the distributed variable `dest`. The operation atomically compares the current value of `dest` with `old_value`. If they are equal, the value of `dest` is replaced with `new_value`; otherwise, no change is made. The operation is guaranteed to be completed when the function returns, ensuring that the update (if any) is visible to all processes. The type `T` must be a data type with a size of `1`, `2`, `4`, or `8` bytes.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`bool compare_and_swap_sync(remote<T*> dest, int index, T old_value, T new_value)`*
+    + Issue a synchronous compare-and-swap operation on the element at position `index` within the distributed array `dest` (where `dest` is a pointer to a remotely hosted array of type `T`). The operation atomically compares the current value of the element at `dest[index]` with `old_value`. If they are equal, the element at `dest[index]` is replaced with new_value; otherwise, no change is made. The operation is guaranteed to be completed when the function returns, ensuring that the update (if any) is visible to all processes. The type `T` must be a data type with a size of `1`, `2`, `4`, or `8`.
+]
+#pseudocode-list(line-numbering: none)[
+  + *`T fetch_and_add_sync(remote<T> dest, T inc)`*
+    + Issue a synchronous fetch-and-add operation on the distributed variable `dest`. The operation atomically adds the value `inc` to the current value of `dest`, returning the original value of `dest` (before the addition) to the calling process. The update to `dest` is guaranteed to be completed and visible to all processes when the function returns. The type `T` must be an integral type with a size of `1`, `2`, `4`, or `8` bytes.
+]
 
-`void aread_sync(remote<T> src, T* dest)`: Issue a synchronous read of the distributed variable `src` and stores its value into the local memory location pointed to by `dest`. The read is guaranteed to be completed when the function returns.
+== A simple baseline distributed SPSC <distributed-spsc>
 
-`void aread_sync(remote<T*> src, int index, T* dest)`: Issue a synchronous read of the element at position `index` within the distributed array `src` (where `src` is a pointer to a remotely hosted array of type `T`) and stores the value into the local memory location pointed to by `dest`. The read is guaranteed to be completed when the function returns.
-
-`void awrite_sync(remote<T> dest, T* src)`: Issue a synchronous write of the value at the local memory location pointed to by `src` into the distributed variable `dest`. The write is guaranteed to be completed when the function returns.
-
-`void awrite_sync(remote<T*> dest, int index, T* src)`: Issue a synchronous write of the value at the local memory location pointed to by `src` into the element at position `index` within the distributed array `dest` (where `dest` is a pointer to a remotely hosted array of type `T`). The write is guaranteed to be completed when the function returns.
-
-`void aread_async(remote<T> src, T* dest)`: Issue an asynchronous read of the distributed variable `src` and initiate the transfer of its value into the local memory location pointed to by `dest`. The operation may not be completed when the function returns.
-
-`void aread_async(remote<T*> src, int index, T* dest)`: Issue an asynchronous read of the element at position `index` within the distributed array `src` (where `src` is a pointer to a remotely hosted array of type `T`) and initiate the transfer of its value into the local memory location pointed to by `dest`. The operation may not be completed when the function returns.
-
-`void awrite_async(remote<T> dest, T* src)`: Issue an asynchronous write of the value at the local memory location pointed to by `src` into the distributed variable `dest`. The operation may not be completed when the function returns.
-
-`void awrite_async(remote<T*> dest, int index, T* src)`: Issue an asynchronous write of the value at the local memory location pointed to by `src` into the element at position `index` within the distributed array `dest` (where `dest` is a pointer to a remotely hosted array of type `T`). The operation may not be completed when the function returns.
-
-`void flush(remote<T> src)`: Ensure that all read and write operations on the distributed variable `src` (or its associated array) issued before this function call are fully completed by the time the function returns.
-
-`bool compare_and_swap_sync(remote<T> dest, T old_value, T new_value)`: Issue a synchronous compare-and-swap operation on the distributed variable `dest`. The operation atomically compares the current value of `dest` with `old_value`. If they are equal, the value of `dest` is replaced with `new_value`; otherwise, no change is made. The operation is guaranteed to be completed when the function returns, ensuring that the update (if any) is visible to all processes. The type `T` must be a data type with a size of `1`, `2`, `4`, or `8` bytes.
-
-`bool compare_and_swap_sync(remote<T*> dest, int index, T old_value, T new_value)`: Issue a synchronous compare-and-swap operation on the element at position `index` within the distributed array `dest` (where `dest` is a pointer to a remotely hosted array of type `T`). The operation atomically compares the current value of the element at `dest[index]` with `old_value`. If they are equal, the element at `dest[index]` is replaced with new_value; otherwise, no change is made. The operation is guaranteed to be completed when the function returns, ensuring that the update (if any) is visible to all processes. The type `T` must be a data type with a size of `1`, `2`, `4`, or `8`.
-
-`T fetch_and_add_sync(remote<T> dest, T inc)`: Issue a synchronous fetch-and-add operation on the distributed variable `dest`. The operation atomically adds the value `inc` to the current value of `dest`, returning the original value of `dest` (before the addition) to the calling process. The update to `dest` is guaranteed to be completed and visible to all processes when the function returns. The type `T` must be an integral type with a size of `1`, `2`, `4`, or `8` bytes.
-
-== A simple distributed SPSC <distributed-spsc>
-
-The two algorithms we propose here both utilize a distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
+For prototyping, the two MPSC queue wrapper algorithms we propose here both utilize a baseline distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
 
 Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
 
@@ -228,11 +267,13 @@ The procedures of the dequeuer are given as follows.
 `spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
 
 
-== dLTQueue - Modified LTQueue without LL/SC <naive-LTQueue>
+== dLTQueue - Modified distributed LTQueue without LL/SC <naive-LTQueue>
 
-This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSCs, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
+This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSC queues, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
 
-=== Structure
+=== Data structure & Algorithm overview
+
+=== Data structure
 
 The structure of our dLTQueue is shown as in @modified-ltqueue-tree.
 
@@ -253,7 +294,7 @@ Note that if a local SPSC is empty, the `min_timestamp` variable of the correspo
       supplement: "Image",
       image("/static/images/modified-ltqueue.png"),
       caption: [
-        dLTQueue's structure
+        dLTQueue's structure.
       ],
     ) <modified-ltqueue-tree>
   ],
@@ -264,7 +305,7 @@ Placement-wise:
 - All the *tree nodes* are hosted at the *dequeuer*.
 - The distributed counter, which the enqueuers use to timestamp their enqueued value, is hosted at the *dequeuer*.
 
-=== Pseudocode
+=== Algorithm
 
 Below is the types utilized in dLTQueue.
 
@@ -570,7 +611,7 @@ The followings are the dequeuer procedures.
   ],
 ) <ltqueue-dequeue>
 
-To dequeue a value, `dequeue` reads the rank stored inside the root node (line 62). If the rank is `DUMMY_RANK`, the MPSC is treated as empty and failure is signaled (line 64). Otherwise, we invoke `spsc_dequeue` on the SPSC of the enqueuer with the obtained rank (line 66). We then extract out the real data and set it to `output` (line 68). We finally propagate the dequeue from the enqueuer node that corresponds to the obtained rank (line 69) and signal success (line 70).
+To dequeue a value, `dequeue` reads the rank stored inside the root node (line 62). If the rank is `DUMMY_RANK`, the MPSC queue is treated as empty and failure is signaled (line 64). Otherwise, we invoke `spsc_dequeue` on the SPSC of the enqueuer with the obtained rank (line 66). We then extract out the real data and set it to `output` (line 68). We finally propagate the dequeue from the enqueuer node that corresponds to the obtained rank (line 69) and signal success (line 70).
 
 #figure(
   kind: "algorithm",
@@ -680,11 +721,13 @@ The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with 
 
 === Motivation
 
-Even though the straightforward dLTQueue algorithm we have ported in @naive-LTQueue pretty much preserve the original algorithm's characteristics, that is wait-freedom and time complexity of $Theta(log n)$ for both `enqueue` and `dequeue` operations (which we will prove in @theoretical-aspects[]), we have to be aware that this is $Theta(log n)$ remote operations, which is potentially expensive and a bottleneck in the algorithm.
+Even though the straightforward dLTQueue algorithm we have ported in @naive-LTQueue pretty much preserve the original algorithm's characteristics, i.e. wait-freedom and time complexity of $Theta(log n)$ for both `enqueue` and `dequeue` operations (which we will prove in @theoretical-aspects[]), we have to be aware that this is $Theta(log n)$ remote operations, which is potentially expensive and a bottleneck in the algorithm.
 
 Therefore, to be more suitable for distributed context, we propose a new algorithm that's inspired by LTQueue, in which both `enqueue` and `dequeue` only perform a constant number of remote operations, at the cost of `dequeue` having to perform $Theta(n)$ local operations, where $n$ is the number of enqueuers. Because remote operations are much more expensive, this might be a worthy tradeoff.
 
-=== Structure
+=== Data structure & Algorithm overview
+
+=== Data structure
 
 The structure of Slotqueue is shown as in @slotqueue-structure.
 
@@ -694,10 +737,10 @@ Additionally, the dequeuer hosts an array whose entries each corresponds with an
 
 #figure(
   image("/static/images/slotqueue.png"),
-  caption: [Basic structure of Slotqueue],
+  caption: [Basic structure of Slotqueue.],
 ) <slotqueue-structure>
 
-=== Pseudocode
+=== Algorithm
 
 We first introduce the types and shared variables utilized in Slotqueue.
 

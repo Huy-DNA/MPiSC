@@ -191,7 +191,7 @@ LTQueue's idea is to maintain a tree structure as in @ltqueue-tree. Each enqueue
       supplement: "Image",
       image("/assets/ltqueue-tree.png"),
       caption: [
-        LTQueue's structure
+        LTQueue's structure.
       ],
     ) <ltqueue-tree>
   ],
@@ -316,7 +316,7 @@ The `refresh` procedure is by itself simple: we access all child nodes to determ
       supplement: "Image",
       image("/assets/double-refresh.png", height: 200pt, fit: "stretch"),
       caption: [
-        Even though two `refresh`s fails, the `currentNode`'s timestamp is still updated correctly
+        Even though two `refresh`s fails, the `currentNode`'s timestamp is still updated correctly.
       ],
     ) <double-refresh>],
 )
@@ -373,7 +373,7 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
       supplement: "Image",
       image("/assets/modified-ltqueue.png"),
       caption: [
-        Modified LTQueue's structure
+        Modified LTQueue's structure.
       ],
     ) <modified-ltqueue-tree>
   ],

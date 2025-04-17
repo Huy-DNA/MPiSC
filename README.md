@@ -1,4 +1,4 @@
-# Porting shared memory MPSCs to distributed context using MPI-3 RMA
+# Porting shared memory MPSC queues to distributed context using MPI-3 RMA
 
 ## Objective
 
@@ -29,7 +29,7 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
 <details>
   <summary>Why MPI RMA?</summary>
   
-  MPSC belongs to the class of <i>irregular</i> applications, this means that:
+  MPSC queue belongs to the class of <i>irregular</i> applications, this means that:
   <ul>
     <li>Memory access pattern is not known.</li>
     <li>Data locations cannot be known in advance, it can change during execution.</li>
@@ -114,7 +114,7 @@ The porting approach we choose is to use MPI-3 RMA to port lock-free queue algor
   - The happy path can use lock-free algorithm and fall back to the wait-free algorithm. As lock-free algorithms are typically more efficient, this can lead to speedups.
   - Replacing CAS with simpler operations like FAA, load/store in the fast path ([WFQueue](./references/WFQueue/README.md)).
 - Avoid contention: Enqueuers or dequeuers performing on a shared data structures can harm each other's progress.
-  - Local buffers can be used at the enqueuers' side in MPSC so that enqueuers do not contend with each other.
+  - Local buffers can be used at the enqueuers' side in MPSC queue so that enqueuers do not contend with each other.
   - Elimination + Backing off techniques in MPMC.
 - Cache-aware solutions.
 
