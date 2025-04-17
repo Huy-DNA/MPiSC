@@ -271,9 +271,7 @@ The procedures of the dequeuer are given as follows.
 
 This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSC queues, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
 
-=== Data structure & Algorithm overview
-
-=== Data structure
+=== Overview
 
 The structure of our dLTQueue is shown as in @modified-ltqueue-tree.
 
@@ -305,7 +303,7 @@ Placement-wise:
 - All the *tree nodes* are hosted at the *dequeuer*.
 - The distributed counter, which the enqueuers use to timestamp their enqueued value, is hosted at the *dequeuer*.
 
-=== Algorithm
+=== Data structure
 
 Below is the types utilized in dLTQueue.
 
@@ -390,7 +388,7 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
   ]
 ]
 
-
+Initially, the enqueuers and the dequeuers are initialized as follows:
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
@@ -412,6 +410,8 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
       + Initialize `Timestamps`, synchronizing each entry with the corresponding enqueuer.
   ]
 ]
+
+=== Algorithm
 
 We first present the tree-structure utility procedures that are shared by both the enqueuer and the dequeuer:
 
@@ -725,9 +725,7 @@ Even though the straightforward dLTQueue algorithm we have ported in @naive-LTQu
 
 Therefore, to be more suitable for distributed context, we propose a new algorithm that's inspired by LTQueue, in which both `enqueue` and `dequeue` only perform a constant number of remote operations, at the cost of `dequeue` having to perform $Theta(n)$ local operations, where $n$ is the number of enqueuers. Because remote operations are much more expensive, this might be a worthy tradeoff.
 
-=== Data structure & Algorithm overview
-
-=== Data structure
+=== Overview
 
 The structure of Slotqueue is shown as in @slotqueue-structure.
 
@@ -740,7 +738,8 @@ Additionally, the dequeuer hosts an array whose entries each corresponds with an
   caption: [Basic structure of Slotqueue.],
 ) <slotqueue-structure>
 
-=== Algorithm
+
+=== Data structure
 
 We first introduce the types and shared variables utilized in Slotqueue.
 
@@ -759,8 +758,6 @@ We first introduce the types and shared variables utilized in Slotqueue.
     + `Counter`: `remote<uint64_t>`
       + A distributed counter.
       + Hosted at the dequeuer.
-    + `Dequeuer_rank`: `uint32_t`
-      + The rank of the dequeuer process. This is read-only.
 ]
 
 Similar to the idea of assigning an order to each enqueuer in dLTQueue, the following procedure computes an enqueuer's order based on its rank:
@@ -797,6 +794,7 @@ Reversely, `enqueuerRank` computes an enqueuer's rank given its order.
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer-local variables*
       + `Dequeuer_rank`: `uint64_t`
+        + The rank of the dequeuer.
       + `Enqueuer_count`: `uint64_t`
         + The number of enqueuers.
       + `Self_rank`: `uint32_t`
@@ -810,12 +808,36 @@ Reversely, `enqueuerRank` computes an enqueuer's rank given its order.
   #pseudocode-list(line-numbering: none)[
     + *Dequeuer-local variables*
       + `Dequeuer_rank`: `uint64_t`
+        + The rank of the dequeuer.
       + `Enqueuer_count`: `uint64_t`
         + The number of enqueuers.
       + `Spscs`: *array* of `spsc_t` with `Enqueuer_count` entries.
         + The entry at index $i$ corresponds to the `Spsc` at the enqueuer with an order of $i$.
   ]
 ]
+
+Initially, the enqueuer and the dequeuer are initialized as follows.
+
+#columns(2)[
+  #pseudocode-list(line-numbering: none)[
+    + *Enqueuer initialization*
+      + Initialize `Dequeuer_rank`
+      + Initialize `Enqueuer_count`
+      + Initialize `Self_rank`
+      + Initialize the local `Spsc` to its initial state
+  ]
+  #colbreak()
+  #pseudocode-list(line-numbering: none)[
+    + *Dequeuer initialization*
+      + Initialize `Dequeuer_rank`
+      + Initialize `Enqueuer_count`
+      + Initialize `Counter` to 0
+      + Initialize the `Slots` array with size equal to the number of enqueuers and every entry is initialized to `MAX_TIMESTAMP`
+      + Initialize the `Spscs` array, the `i`-th entry corresponds to the `Spsc` variable of the enqueuer of order `i`
+  ]
+]
+
+=== Algorithm
 
 The enqueuer operations are given as follows.
 
