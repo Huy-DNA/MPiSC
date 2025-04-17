@@ -121,7 +121,7 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 #definition[A *successful modification instruction* on a variable `v` is an atomic instruction that changes the value of `v` e.g. a store or a successful CAS.]
 
 #definition[A *CAS-sequence* on a variable `v` is a sequence of instructions of a method $m$ such that:
-  - The first instruction is a load $v_0 = $`load(`$v$`)`.
+  - The first instruction is a load $v_0 = $ `load(`$v$`)`.
   - The last instruction is a `CAS(&`$v$`,`$v_0$`,`$v_1$`)`.
   - There's no modification instruction on `v` between the first and the last instruction.
 ]
