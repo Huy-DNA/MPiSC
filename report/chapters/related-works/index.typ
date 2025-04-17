@@ -155,48 +155,37 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of existing distributed FIFO queues. #linebreak() *R* stands for remote operations and *A* stands for atomic operations #linebreak() (1) The *baseline SPSC* refers to the SPSC we introduce in @distributed-spsc, the reason we have to qualify *dLTQueue* and *Slotqueue* with a specific SPSC implementation is that *dLTQueue* and *Slotqueue* are in fact "MPSC queue wrappers" that can turn some variant SPSCs to MPSCs (this will be discussed further in @distributed-queues[]). #linebreak() (2) The "bounded" property is not inherent for *dLTQueue* and *Slotqueue* "wrappers", they are bounded because the *baseline SPSC* is bounded.],
+  caption: [Characteristic summary of existing distributed FIFO queues. #linebreak() $R$ stands for remote operations and $A$ stands for atomic operations #linebreak().],
   table(
-    columns: (1.2fr, 1fr, 1fr, 1fr),
+    columns: (1fr, 2fr),
     table.header(
       [*FIFO queues*],
       [*FastQueue* @bcl],
-      [*dLTQueue* + *baseline SPSC* (1)],
-      [*Slotqueue* + *baseline SPSC* (1)],
     ),
 
     [Supported patterns],
     [Multi-producer or Multi-consumer],
-    [Multi-producer Single-consumer],
-    [Multi-producer Single-consumer],
 
-    [ABA solution],
-    [No CAS],
-    [Unique timestamp],
-    [ABA-safe #linebreak() by default],
-
-    [Memory reclamation], [Custom scheme], [Custom scheme], [Custom scheme],
     [Progress guarantee of #linebreak() dequeue],
     [Wait-free],
-    [Wait-free],
-    [Wait-free],
-
-    [Theoretical #linebreak() performance model of dequeue],
-    [2A],
-    [$Theta(log n)$R #linebreak() + $Theta(log n)$A],
-    [$Theta(1)$R #linebreak() + $Theta(n)$A],
 
     [Progress guarantee of #linebreak() enqueue],
     [Wait-free],
-    [Wait-free],
-    [Wait-free],
 
-    [Theoretical #linebreak() performance model of enqueue],
-    [2R],
-    [$Theta(log n)$R #linebreak() + $Theta(log n)$A],
-    [$Theta(1)$R],
+    [Worst-case #linebreak() time-complexity of #linebreak() dequeue],
+    [$2A$],
 
-    [Number of elements], [Bounded], [Bounded (2)], [Bounded (2)],
+    [Worst-case #linebreak() time-complexity of #linebreak() enqueue],
+    [$2R$],
+
+    [ABA solution],
+    [No usage of CAS],
+    [Unique timestamp],
+    [ABA-safe #linebreak() by default],
+
+    [Memory reclamation], [No dynamic memory allocation],
+
+    [Number of elements], [Bounded],
   ),
 ) <summary-of-dFIFOs>
 
@@ -217,4 +206,4 @@ To dequeue, each dequeuer reserves a slot in the queue by FAA-ing the $"First"$ 
 
 To avoid refetching $"First"$ and $"Last"$ indices on every enqueue or dequeue operation, FastQueue uttilizes a caching strategy. That is, each time $"First"$ and $"Last"$ have to be refetched, the values are saved locally. Of course, over time, these cached values can become out-of-sync with the real values. FastQueue lazily updates these cached values, precisely, a dequeuer when based on these cached values finds that the queue is empty, it performs a refetch and similarly an enqueuer when based on these cached values finds that the queue is full, it performs a refetch. This idea of caching inspires our two new MPSC queue algorithms: dLTQueue and Slotqueue.
 
-dLTQueue and Slotqueue although seem to have higher costs for enqueue and dequeue operations, directly support MPSC use cases. These data structures are explained further in @distributed-queues[].
+FastQueue doesn't utilize CAS so ABA problem does not arise. Similarly, FastQueue doesn't perform any dynamic memory allocation so no memory reclamation scheme is needed.

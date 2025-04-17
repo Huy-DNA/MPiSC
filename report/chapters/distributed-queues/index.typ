@@ -20,6 +20,7 @@
 Based on the MPSC queue algorithms we have surveyed in @related-works[], we propose two wait-free distributed MPSC queue algorithms:
 - dLTQueue (@naive-LTQueue) is a direct modification of the original LTQueue @ltqueue without any usage of LL/SC, adapted for distributed environment.
 - Slotqueue (@slotqueue) is inspired by the timestamp-refreshing idea of LTQueue @ltqueue and repeated-rescan of Jiffy @jiffy. Although it still bears some resemblance to LTQueue, we believe it to be more optimized for distributed context.
+We also adapt FastQueue @bcl for MPSC use cases as a distributed baseline MPSC queue algorithm. Notice that FastQueue's dequeuer is now blocking. Further details about our adaptation and proofs of its theoretical aspects are given in the following sections.
 
 In actuality, dLTQueue and Slotqueue are more than simple MPSC algorithms. As hinted in @dfifo-related-works, they are "MPSC queue wrappers", that is, given an SPSC queue implementation, they yield an MPSC implementation. There's one additional constraint: The SPSC interface must support an additional `readFront` operation, which returns the first data item currently in the SPSC queue.
 
@@ -32,33 +33,58 @@ This fact has an important implication: when we're talking about the characteris
   - Theoretical performance of the MPSC queue's `enqueue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `enqueue` + Theoretical performance of the SPSC queue's `enqueue` operation.
   - Theoretical performance of the MPSC queue's `dequeue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `dequeue` + Theoretical performance of the SPSC queue's `dequeue` operation.
 
-The characteristics of these MPSC queue wrappers are summarized in @summary-of-distributed-mpscs.
+The characteristics of these MPSC queue wrappers and the adapted FastQueue algorithm are summarized in @summary-of-distributed-mpscs. For benchmarking purposes, we use a baseline distributed SPSC introduced in @distributed-spsc in combination with the MPSC queue wrappers. The characteristics of the resulting MPSC queues are also shown in @summary-of-distributed-mpscs.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*.],
+  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers, $R$ stands for *remote operation* and $A$ stands for *atomic operation*, $F$ stands for the number of failures that cause the FastQueue dequeuer to spin. #linebreak() (2) "`-`" means that it doesn't make sense to talk about a certain aspect of the algorithm. #linebreak() (3) The cells marked with (\*) assumes the underlying SPSC is our baselines SPSC in @distributed-spsc.],
   table(
-    columns: (1.3fr, 1fr, 1fr),
+    columns: (1fr, 1fr, 1fr, 1fr),
     table.header(
       [*MPSC queues*],
+      [*FastQueue*],
       [*dLTQueue*],
       [*Slotqueue*],
     ),
 
-    [Correctness], [Linearizable], [Linearizable],
-    [Progress guarantee of dequeue], [Wait-free], [Wait-free],
-    [Progress guarantee of enqueue], [Wait-free], [Wait-free],
+    [Correctness], [Linearizable], [Linearizable], [Linearizable],
+    [Progress guarantee of dequeue], [Blocking], [Wait-free], [Wait-free],
+    [Progress guarantee of enqueue], [Wait-free], [Wait-free], [Wait-free],
     [Dequeue wrapping overhead],
-    [$Theta(log n) R$ + $Theta(log n) A$],
+    [-],
+    [$Theta(log n) R + Theta(log n) A$],
     [$Theta(n) A$],
 
     [Enqueue wrapping overhead],
-    [$Theta(log n) R$ + $Theta(log n) A$],
-    [$Theta(1) R$ + $Theta(1) A$],
+    [-],
+    [$Theta(log n) R + Theta(log n) A$],
+    [$Theta(1) R + Theta(1) A$],
 
-    [ABA solution], [Unique timestamp], [ABA-safe by default],
-    [Memory reclamation], [Custom scheme], [Custom scheme],
+    [Worst-case #linebreak() time-complexity of #linebreak() dequeue],
+    [$(F+1)Theta(1)A$],
+    [$Theta(log n) R + Theta(log n) A$ (\*)],
+    [$Theta(1) R + Theta(n) A$ (\*)],
+
+    [Worst-case #linebreak() time-complexity of #linebreak() enqueue],
+    [$Theta(1)R$],
+    [$Theta(log n) R + Theta(log n) A$ (\*)],
+    [$Theta(1) R + Theta(1) A$ (\*)],
+
+    [ABA solution],
+    [No usage of CAS],
+    [Unique timestamp],
+    [ABA-safe #linebreak() by default],
+
+    [Memory #linebreak() reclamation],
+    [No dynamic memory allocation],
+    [No dynamic memory allocation],
+    [No dynamic memory allocation],
+
+    [Number of element],
+    [Bounded],
+    [Depending on the underlying SPSC],
+    [Depending on the underlying SPSC],
   ),
 ) <summary-of-distributed-mpscs>
 
