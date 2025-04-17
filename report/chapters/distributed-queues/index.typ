@@ -27,6 +27,7 @@ This fact has an important implication: when we're talking about the characteris
 - If the underlying SPSC queue is linearizable (which is composable), the resulting MPSC queue is linearizable.
 - The resulting MPSC queue's progress guarantee is the weaker guarantee between the wrapper's and the underlying SPSC's.
 - If the underlying SPSC queue is safe against ABA problem and memory reclamation, the resulting MPSC queue is also safe against these problems.
+- If the underlying SPSC queue is unbounded, the resulting MPSC queue is also unbounded.
 - To highlight specifically the performance of "MPSC queue wrappers", we define the theoretical *wrapping overhead*. Roughly speaking:
   - Theoretical performance of the MPSC queue's `enqueue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `enqueue` + Theoretical performance of the SPSC queue's `enqueue` operation.
   - Theoretical performance of the MPSC queue's `dequeue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `dequeue` + Theoretical performance of the SPSC queue's `dequeue` operation.
@@ -124,7 +125,7 @@ Although we use MPI-3 RMA to implement these algorithms, the algorithm specifica
 
 == A simple baseline distributed SPSC <distributed-spsc>
 
-The two algorithms we propose here both utilize a distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
+For prototyping, the two MPSC queue wrapper algorithms we propose here both utilize a baseline distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
 
 Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
 
