@@ -169,19 +169,16 @@ Below is the types utilized in our MPSC variant of FastQueue.
 #pseudocode-list(line-numbering: none)[
   + *Types*
     + `data_t` = The type of the data to be stored.
-    + `entry_t` = The type of an entry in the globally-shared circular array.
-      + *struct*
-        + `data`: `data_t`
-        + `is_set`: `bool`
-      + *end*
 ]
 
 The shared variables and variables local to each enqueuer and dequeuer in our MPSC-variant of FastQueue are as followed.
 
 #pseudocode-list(line-numbering: none)[
   + *Shared variables*
-    + `Data`: `remote<entry_t*>`
-      + An array of `entry_t` with the number of entries equal to a predefined cacacity.
+    + `Data`: `remote<data_t*>`
+      + An array of `data_t` with the number of entries equal to the predefined capacity.
+    + `Flags`: `remote<bool*>`
+      + An array of booleans with the number of entries equal to the predefined capacity.
     + `First`: `remote<uint64_t>`
       + A monotonically-increasing counter that points to the index of the first undequeued entry when taken modulo the predefined capacity.
     + `Last`: `remote<uint64_t>`
@@ -228,6 +225,61 @@ Initially, the enqueuers and the dequeuer are initialized as follows:
 
 === Algorithm
 
+As described, the procedures need to account for changes induced by the introduction of the `is_set` flag to each entry compared the original FastQueue. Other than that, they are kept closest in spirit to the original FastQueue, albeit at the cost of making `dequeue` blocking.
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    booktabs: true,
+    numbered-title: [`bool enqueue(data_t v)`],
+  )[
+    + `old_last = fetch_and_add_sync(Last, 1)`
+    + `new_last = old_last + 1`
+    + *if* `(new_last - First_buf > Capacity)                                            `
+      + `aread_sync(First, &First_buf)`
+      + *if* `(new_last - First_buf > Capacity)`
+        + `fetch_and_add_sync(Last, -1)`
+        + *return* `false`
+    + `awrite_sync(Data, Last_buf % Capacity, &v)`
+    + `set = true`
+    + `awrite_sync(Flags, Last_buf % Capacity, &set)`
+    + *return* `true`
+  ],
+) <fastqueue-enqueue>
+
+To enqueue, the enqueuer reserves an entry in the MPSC queue by FAA-ing the `Last` index (line 1). It then checks if the queue is full and if it is, return `false` (line 3-7). Note the usage of the cached value `First_buf` to lazily fetch the remote `First` value when extremely needed. If the queue is not full, the enqueuer writes out its data (line 8) and sets its entry's flag to `true` (line 10) at its own pace. It then returns `true` to signal success (line 11).
+
+#figure(
+  kind: "algorithm",
+  supplement: [Procedure],
+  pseudocode-list(
+    line-numbering: i => i + 11,
+    booktabs: true,
+    numbered-title: [`bool dequeue(data_t* output)`],
+  )[
+    + `old_first = 0`
+    + `aread_sync(First, &old_first)`
+    + `new_first = old_first + 1`
+    + *if* `(new_first > Last_buf)                                            `
+      + `aread_sync(Last, &Last_buf)`
+      + *if* `(new_first > Last_buf)`
+        + *return* `false`
+    + `flag = false`
+    + *do*
+      + `aread_sync(Flags, old_first % Capacity, &flag)`
+      + *while* `(!flag)`
+    + `aread_sync(Data, old_first % Capacity, output)`
+    + `unset = false`
+    + `awrite_sync(Flags, old_first % Capacity, &unset)`
+    + `awrite_sync(First, &new_first)`
+    + *return* `true`
+
+  ],
+) <fastqueue-dequeue>
+
+To dequeue, the dequeuer fetches the `First` remote variable to decide which item to dequeue next (line 12-14). If the queue is empty, it returns `false` (line 15-18). To read the value at `First`, the dequeuer spins until it sees that the corresponding entry is ready (line 20-22). When the entry is ready, it reads the corresponding data (line 23) and resets the flag (line 24-25). It signals success by swinging the `First` index to the next value and return `true` (line 26-27).
+
 == A simple baseline distributed SPSC <distributed-spsc>
 
 For prototyping, the two MPSC queue wrapper algorithms we propose here both utilize a baseline distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
@@ -243,11 +295,14 @@ Placement-wise, all queue data in this SPSC is hosted on the enqueuer while the 
   #pseudocode-list(line-numbering: none)[
     + *Shared variables*
       + `First`: `remote<uint64_t>`
-        + The index of the last undequeued entry. Hosted at the dequeuer.
+        + The index of the last undequeued entry.
+        + Hosted at the dequeuer.
       + `Last`: `remote<uint64_t>`
-        + The index of the last unenqueued entry. Hosted at the dequeuer.
+        + The index of the last unenqueued entry.
+        + Hosted at the dequeuer.
       + `Data`: `remote<data_t*>`
-        + An array of `data_t` of some known capacity. Hosted at the enqueuer.
+        + An array of `data_t` of some known capacity.
+        + Hosted at the enqueuer.
   ]
 
   #colbreak()
