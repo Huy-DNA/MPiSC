@@ -112,8 +112,55 @@ for metric in metrics:
     plt.savefig(filename)
     plt.close()  # Close the figure to free up memory
 print(
-    "All comparative plots have been generated in the 'non-rdma-cluster/by-nodes' folder."
+    "All comparative plots have been generated in the 'non-rdma-cluster/all/by-nodes' folder."
 )
+print(
+    "Note: SlotqueueV2a is marked with an asterisk (*) in the legend to indicate it is experimental."
+)
+# Ensure the output directory exists
+output_dir = "non-rdma-cluster/no-ltqueue/by-nodes/"
+os.makedirs(output_dir, exist_ok=True)
+
+# Generate merged plots for each metric
+for metric in metrics:
+    # Create a new figure for each metric
+    plt.figure(figsize=(14, 8))
+
+    # Plot data for each queue
+    for queue_name, queue_metrics in queue_data.items():
+        if queue_name != "LTQueue + baseline SPSC":
+            style = queue_styles[queue_name]
+            plt.plot(
+                nodes,
+                queue_metrics[metric],
+                color=style["color"],
+                marker=style["marker"],
+                linestyle=style.get("linestyle", "-"),
+                label=f"{queue_name}{'*' if queue_name == 'SlotqueueV2a' else ''}",
+            )
+
+    # Set title and labels
+    title, unit = metric_labels[metric]
+    plt.title(f"Comparative {title} Across Queue Implementations (1-4 Nodes)")
+    plt.xlabel("Number of Nodes")
+    plt.ylabel(f"{title} ({unit})")
+
+    # Add grid and legend
+    plt.grid(True)
+    plt.legend(title="Queue Types", loc="best")
+
+    # Add x-axis ticks for every processor count
+    plt.xticks(nodes)
+
+    # Save the plot
+    filename = f"{output_dir}/{metric}_comparison.png"
+    plt.savefig(filename, dpi=300)
+    plt.close()  # Close the figure to free up memory
+
+print(
+    "All comparative plots have been generated in the 'non-rdma-cluster/no-ltqueue/by-nodes' folder."
+)
+
 print(
     "Note: SlotqueueV2a is marked with an asterisk (*) in the legend to indicate it is experimental."
 )
