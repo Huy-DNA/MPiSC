@@ -246,7 +246,7 @@ public:
 #endif
 
     MPI_Aint old_head;
-    read_sync(&old_head, 0, this->_host, this->_head_win);
+    aread_sync(&old_head, 0, this->_host, this->_head_win);
     MPI_Aint new_head = old_head + 1;
 
     if (new_head > this->_tail_buf) {
@@ -266,9 +266,9 @@ public:
                this->_data_win);
 
     bool unset = false;
-    write_sync(&unset, old_head % this->_capacity, this->_host,
+    awrite_sync(&unset, old_head % this->_capacity, this->_host,
                this->_flag_win);
-    write_sync(&new_head, 0, this->_host, this->_head_win);
+    awrite_sync(&new_head, 0, this->_host, this->_head_win);
 
     return true;
   }
