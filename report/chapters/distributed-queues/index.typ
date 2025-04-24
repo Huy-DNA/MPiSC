@@ -160,9 +160,71 @@ This section presents our straightforward adaptation of BCL's FastQueue to suppo
   caption: [Adapted FastQueue structure.],
 ) <fastqueue-structure>
 
-The structure of FastQueue is largely kept intact, except that each entry now holds an additional flag. All data and control variables are hosted at the dequeuer. Enqueuer enqueues an item by FAA-ing the `Last` index to reserve a slot, then it writes the enqueued data and sets the slot's flag to true. The dequeuer dequeues items in the circular buffer in order starting from `First`, but it has to wait for the `is_set` flag to be set to safely dequeue the item. When it has successfully read the value, it unsets the slot's flag and FAA the `First` index. This spinning makes the dequeue operation blocking.
+The structure of FastQueue is largely kept intact, except that each entry now holds an additional flag. All data and control variables e.g. the `Last` and `First` indices are hosted at the dequeuer. Enqueuer enqueues an item by FAA-ing the `Last` index to reserve a slot, then it writes the enqueued data and sets the slot's flag to true. The dequeuer dequeues items in the circular buffer in order starting from `First`, but it has to wait for the `is_set` flag to be set to safely dequeue the item. When it has successfully read the value, it unsets the slot's flag and FAA the `First` index. This spinning makes the dequeue operation blocking.
 
 === Data structure
+
+Below is the types utilized in our MPSC variant of FastQueue.
+
+#pseudocode-list(line-numbering: none)[
+  + *Types*
+    + `data_t` = The type of the data to be stored.
+    + `entry_t` = The type of an entry in the globally-shared circular array.
+      + *struct*
+        + `data`: `data_t`
+        + `is_set`: `bool`
+      + *end*
+]
+
+The shared variables and variables local to each enqueuer and dequeuer in our MPSC-variant of FastQueue are as followed.
+
+#pseudocode-list(line-numbering: none)[
+  + *Shared variables*
+    + `Data`: `remote<entry_t*>`
+      + An array of `entry_t` with the number of entries equal to a predefined cacacity.
+    + `First`: `remote<uint64_t>`
+      + A monotonically-increasing counter that points to the index of the first undequeued entry when taken modulo the predefined capacity.
+    + `Last`: `remote<uint64_t>`
+      + A monotonically-increasing counter that points to the index of the first empty entry when taken modulo the predefined capacity.
+]
+
+#columns(2)[
+  #pseudocode-list(line-numbering: none)[
+    + *Enqueuer-local variables*
+      + `Capacity`: `uint64_t`
+        + A read-only variable representing the maximum number of elements that can be present in the queue.
+      + `First_buf`: The cached value of `First`.
+  ]
+
+  #colbreak()
+
+  #pseudocode-list(line-numbering: none)[
+    + *Dequeuer-local variables*
+      + `Capacity`: `uint64_t`
+        + A read-only variable representing the maximum number of elements that can be present in the queue.
+      + `Last_buf`: The cached value of `Last`.
+  ]
+]
+
+Initially, the enqueuers and the dequeuer are initialized as follows:
+
+#columns(2)[
+  #pseudocode-list(line-numbering: none)[
+    + *Enqueuer initialization*
+      + Initialize `Capacity`.
+      + Initialize `First_buf` to `0`.
+  ]
+
+  #colbreak()
+
+  #pseudocode-list(line-numbering: none)[
+    + *Dequeuer initialization*
+      + Initialize `Capacity`.
+      + Initialize `Last_buf` to `0`.
+      + Initialize `First` and `Last`.
+      + Initialize `Data` to an array with `Capacity` entries each of which `is_set` is set to `false`.
+  ]
+]
 
 === Algorithm
 
@@ -175,7 +237,7 @@ Placement-wise, all queue data in this SPSC is hosted on the enqueuer while the 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
     + *Types*
-      + `data_t` = The type of data stored
+      + `data_t` = The type of data stored.
   ]
 
   #pseudocode-list(line-numbering: none)[
@@ -192,32 +254,32 @@ Placement-wise, all queue data in this SPSC is hosted on the enqueuer while the 
 
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer-local variables*
-      + `Capacity`: A read-only value indicating the capacity of the SPSC
-      + `First_buf`: The cached value of `First`
-      + `Last_buf`: The cached value of `Last`
+      + `Capacity`: A read-only value indicating the capacity of the SPSC.
+      + `First_buf`: The cached value of `First`.
+      + `Last_buf`: The cached value of `Last`.
   ]
 
   #pseudocode-list(line-numbering: none)[
     + *Dequeuer-local variables*
-      + `Capacity`: A read-only value indicating the capacity of the SPSC
-      + `First_buf`: The cached value of `First`
-      + `Last_buf`: The cached value of `Last`
+      + `Capacity`: A read-only value indicating the capacity of the SPSC.
+      + `First_buf`: The cached value of `First`.
+      + `Last_buf`: The cached value of `Last`.
   ]
 ]
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer initialization*
-      + Initialize `First` and `Last` to `0`
-      + Initialize `Capacity`
-      + Allocate array in `Data`
-      + `First_buf = Last_buf = 0`
+      + Initialize `First` and `Last` to `0`.
+      + Initialize `Capacity`.
+      + Allocate array in `Data`.
+      + Initialize `First_buf = Last_buf = 0`.
   ]
   #colbreak()
   #pseudocode-list(line-numbering: none)[
     + *Dequeuer initialization*
-      + Initialize `Capacity`
-      + `First_buf = Last_buf = 0`
+      + Initialize `Capacity`.
+      + Initialize `First_buf = Last_buf = 0`.
   ]
 ]
 
@@ -351,19 +413,19 @@ Below is the types utilized in dLTQueue.
 
 #pseudocode-list(line-numbering: none)[
   + *Types*
-    + `data_t` = The type of the data to be stored
-    + `spsc_t` = The type of the SPSC, this is assumed to be the distributed SPSC in @distributed-spsc
-    + `rank_t` = The type of the rank of an enqueuer process tagged with a unique timestamp (version) to avoid ABA problem
+    + `data_t` = The type of the data to be stored.
+    + `spsc_t` = The type of the SPSC, this is assumed to be the distributed SPSC in @distributed-spsc.
+    + `rank_t` = The type of the rank of an enqueuer process tagged with a unique timestamp (version) to avoid ABA problem.
       + *struct*
         + `value`: `uint32_t`
         + `version`: `uint32_t`
       + *end*
-    + `timestamp_t` = The type of the timestamp tagged with a unique timestamp (version) to avoid ABA problem
+    + `timestamp_t` = The type of the timestamp tagged with a unique timestamp (version) to avoid ABA problem.
       + *struct*
         + `value`: `uint32_t`
         + `version`: `uint32_t`
       + *end*
-    + `node_t` = The type of a tree node
+    + `node_t` = The type of a tree node.
       + *struct*
         + `rank`: `rank_t`
       + *end*
@@ -428,7 +490,7 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
   ]
 ]
 
-Initially, the enqueuers and the dequeuers are initialized as follows:
+Initially, the enqueuers and the dequeuer are initialized as follows:
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
@@ -783,9 +845,9 @@ We first introduce the types and shared variables utilized in Slotqueue.
 
 #pseudocode-list(line-numbering: none)[
   + *Types*
-    + `data_t` = The type of data stored
+    + `data_t` = The type of data stored.
     + `timestamp_t` = `uint64_t`
-    + `spsc_t` = The type of the SPSC each enqueuer uses, this is assumed to be the distributed SPSC in @distributed-spsc
+    + `spsc_t` = The type of the SPSC each enqueuer uses, this is assumed to be the distributed SPSC in @distributed-spsc.
 ]
 
 #pseudocode-list(line-numbering: none)[
@@ -859,19 +921,19 @@ Initially, the enqueuer and the dequeuer are initialized as follows.
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer initialization*
-      + Initialize `Dequeuer_rank`
-      + Initialize `Enqueuer_count`
-      + Initialize `Self_rank`
-      + Initialize the local `Spsc` to its initial state
+      + Initialize `Dequeuer_rank`.
+      + Initialize `Enqueuer_count`.
+      + Initialize `Self_rank`.
+      + Initialize the local `Spsc` to its initial state.
   ]
   #colbreak()
   #pseudocode-list(line-numbering: none)[
     + *Dequeuer initialization*
-      + Initialize `Dequeuer_rank`
-      + Initialize `Enqueuer_count`
-      + Initialize `Counter` to 0
-      + Initialize the `Slots` array with size equal to the number of enqueuers and every entry is initialized to `MAX_TIMESTAMP`
-      + Initialize the `Spscs` array, the `i`-th entry corresponds to the `Spsc` variable of the enqueuer of order `i`
+      + Initialize `Dequeuer_rank`.
+      + Initialize `Enqueuer_count`.
+      + Initialize `Counter` to 0.
+      + Initialize the `Slots` array with size equal to the number of enqueuers and every entry is initialized to `MAX_TIMESTAMP`.
+      + Initialize the `Spscs` array, the `i`-th entry corresponds to the `Spsc` variable of the enqueuer of order `i`.
   ]
 ]
 
