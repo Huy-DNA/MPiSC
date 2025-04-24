@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os
 
 # Ensure the output directory exists
-output_dir = "hp-elitebook"
+output_dir = "hp-elitebook/by-processes/"
 os.makedirs(output_dir, exist_ok=True)
 
 # Data for processors and queue types

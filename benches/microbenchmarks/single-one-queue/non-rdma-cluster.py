@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os
 
 # Ensure the output directory exists
-output_dir = "non-rdma-cluster/all"
+output_dir = "non-rdma-cluster/all/by-processes/"
 os.makedirs(output_dir, exist_ok=True)
 
 # Data for processors and queue types - expanded to include processors 2-32
@@ -1280,7 +1280,7 @@ for metric in metrics:
 print("All comparative plots have been generated in the 'non-rdma-cluster/all' folder.")
 
 # Ensure the output directory exists
-output_dir = "non-rdma-cluster/no-ltqueue"
+output_dir = "non-rdma-cluster/no-ltqueue/by-processes/"
 os.makedirs(output_dir, exist_ok=True)
 
 # Generate merged plots for each metric
@@ -1291,15 +1291,15 @@ for metric in metrics:
     # Plot data for each queue
     for queue_name, queue_metrics in queue_data.items():
         if queue_name != "LTQueue":
-          style = queue_styles[queue_name]
-          plt.plot(
-              processors,
-              queue_metrics[metric],
-              color=style["color"],
-              marker=style["marker"],
-              linestyle=style.get("linestyle", "-"),
-              label=f"{queue_name}{'*' if queue_name == 'SlotqueueV2a' else ''}",
-          )
+            style = queue_styles[queue_name]
+            plt.plot(
+                processors,
+                queue_metrics[metric],
+                color=style["color"],
+                marker=style["marker"],
+                linestyle=style.get("linestyle", "-"),
+                label=f"{queue_name}{'*' if queue_name == 'SlotqueueV2a' else ''}",
+            )
 
     # Set title and labels
     title, unit = metric_labels[metric]
@@ -1319,7 +1319,9 @@ for metric in metrics:
     plt.savefig(filename, dpi=300)
     plt.close()  # Close the figure to free up memory
 
-print("All comparative plots have been generated in the 'non-rdma-cluster/no-ltqueue' folder.")
+print(
+    "All comparative plots have been generated in the 'non-rdma-cluster/no-ltqueue' folder."
+)
 
 print(
     "Note: SlotqueueV2a is marked with an asterisk (*) in the legend to indicate it is experimental."
