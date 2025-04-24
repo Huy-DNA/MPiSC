@@ -463,7 +463,7 @@ In pure MPI, we use MPI exclusively for communication and synchronization. With 
 
 For lock-free synchronization, we choose to use *passive target synchronization* with `MPI_Win_lock_all`/`MPI_Win_unlock_all`.
 
-In the MPI-3 specification @mpi-3.1, these functions are specified as follows:
+In the MPI-3 specification @mpi-3.1, these functions are specified as in @mpi-win-sync-spec.
 
 #figure(
   kind: "table",
@@ -478,7 +478,7 @@ In the MPI-3 specification @mpi-3.1, these functions are specified as follows:
     [`MPI_Win_unlock_all`],
     [Matches with an `MPI_Win_lock_all` to unlock a window previously locked by that `MPI_Win_lock_all`.],
   ),
-)
+) <mpi-win-sync-spec>
 
 The reason we choose this is 3-fold:
 - Unlike *active target synchronization*, *passive target synchronization* does not require the process whose memory is being accessed by an MPI RMA communication call to participate in. This is in line with our intention to use MPI RMA to easily model irregular applications like MPSC queues.

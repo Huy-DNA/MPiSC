@@ -178,10 +178,7 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
     [Worst-case #linebreak() time-complexity of #linebreak() enqueue],
     [$2R$],
 
-    [ABA solution],
-    [No usage of CAS],
-    [Unique timestamp],
-    [ABA-safe #linebreak() by default],
+    [ABA solution], [ABA-safe by default],
 
     [Memory reclamation], [No dynamic memory allocation],
 
