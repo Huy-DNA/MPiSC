@@ -43,12 +43,11 @@ Major: Computer Science
   columns: (1fr, 1fr),
   rows: (2em, auto),
   column-gutter: .2cm,
-  align(right, [*thesis committee*:\ *member secretary*:\ *supervisors*:]),
+  align(right, [*thesis committee*:\ *supervisors*:]),
   align(
     left,
     [
       #t.committee.id\
-      #t.committee.secretary\
       #for s in t.at("teachers") [
         #s.at("name")\
       ]
