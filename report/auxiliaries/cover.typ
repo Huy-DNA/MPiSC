@@ -63,7 +63,7 @@ Major: Computer Science
   columns: (1fr, 1fr),
   rows: (2em, auto),
   column-gutter: .2cm,
-  align(right, [*students*:]),
+  align(right, [*student*:]),
   align(
     left,
     for s in t.at("students") [
