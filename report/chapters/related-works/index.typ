@@ -42,7 +42,7 @@ There exists numerous research into the design of lock-free shared memory MPMCs 
     [Wait-free],
     [Wait-free],
 
-    [Number of elements], [Unbounded], [Unbounded], [Unbounded], [Unbounded],
+    [Number of elements], [Unbounded], [Unbounded], [Bounded], [Unbounded],
   ),
 ) <summary-of-MPSCs>
 
