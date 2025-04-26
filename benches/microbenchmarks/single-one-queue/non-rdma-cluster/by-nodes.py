@@ -102,11 +102,15 @@ for metric in metrics:
     # Set title and labels
     title, unit = metric_labels[metric]
     plt.title(f"Comparative {title} Across Queue Implementations")
-    plt.xlabel("Number of Nodes")
+    plt.xlabel("Number of Nodes (x8 cores)")
     plt.ylabel(f"{title} ({unit})")
     # Add grid and legend
     plt.grid(True)
     plt.legend(title="Queue Types", loc="best")
+
+    # Set x-axis to use only integer values
+    plt.xticks(nodes, [str(int(node)) for node in nodes])
+
     # Save the plot
     filename = f"{output_dir}/{metric}_comparison.png"
     plt.savefig(filename)
@@ -142,15 +146,15 @@ for metric in metrics:
     # Set title and labels
     title, unit = metric_labels[metric]
     plt.title(f"Comparative {title} Across Queue Implementations (1-4 Nodes)")
-    plt.xlabel("Number of Nodes")
+    plt.xlabel("Number of Nodes (x8 cores)")
     plt.ylabel(f"{title} ({unit})")
 
     # Add grid and legend
     plt.grid(True)
     plt.legend(title="Queue Types", loc="best")
 
-    # Add x-axis ticks for every processor count
-    plt.xticks(nodes)
+    # Set x-axis to use only integer values
+    plt.xticks(nodes, [str(int(node)) for node in nodes])
 
     # Save the plot
     filename = f"{output_dir}/{metric}_comparison.png"
