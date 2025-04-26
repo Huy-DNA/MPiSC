@@ -63,7 +63,7 @@ The following narrows down what we're going to investigate in the shared-memory 
 
 Any research effort in this thesis revolves around this research question:
 
-#quote()[How to utilize shared-memory programming principles to model and design distributed MPSC queue algorithms in a fault-tolerant and performant manner?]
+#quote()[How to utilize shared-memory programming principles to model and design distributed MPSC queue algorithms in a correct, fault-tolerant and performant manner?]
 
 We further decompose this question into smaller subquestions:
 + Which factor contributes to the fault-tolerance and performance of a distributed MPSC queue algorithms?
