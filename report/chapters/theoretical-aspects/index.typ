@@ -137,6 +137,10 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 
 === Performance model
 
+We use a simple performance model, inspiring by the big-O notation for worst-case time complexity. Specifically, we model the latency of a operation by counting the number of remote operations and local operations taken by that operation. This model is simple but sufficient, as our two new algorithms are wait-free, which ensures that the worst-case time complexity of them cannot be infinite.
+
+For blocking algorithms such as our adapted version of FastQueue, we includes a parameter representing the number of retrials in the estimation, as the worst-case time complexity can be infinite.
+
 == Theoretical proofs of FastQueue
 
 === Correctness
