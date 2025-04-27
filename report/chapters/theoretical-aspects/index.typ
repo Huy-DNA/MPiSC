@@ -143,6 +143,8 @@ For blocking algorithms such as our adapted version of FastQueue, we includes a 
 
 == Theoretical proofs of FastQueue
 
+In this section, we provide proofs covering all of our interested theoretical aspects in our adapted version of FastQueue.
+
 === Correctness
 
 === Progress guarantee
@@ -226,6 +228,8 @@ Our simple distributed SPSC is wait-free:
 === Performance model
 
 == Theoretical proofs of dLTQueue
+
+In this section, we provide proofs covering all of our interested theoretical aspects in dLTQueue.
 
 === Proof-specific notations
 
@@ -678,6 +682,8 @@ Notice that every loop in dLTQueue is bounded, and no method have to wait for an
 === Performance model
 
 == Theoretical proofs of Slotqueue
+
+In this section, we provide proofs covering all of our interested theoretical aspects in Slotqueue.
 
 === Proof-specific notations
 
