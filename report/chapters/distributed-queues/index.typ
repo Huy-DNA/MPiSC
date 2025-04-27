@@ -39,31 +39,23 @@ The characteristics of these MPSC queue wrappers are summarized in @summary-of-d
   supplement: "Table",
   caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*.],
   table(
-    columns: (1fr, 1fr, 1fr, 1fr),
+    columns: (1fr, 1.5fr, 1.5fr),
     table.header(
       [*MPSC queues*],
       [*dLTQueue*],
       [*Slotqueue*],
     ),
 
-    [Correctness], [Linearizable], [Linearizable], [Linearizable],
+    [Correctness], [Linearizable], [Linearizable],
     [Progress guarantee of dequeue], [Wait-free], [Wait-free],
     [Progress guarantee of enqueue], [Wait-free], [Wait-free],
     [Dequeue wrapping overhead],
-    [$Theta(log n) R + Theta(log n) L$],
+    [$Theta(1) R + Theta(log n) L$],
     [$Theta(n) L$],
 
     [Enqueue wrapping overhead],
     [$Theta(log n) R + Theta(log n) L$],
     [$Theta(1) R + Theta(1) L$],
-
-    [Worst-case #linebreak() time-complexity of #linebreak() dequeue],
-    [$Theta(log n) R + Theta(log n) L$ (\*)],
-    [$Theta(1) R + Theta(n) L$ (\*)],
-
-    [Worst-case #linebreak() time-complexity of #linebreak() enqueue],
-    [$Theta(log n) R + Theta(log n) L$ (\*)],
-    [$Theta(1) R + Theta(1) L$ (\*)],
 
     [ABA solution],
     [Unique timestamp],

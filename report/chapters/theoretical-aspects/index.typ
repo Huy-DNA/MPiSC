@@ -137,7 +137,7 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 
 === Performance model
 
-We use a simple performance model, inspiring by the big-O notation for worst-case time complexity. Specifically, we model the latency of a operation by counting the number of remote operations and local operations taken by that operation. This model is simple but sufficient, as our two new algorithms are wait-free, which ensures that the worst-case time complexity of them cannot be infinite.
+We use a simple performance model, inspiring by the big-O notation for worst-case time complexity. Specifically, we model the latency of a method by counting the number of remote operations and local operations taken by that method. This model is simple but sufficient, as our two new algorithms are wait-free, which ensures that the worst-case time complexity of them cannot be infinite.
 
 == Theoretical proofs of the distributed SPSC
 
@@ -215,6 +215,10 @@ Our simple distributed SPSC is wait-free:
 
 === Performance model
 
+We analyze the time complexity of our simple SPSC queue.
+
+For both enqueue and dequeue, we can see that there are always a total of $Theta(1)$ operations and the number of remote operations is greater than 0. Therefore, the time complexities of enqueue and dequeue are both $Theta(1)R + Theta(1)L$.
+
 == Theoretical proofs of dLTQueue
 
 In this section, we provide proofs covering all of our interested theoretical aspects in dLTQueue.
@@ -276,6 +280,8 @@ We will refer `propagate`#sub(`e`) and `propagate`#sub(`d`) as `propagate` if th
 
 === Correctness
 
+This section establishes the correctness of LTQueue introduced in @ltqueue.
+
 ==== ABA problem
 
 We use CAS instructions on:
@@ -290,7 +296,7 @@ Notice that at these locations, we increase the associated version tags of the C
 
 ==== Memory reclamation
 
-Notice that Slotqueue pushes the memory reclamation problem to the underlying SPSC. Because the underlying SPSC is memory-safe, Slotqueue is also memory-safe.
+Notice that dLTQueue pushes the memory reclamation problem to the underlying SPSC. If the underlying SPSC is memory-safe, dLTQueue is also memory-safe.
 
 ==== Linearizability
 
@@ -669,6 +675,30 @@ Notice that every loop in dLTQueue is bounded, and no method have to wait for an
 
 === Performance model
 
+We analyze the wrapping overhead of dLTQueue's methods.
+
+For every enqueue, every tree node has to be refreshed. Because the tree is a balanced binary tree with $n$ leaf nodes, with $n$ being the number of enqueuers, the tree height is $Theta(log n)$. Because the tree nodes are hosted on the dequeuer, this takes $Theta(log n)$ remote operations and $Theta(log n)$ local operations.
+
+For each dequeue, every tree node also has to be refreshed, however, they are hosted on the dequeuer, so this only takes $Theta(log n)$ local operations. The `min_timestamp` variable at an enqueuer node also has to be refreshed, so $Theta(1)$ local operations are required.
+
+The summary of this analysis is shown in @ltqueue-perf.
+
+#figure(
+  kind: "table",
+  supplement: "Table",
+  caption: [Summary of wrapping overhead of dLTQueue. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*.],
+  table(
+    columns: (1fr, 1fr),
+    table.header(
+      [*MPSC queues*],
+      [*dLTQueue*],
+    ),
+
+    [Dequeue wrapping overhead], [$Theta(1) R + Theta(log n) L$],
+    [Enqueue wrapping overhead], [$Theta(log n) R + Theta(log n) L$],
+  ),
+) <ltqueue-perf>
+
 == Theoretical proofs of Slotqueue
 
 In this section, we provide proofs covering all of our interested theoretical aspects in Slotqueue.
@@ -711,6 +741,8 @@ The followings are some other definitions that will be used throughout our proof
 #definition[For a dequeue, *slot-scan phase* refer to its execution of line 31-47 of @slotqueue-read-minimum-rank.]
 
 === Correctness
+
+This section establishes the correctness of Slotqueue introduced in @slotqueue.
 
 ==== ABA problem
 
@@ -827,6 +859,8 @@ Both `CAS`es target some slot in the `Slots` array.
 ]
 
 ==== Memory reclamation
+
+Notice that Slotqueue pushes the memory reclamation problem to the underlying SPSC. If the underlying SPSC is memory-safe, Slotqueue is also memory-safe.
 
 ==== Linearizability
 
@@ -1027,3 +1061,27 @@ Both `CAS`es target some slot in the `Slots` array.
 Notice that every loop in Slotqueue is bounded, and no method have to wait for another. Therefore, Slotqueue is wait-free.
 
 === Performance model
+
+We analyze the wrapping overhead of Slotqueue's methods.
+
+For every enqueue, only one slot has to be refreshed and the rest of the method takes only $Theta(1)$ local operations. Because the slot is hosted on the dequeuer, this takes $Theta(1)$ remote operations and $Theta(1)$ local operations.
+
+For each dequeue, the slot array has to be scanned 2 times and a slot needs to be refreshed. All of these data are hosted on the dequeuer so no remote operations are needed. The scan, however, takes $Theta(n)$ local operations.
+
+The summary of this analysis is shown in @slotqueue-perf.
+
+#figure(
+  kind: "table",
+  supplement: "Table",
+  caption: [Summary of wrapping overhead of Slotqueue. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*.],
+  table(
+    columns: (1fr, 1fr),
+    table.header(
+      [*MPSC queues*],
+      [*Slotqueue*],
+    ),
+
+    [Dequeue wrapping overhead], [$Theta(n) L$],
+    [Enqueue wrapping overhead], [$Theta(1) R + Theta(1) L$],
+  ),
+) <slotqueue-perf>
