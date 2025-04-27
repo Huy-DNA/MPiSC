@@ -159,7 +159,7 @@ Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of existing distributed FIFO queues. #linebreak() $R$ stands for remote operations and $A$ stands for atomic operations #linebreak().],
+  caption: [Characteristic summary of existing distributed FIFO queues. #linebreak() $R$ stands for remote operations and $L$ stands for local operations #linebreak().],
   table(
     columns: (1fr, 2fr),
     table.header(
@@ -170,7 +170,7 @@ Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and
     [Supported patterns], [Multi-producer or Multi-consumer],
     [Progress guarantee of #linebreak() dequeue], [Wait-free],
     [Progress guarantee of #linebreak() enqueue], [Wait-free],
-    [Worst-case #linebreak() time-complexity of #linebreak() dequeue], [$2A$],
+    [Worst-case #linebreak() time-complexity of #linebreak() dequeue], [$2L$],
     [Worst-case #linebreak() time-complexity of #linebreak() enqueue], [$2R$],
     [ABA solution], [ABA-safe by default],
     [Memory reclamation], [No dynamic memory allocation],

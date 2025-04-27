@@ -38,7 +38,7 @@ The characteristics of these MPSC queue wrappers and the adapted FastQueue algor
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers, $R$ stands for *remote operation* and $A$ stands for *atomic operation*, $F$ stands for the number of failures that cause the FastQueue dequeuer to spin. #linebreak() (2) "`-`" means that it doesn't make sense to talk about a certain aspect of the algorithm. #linebreak() (3) The cells marked with (\*) assumes the underlying SPSC is our baselines SPSC in @distributed-spsc.],
+  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers, $R$ stands for *remote operation* and $L$ stands for *local operation*, $F$ stands for the number of failures that cause the FastQueue dequeuer to spin. #linebreak() (2) "`-`" means that it doesn't make sense to talk about a certain aspect of the algorithm. #linebreak() (3) The cells marked with (\*) assumes the underlying SPSC is our baselines SPSC in @distributed-spsc.],
   table(
     columns: (1fr, 1fr, 1fr, 1fr),
     table.header(
@@ -53,23 +53,23 @@ The characteristics of these MPSC queue wrappers and the adapted FastQueue algor
     [Progress guarantee of enqueue], [Wait-free], [Wait-free], [Wait-free],
     [Dequeue wrapping overhead],
     [-],
-    [$Theta(log n) R + Theta(log n) A$],
-    [$Theta(n) A$],
+    [$Theta(log n) R + Theta(log n) L$],
+    [$Theta(n) L$],
 
     [Enqueue wrapping overhead],
     [-],
-    [$Theta(log n) R + Theta(log n) A$],
-    [$Theta(1) R + Theta(1) A$],
+    [$Theta(log n) R + Theta(log n) L$],
+    [$Theta(1) R + Theta(1) L$],
 
     [Worst-case #linebreak() time-complexity of #linebreak() dequeue],
-    [$(F+1)Theta(1)A$],
-    [$Theta(log n) R + Theta(log n) A$ (\*)],
-    [$Theta(1) R + Theta(n) A$ (\*)],
+    [$(F+1)Theta(1)L$],
+    [$Theta(log n) R + Theta(log n) L$ (\*)],
+    [$Theta(1) R + Theta(n) L$ (\*)],
 
     [Worst-case #linebreak() time-complexity of #linebreak() enqueue],
     [$Theta(1)R$],
-    [$Theta(log n) R + Theta(log n) A$ (\*)],
-    [$Theta(1) R + Theta(1) A$ (\*)],
+    [$Theta(log n) R + Theta(log n) L$ (\*)],
+    [$Theta(1) R + Theta(1) L$ (\*)],
 
     [ABA solution],
     [No usage of CAS],
