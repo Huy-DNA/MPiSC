@@ -148,6 +148,10 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
 - When scanning the queue and the dequeuer sees that a segment contains only `HANDLED` slots, it only reclaims the dynamically-allocated array in the segment, which consumes the most memory, while still keeping the linked-list structure intact. Therefore, if any enqueuer is holding a reference to a segment before the partially-reclaimed segment, it can still traverse the next pointer chain safely.
 - To fully reclaim a segment, when partially reclaim a segment, it is added to a garbage list. Note that the first segments that contain only `HANDLED` slots can be fully reclaimed right when the dequeuer performs the scan. When a segment is fully reclaimed, any segment in the garbage list that precedes this segment is also fully reclaimed.
 
+== Remarks
+
+Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and WRLQueue as a potential candidate for porting naively to distributed environment because they either do not provide a sufficient progress guarantee or protection against ABA problem and memory reclamation problem. Jiffy's idea of the dequeuer rescanning the global queue looking for a `SET` slot is quite useful and partly contributes to our idea of double scanning in Slotqueue (@slotqueue), which is our improvement over indefinite repeated scans as in Jiffy. LTQueue remains our primary inspiration, owing to how it splits the MPSC queue data across multiple processes, which signals a good fit for distributed environment.
+
 == Distributed FIFO queues <dfifo-related-works>
 
 @summary-of-dFIFOs summarizes to the best of our knowledge all distributed FIFO queues that can be fairly used oradapted for MPSC use cases.
@@ -163,25 +167,13 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
       [*FastQueue* @bcl],
     ),
 
-    [Supported patterns],
-    [Multi-producer or Multi-consumer],
-
-    [Progress guarantee of #linebreak() dequeue],
-    [Wait-free],
-
-    [Progress guarantee of #linebreak() enqueue],
-    [Wait-free],
-
-    [Worst-case #linebreak() time-complexity of #linebreak() dequeue],
-    [$2A$],
-
-    [Worst-case #linebreak() time-complexity of #linebreak() enqueue],
-    [$2R$],
-
+    [Supported patterns], [Multi-producer or Multi-consumer],
+    [Progress guarantee of #linebreak() dequeue], [Wait-free],
+    [Progress guarantee of #linebreak() enqueue], [Wait-free],
+    [Worst-case #linebreak() time-complexity of #linebreak() dequeue], [$2A$],
+    [Worst-case #linebreak() time-complexity of #linebreak() enqueue], [$2R$],
     [ABA solution], [ABA-safe by default],
-
     [Memory reclamation], [No dynamic memory allocation],
-
     [Number of elements], [Bounded],
   ),
 ) <summary-of-dFIFOs>
