@@ -147,7 +147,21 @@ In this section, we provide proofs covering all of our interested theoretical as
 
 === Correctness
 
+==== ABA problem
+
+There's no CAS usage in FastQueue, therefore, there's no ABA problem.
+
+==== Memory reclamation
+
+There's no dynamic memory allocation or deallocation in FastQueue, therefore, there can be no unsafe memory reclamation.
+
+==== Linearizability
+
+#theorem(name: "Linearizability of FastQueue")[FastQueue is linearizable.]
+
 === Progress guarantee
+
+It's trivial that FastQueue's enqueue operation is wait-free, as there's no looping or waiting for other processes. On the other hand, dequeue is blocking, as it needs to spin waiting for an enqueuer to set an entry's flag to true. If the enqueuer suspends, the dequeuer is blocked indefinitely.
 
 === Performance model
 
