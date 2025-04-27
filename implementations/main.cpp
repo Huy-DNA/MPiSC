@@ -78,7 +78,6 @@ int main(int argc, char **argv) {
   if (run_bench) {
     slotqueue_single_one_queue_benchmark(100000, 5);
     ltqueue_single_one_queue_benchmark(100000, 5);
-    fastqueue_single_one_queue_benchmark(100000, 5);
   }
 
   MPI_Finalize();

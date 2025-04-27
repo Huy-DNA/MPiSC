@@ -20,7 +20,6 @@
 Based on the MPSC queue algorithms we have surveyed in @related-works[], we propose two wait-free distributed MPSC queue algorithms:
 - dLTQueue (@naive-LTQueue) is a direct modification of the original LTQueue @ltqueue without any usage of LL/SC, adapted for distributed environment.
 - Slotqueue (@slotqueue) is inspired by the timestamp-refreshing idea of LTQueue @ltqueue and repeated-rescan of Jiffy @jiffy. Although it still bears some resemblance to LTQueue, we believe it to be more optimized for distributed context.
-We also adapt FastQueue @bcl for MPSC use cases as a distributed baseline MPSC queue algorithm. Notice that FastQueue's dequeuer is now blocking. Further details about our adaptation and proofs of its theoretical aspects are given in the following sections.
 
 In actuality, dLTQueue and Slotqueue are more than simple MPSC algorithms. As hinted in @dfifo-related-works, they are "MPSC queue wrappers", that is, given an SPSC queue implementation, they yield an MPSC implementation. There's one additional constraint: The SPSC interface must support an additional `readFront` operation, which returns the first data item currently in the SPSC queue.
 
@@ -33,56 +32,48 @@ This fact has an important implication: when we're talking about the characteris
   - Theoretical performance of the MPSC queue's `enqueue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `enqueue` + Theoretical performance of the SPSC queue's `enqueue` operation.
   - Theoretical performance of the MPSC queue's `dequeue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `dequeue` + Theoretical performance of the SPSC queue's `dequeue` operation.
 
-The characteristics of these MPSC queue wrappers and the adapted FastQueue algorithm are summarized in @summary-of-distributed-mpscs. For benchmarking purposes, we use a baseline distributed SPSC introduced in @distributed-spsc in combination with the MPSC queue wrappers. The characteristics of the resulting MPSC queues are also shown in @summary-of-distributed-mpscs.
+The characteristics of these MPSC queue wrappers are summarized in @summary-of-distributed-mpscs. For benchmarking purposes, we use a baseline distributed SPSC introduced in @distributed-spsc in combination with the MPSC queue wrappers. The characteristics of the resulting MPSC queues are also shown in @summary-of-distributed-mpscs.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers, $R$ stands for *remote operation* and $L$ stands for *local operation*, $F$ stands for the number of failures that cause the FastQueue dequeuer to spin. #linebreak() (2) "`-`" means that it doesn't make sense to talk about a certain aspect of the algorithm. #linebreak() (3) The cells marked with (\*) assumes the underlying SPSC is our baselines SPSC in @distributed-spsc.],
+  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*.],
   table(
     columns: (1fr, 1fr, 1fr, 1fr),
     table.header(
       [*MPSC queues*],
-      [*FastQueue*],
       [*dLTQueue*],
       [*Slotqueue*],
     ),
 
     [Correctness], [Linearizable], [Linearizable], [Linearizable],
-    [Progress guarantee of dequeue], [Blocking], [Wait-free], [Wait-free],
-    [Progress guarantee of enqueue], [Wait-free], [Wait-free], [Wait-free],
+    [Progress guarantee of dequeue], [Wait-free], [Wait-free],
+    [Progress guarantee of enqueue], [Wait-free], [Wait-free],
     [Dequeue wrapping overhead],
-    [-],
     [$Theta(log n) R + Theta(log n) L$],
     [$Theta(n) L$],
 
     [Enqueue wrapping overhead],
-    [-],
     [$Theta(log n) R + Theta(log n) L$],
     [$Theta(1) R + Theta(1) L$],
 
     [Worst-case #linebreak() time-complexity of #linebreak() dequeue],
-    [$(F+1)Theta(1)L$],
     [$Theta(log n) R + Theta(log n) L$ (\*)],
     [$Theta(1) R + Theta(n) L$ (\*)],
 
     [Worst-case #linebreak() time-complexity of #linebreak() enqueue],
-    [$Theta(1)R$],
     [$Theta(log n) R + Theta(log n) L$ (\*)],
     [$Theta(1) R + Theta(1) L$ (\*)],
 
     [ABA solution],
-    [No usage of CAS],
     [Unique timestamp],
     [ABA-safe #linebreak() by default],
 
     [Memory #linebreak() reclamation],
     [No dynamic memory allocation],
     [No dynamic memory allocation],
-    [No dynamic memory allocation],
 
     [Number of element],
-    [Bounded],
     [Depending on the underlying SPSC],
     [Depending on the underlying SPSC],
   ),
@@ -148,137 +139,6 @@ Although we use MPI-3 RMA to implement these algorithms, the algorithm specifica
   + *`T fetch_and_add_sync(remote<T> dest, T inc)`*
     + Issue a synchronous fetch-and-add operation on the distributed variable `dest`. The operation atomically adds the value `inc` to the current value of `dest`, returning the original value of `dest` (before the addition) to the calling process. The update to `dest` is guaranteed to be completed and visible to all processes when the function returns. The type `T` must be an integral type with a size of `1`, `2`, `4`, or `8` bytes.
 ]
-
-== FastQueue - An adaptation of BCL's FastQueue as a baseline blocking distributed MPSC
-
-This section presents our straightforward adaptation of BCL's FastQueue to support MPSC use cases. This implementation is used as a comparison baseline for our other algorithms. For fairness, we aim to introduce least possible overhead on the original FastQueue, which is optimized for performance, but not fault-tolerance.
-
-=== Overview
-
-#figure(
-  image("/static/images/fastqueue.png"),
-  caption: [Adapted FastQueue structure.],
-) <fastqueue-structure>
-
-The structure of FastQueue is largely kept intact, except that each entry now holds an additional flag. All data and control variables e.g. the `Last` and `First` indices are hosted at the dequeuer. Enqueuer enqueues an item by FAA-ing the `Last` index to reserve a slot, then it writes the enqueued data and sets the slot's flag to true. The dequeuer dequeues items in the circular buffer in order starting from `First`, but it has to wait for the `is_set` flag to be set to safely dequeue the item. When it has successfully read the value, it unsets the slot's flag and FAA the `First` index. This spinning makes the dequeue operation blocking.
-
-=== Data structure
-
-Below is the types utilized in our MPSC variant of FastQueue.
-
-#pseudocode-list(line-numbering: none)[
-  + *Types*
-    + `data_t` = The type of the data to be stored.
-]
-
-The shared variables and variables local to each enqueuer and dequeuer in our MPSC-variant of FastQueue are as followed.
-
-#pseudocode-list(line-numbering: none)[
-  + *Shared variables*
-    + `Data`: `remote<data_t*>`
-      + An array of `data_t` with the number of entries equal to the predefined capacity.
-    + `Flags`: `remote<bool*>`
-      + An array of booleans with the number of entries equal to the predefined capacity.
-    + `First`: `remote<uint64_t>`
-      + A monotonically-increasing counter that points to the index of the first undequeued entry when taken modulo the predefined capacity.
-    + `Last`: `remote<uint64_t>`
-      + A monotonically-increasing counter that points to the index of the first empty entry when taken modulo the predefined capacity.
-]
-
-#columns(2)[
-  #pseudocode-list(line-numbering: none)[
-    + *Enqueuer-local variables*
-      + `Capacity`: `uint64_t`
-        + A read-only variable representing the maximum number of elements that can be present in the queue.
-      + `First_buf`: The cached value of `First`.
-  ]
-
-  #colbreak()
-
-  #pseudocode-list(line-numbering: none)[
-    + *Dequeuer-local variables*
-      + `Capacity`: `uint64_t`
-        + A read-only variable representing the maximum number of elements that can be present in the queue.
-      + `Last_buf`: The cached value of `Last`.
-  ]
-]
-
-Initially, the enqueuers and the dequeuer are initialized as follows:
-
-#columns(2)[
-  #pseudocode-list(line-numbering: none)[
-    + *Enqueuer initialization*
-      + Initialize `Capacity`.
-      + Initialize `First_buf` to `0`.
-  ]
-
-  #colbreak()
-
-  #pseudocode-list(line-numbering: none)[
-    + *Dequeuer initialization*
-      + Initialize `Capacity`.
-      + Initialize `Last_buf` to `0`.
-      + Initialize `First` and `Last`.
-      + Initialize `Data` to an array with `Capacity` entries each of which `is_set` is set to `false`.
-  ]
-]
-
-=== Algorithm
-
-As described, the procedures need to account for changes induced by the introduction of the `is_set` flag to each entry compared the original FastQueue. Other than that, they are kept closest in spirit to the original FastQueue, albeit at the cost of making `dequeue` blocking.
-
-#figure(
-  kind: "algorithm",
-  supplement: [Procedure],
-  pseudocode-list(
-    booktabs: true,
-    numbered-title: [`bool enqueue(data_t v)`],
-  )[
-    + `old_last = fetch_and_add_sync(Last, 1)`
-    + `new_last = old_last + 1`
-    + *if* `(new_last - First_buf > Capacity)                                            `
-      + `aread_sync(First, &First_buf)`
-      + *if* `(new_last - First_buf > Capacity)`
-        + `fetch_and_add_sync(Last, -1)`
-        + *return* `false`
-    + `awrite_sync(Data, Last_buf % Capacity, &v)`
-    + `set = true`
-    + `awrite_sync(Flags, Last_buf % Capacity, &set)`
-    + *return* `true`
-  ],
-) <fastqueue-enqueue>
-
-To enqueue, the enqueuer reserves an entry in the MPSC queue by FAA-ing the `Last` index (line 1). It then checks if the queue is full and if it is, return `false` (line 3-7). Note the usage of the cached value `First_buf` to lazily fetch the remote `First` value when extremely needed. If the queue is not full, the enqueuer writes out its data (line 8) and sets its entry's flag to `true` (line 10) at its own pace. It then returns `true` to signal success (line 11).
-
-#figure(
-  kind: "algorithm",
-  supplement: [Procedure],
-  pseudocode-list(
-    line-numbering: i => i + 11,
-    booktabs: true,
-    numbered-title: [`bool dequeue(data_t* output)`],
-  )[
-    + `old_first = 0`
-    + `aread_sync(First, &old_first)`
-    + `new_first = old_first + 1`
-    + *if* `(new_first > Last_buf)                                            `
-      + `aread_sync(Last, &Last_buf)`
-      + *if* `(new_first > Last_buf)`
-        + *return* `false`
-    + `flag = false`
-    + *do*
-      + `aread_sync(Flags, old_first % Capacity, &flag)`
-      + *while* `(!flag)`
-    + `aread_sync(Data, old_first % Capacity, output)`
-    + `unset = false`
-    + `awrite_sync(Flags, old_first % Capacity, &unset)`
-    + `awrite_sync(First, &new_first)`
-    + *return* `true`
-
-  ],
-) <fastqueue-dequeue>
-
-To dequeue, the dequeuer fetches the `First` remote variable to decide which item to dequeue next (line 12-14). If the queue is empty, it returns `false` (line 15-18). To read the value at `First`, the dequeuer spins until it sees that the corresponding entry is ready (line 20-22). When the entry is ready, it reads the corresponding data (line 23) and resets the flag (line 24-25). It signals success by swinging the `First` index to the next value and return `true` (line 26-27).
 
 == A simple baseline distributed SPSC <distributed-spsc>
 

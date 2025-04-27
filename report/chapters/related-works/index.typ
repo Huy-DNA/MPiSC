@@ -154,7 +154,7 @@ Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and
 
 == Distributed FIFO queues <dfifo-related-works>
 
-@summary-of-dFIFOs summarizes to the best of our knowledge all distributed FIFO queues that can be fairly used oradapted for MPSC use cases.
+@summary-of-dFIFOs summarizes to the best of our knowledge all distributed FIFO queues that can be used as a baseline for our MPSC queue algorithms, although they are not truly MPSC queues.
 
 #figure(
   kind: "table",

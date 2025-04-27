@@ -139,32 +139,6 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 
 We use a simple performance model, inspiring by the big-O notation for worst-case time complexity. Specifically, we model the latency of a operation by counting the number of remote operations and local operations taken by that operation. This model is simple but sufficient, as our two new algorithms are wait-free, which ensures that the worst-case time complexity of them cannot be infinite.
 
-For blocking algorithms such as our adapted version of FastQueue, we includes a parameter representing the number of retrials in the estimation, as the worst-case time complexity can be infinite.
-
-== Theoretical proofs of FastQueue
-
-In this section, we provide proofs covering all of our interested theoretical aspects in our adapted version of FastQueue.
-
-=== Correctness
-
-==== ABA problem
-
-There's no CAS usage in FastQueue, therefore, there's no ABA problem.
-
-==== Memory reclamation
-
-There's no dynamic memory allocation or deallocation in FastQueue, therefore, there can be no unsafe memory reclamation.
-
-==== Linearizability
-
-#theorem(name: "Linearizability of FastQueue")[FastQueue is linearizable.]
-
-=== Progress guarantee
-
-It's trivial that FastQueue's enqueue operation is wait-free, as there's no looping or waiting for other processes. On the other hand, dequeue is blocking, as it needs to spin waiting for an enqueuer to set an entry's flag to true. If the enqueuer suspends, the dequeuer is blocked indefinitely.
-
-=== Performance model
-
 == Theoretical proofs of the distributed SPSC
 
 In this section, we focus on the correctness and progress guarantee of the simple distributed SPSC established in @distributed-spsc.

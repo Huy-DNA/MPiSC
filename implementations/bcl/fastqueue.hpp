@@ -16,9 +16,6 @@ private:
   MPI_Win _data_win;
   MPI_Aint *_data_ptr;
 
-  MPI_Win _flag_win;
-  bool *_flag_ptr;
-
   MPI_Aint _head_buf;
 
   const MPI_Aint _host;
@@ -44,16 +41,12 @@ public:
                        &this->_tail_ptr, &this->_tail_win);
       MPI_Win_allocate(capacity * sizeof(T), sizeof(T), this->_info, comm,
                        &this->_data_ptr, &this->_data_win);
-      MPI_Win_allocate(capacity * sizeof(bool), sizeof(bool), this->_info, comm,
-                       &this->_flag_ptr, &this->_flag_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_head_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tail_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_data_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_flag_win);
       *this->_head_ptr = 0;
       *this->_tail_ptr = 0;
       memset(this->_data_ptr, 0, capacity * sizeof(T));
-      memset(this->_flag_ptr, 0, capacity * sizeof(bool));
     } else {
       MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_head_ptr,
                        &this->_head_win);
@@ -61,33 +54,26 @@ public:
                        &this->_tail_win);
       MPI_Win_allocate(0, sizeof(T), this->_info, comm, &this->_data_ptr,
                        &this->_data_win);
-      MPI_Win_allocate(0, sizeof(bool), this->_info, comm, &this->_flag_ptr,
-                       &this->_flag_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_head_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tail_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_data_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_flag_win);
     }
     MPI_Win_flush_all(this->_head_win);
     MPI_Win_flush_all(this->_tail_win);
     MPI_Win_flush_all(this->_data_win);
-    MPI_Win_flush_all(this->_flag_win);
     MPI_Barrier(comm);
     MPI_Win_flush_all(this->_head_win);
     MPI_Win_flush_all(this->_tail_win);
     MPI_Win_flush_all(this->_data_win);
-    MPI_Win_flush_all(this->_flag_win);
   }
 
   ~FastEnqueuer() {
     MPI_Win_unlock_all(this->_head_win);
     MPI_Win_unlock_all(this->_tail_win);
     MPI_Win_unlock_all(this->_data_win);
-    MPI_Win_unlock_all(this->_flag_win);
     MPI_Win_free(&this->_head_win);
     MPI_Win_free(&this->_tail_win);
     MPI_Win_free(&this->_data_win);
-    MPI_Win_free(&this->_flag_win);
     MPI_Info_free(&this->_info);
   }
 
@@ -95,7 +81,6 @@ public:
 #ifdef PROFILE
     CALI_CXX_MARK_FUNCTION;
 #endif
-
     MPI_Aint old_tail;
     fetch_and_add_sync(&old_tail, 1, 0, this->_host, this->_tail_win);
     MPI_Aint new_tail = old_tail + 1;
@@ -110,9 +95,6 @@ public:
 
     awrite_sync(&data, old_tail % this->_capacity, this->_host,
                 this->_data_win);
-    bool set = true;
-    awrite_sync(&set, old_tail % this->_capacity, this->_host, this->_flag_win);
-
     return true;
   }
 
@@ -144,12 +126,6 @@ public:
       awrite_async(data.data() + i, disp, this->_host, this->_data_win);
     }
     flush(this->_host, this->_data_win);
-    for (int i = 0; i < size; ++i) {
-      const uint64_t disp = (old_tail + i) % this->_capacity;
-      bool t = true;
-      awrite_async(&t, disp, this->_host, this->_flag_win);
-    }
-    flush(this->_host, this->_flag_win);
 
     return true;
   }
@@ -193,16 +169,12 @@ public:
                        &this->_tail_ptr, &this->_tail_win);
       MPI_Win_allocate(capacity * sizeof(T), sizeof(T), this->_info, comm,
                        &this->_data_ptr, &this->_data_win);
-      MPI_Win_allocate(capacity * sizeof(bool), sizeof(bool), this->_info, comm,
-                       &this->_flag_ptr, &this->_flag_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_head_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tail_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_data_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_flag_win);
       *this->_head_ptr = 0;
       *this->_tail_ptr = 0;
       memset(this->_data_ptr, 0, capacity * sizeof(T));
-      memset(this->_flag_ptr, 0, capacity * sizeof(bool));
     } else {
       MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_head_ptr,
                        &this->_head_win);
@@ -210,33 +182,26 @@ public:
                        &this->_tail_win);
       MPI_Win_allocate(0, sizeof(T), this->_info, comm, &this->_data_ptr,
                        &this->_data_win);
-      MPI_Win_allocate(0, sizeof(bool), this->_info, comm, &this->_flag_ptr,
-                       &this->_flag_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_head_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tail_win);
       MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_data_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_flag_win);
     }
     MPI_Win_flush_all(this->_head_win);
     MPI_Win_flush_all(this->_tail_win);
     MPI_Win_flush_all(this->_data_win);
-    MPI_Win_flush_all(this->_flag_win);
     MPI_Barrier(comm);
     MPI_Win_flush_all(this->_head_win);
     MPI_Win_flush_all(this->_tail_win);
     MPI_Win_flush_all(this->_data_win);
-    MPI_Win_flush_all(this->_flag_win);
   }
 
   ~FastDequeuer() {
     MPI_Win_unlock_all(this->_head_win);
     MPI_Win_unlock_all(this->_tail_win);
     MPI_Win_unlock_all(this->_data_win);
-    MPI_Win_unlock_all(this->_flag_win);
     MPI_Win_free(&this->_head_win);
     MPI_Win_free(&this->_tail_win);
     MPI_Win_free(&this->_data_win);
-    MPI_Win_free(&this->_flag_win);
     MPI_Info_free(&this->_info);
   }
 
@@ -244,32 +209,20 @@ public:
 #ifdef PROFILE
     CALI_CXX_MARK_FUNCTION;
 #endif
-
     MPI_Aint old_head;
-    aread_sync(&old_head, 0, this->_host, this->_head_win);
+    fetch_and_add_sync(&old_head, 1, 0, this->_host, this->_head_win);
     MPI_Aint new_head = old_head + 1;
 
     if (new_head > this->_tail_buf) {
       aread_sync(&this->_tail_buf, 0, this->_host, this->_tail_win);
       if (new_head > this->_tail_buf) {
+        fetch_and_add_sync(&old_head, -1, 0, this->_host, this->_head_win);
         return false;
       }
     }
 
-    bool flag;
-    do {
-      aread_sync(&flag, old_head % this->_capacity, this->_host,
-                 this->_flag_win);
-    } while (!flag);
-
     aread_sync(output, old_head % this->_capacity, this->_host,
                this->_data_win);
-
-    bool unset = false;
-    awrite_sync(&unset, old_head % this->_capacity, this->_host,
-               this->_flag_win);
-    awrite_sync(&new_head, 0, this->_host, this->_head_win);
-
     return true;
   }
 };
