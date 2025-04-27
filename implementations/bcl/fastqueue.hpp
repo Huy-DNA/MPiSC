@@ -145,6 +145,7 @@ private:
   MPI_Win _flag_win;
   bool *_flag_ptr;
 
+  MPI_Aint _head_buf;
   MPI_Aint _tail_buf;
 
   const MPI_Aint _host;
@@ -154,7 +155,7 @@ private:
 public:
   FastDequeuer(MPI_Aint capacity, MPI_Aint host, MPI_Aint self_rank,
                MPI_Comm comm)
-      : _host{host}, _tail_buf{0}, _capacity{capacity} {
+      : _host{host}, _head_buf{0}, _tail_buf{0}, _capacity{capacity} {
     int rank;
     MPI_Comm_rank(comm, &rank);
 
@@ -209,20 +210,19 @@ public:
 #ifdef PROFILE
     CALI_CXX_MARK_FUNCTION;
 #endif
-    MPI_Aint old_head;
-    fetch_and_add_sync(&old_head, 1, 0, this->_host, this->_head_win);
-    MPI_Aint new_head = old_head + 1;
+    MPI_Aint new_head = this->_head_buf + 1;
 
     if (new_head > this->_tail_buf) {
       aread_sync(&this->_tail_buf, 0, this->_host, this->_tail_win);
       if (new_head > this->_tail_buf) {
-        fetch_and_add_sync(&old_head, -1, 0, this->_host, this->_head_win);
         return false;
       }
     }
 
-    aread_sync(output, old_head % this->_capacity, this->_host,
+    aread_sync(output, this->_head_buf % this->_capacity, this->_host,
                this->_data_win);
+    awrite_sync(&new_head, 0, this->_host, this->_head_win);
+    ++this->_head_buf;
     return true;
   }
 };
