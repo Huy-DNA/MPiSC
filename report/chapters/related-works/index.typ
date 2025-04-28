@@ -42,7 +42,7 @@ There exists numerous research into the design of lock-free shared memory MPMCs 
     [Wait-free],
     [Wait-free],
 
-    [Number of elements], [Unbounded], [Unbounded], [Unbounded], [Unbounded],
+    [Number of elements], [Unbounded], [Unbounded], [Bounded], [Unbounded],
   ),
 ) <summary-of-MPSCs>
 
@@ -145,58 +145,36 @@ To dequeue, the dequeuer would start from the Head index of the first segment, s
 Similar to DQueue, CAS is only used when appending new segments at the end of the queue. Therefore, ABA problem only involves internal manipulation of pointers to dynamically-allocated memory. If a proper memory reclamation scheme is utilized.
 
 Regarding memory reclamation, while the dequeuer is scanning the queue, it will reclaim any segments with only `HANDLED` slots. We can see there's potentially a pitfall similar to the one DQueue runs into here. To avoid this pitfall, Jiffy takes the following measures:
-- When scanning the queue and the dequeuer sees that a segment contains only `HANDLED` slots, it only reclaims the dynamically-allocated array in the segment, which consumes the most memory, while still keeping the linked-list structure in tact. Therefore, if any enqueuer is holding a reference to a segment before the partially-reclaimed segment, it can still traverse the next pointer chain safely.
+- When scanning the queue and the dequeuer sees that a segment contains only `HANDLED` slots, it only reclaims the dynamically-allocated array in the segment, which consumes the most memory, while still keeping the linked-list structure intact. Therefore, if any enqueuer is holding a reference to a segment before the partially-reclaimed segment, it can still traverse the next pointer chain safely.
 - To fully reclaim a segment, when partially reclaim a segment, it is added to a garbage list. Note that the first segments that contain only `HANDLED` slots can be fully reclaimed right when the dequeuer performs the scan. When a segment is fully reclaimed, any segment in the garbage list that precedes this segment is also fully reclaimed.
+
+== Remarks
+
+Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and WRLQueue as a potential candidate for porting naively to distributed environment because they either do not provide a sufficient progress guarantee or protection against ABA problem and memory reclamation problem. Jiffy's idea of the dequeuer rescanning the global queue looking for a `SET` slot is quite useful and partly contributes to our idea of double scanning in Slotqueue (@slotqueue), which is our improvement over indefinite repeated scans as in Jiffy. LTQueue remains our primary inspiration, owing to how it splits the MPSC queue data across multiple processes, which signals a good fit for distributed environment.
 
 == Distributed FIFO queues <dfifo-related-works>
 
-@summary-of-dFIFOs summarizes to the best of our knowledge all distributed FIFO queues that can be fairly used oradapted for MPSC use cases.
+@summary-of-dFIFOs summarizes to the best of our knowledge all distributed FIFO queues that can be used as a baseline for our MPSC queue algorithms, although they are not truly MPSC queues.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of existing distributed FIFO queues. #linebreak() *R* stands for remote operations and *A* stands for atomic operations #linebreak() (1) The *baseline SPSC* refers to the SPSC we introduce in @distributed-spsc, the reason we have to qualify *dLTQueue* and *Slotqueue* with a specific SPSC implementation is that *dLTQueue* and *Slotqueue* are in fact "MPSC queue wrappers" that can turn some variant SPSCs to MPSCs (this will be discussed further in @distributed-queues[]). #linebreak() (2) The "bounded" property is not inherent for *dLTQueue* and *Slotqueue* "wrappers", they are bounded because the *baseline SPSC* is bounded.],
+  caption: [Characteristic summary of existing distributed FIFO queues. #linebreak() $R$ stands for remote operations and $L$ stands for local operations #linebreak().],
   table(
-    columns: (1.2fr, 1fr, 1fr, 1fr),
+    columns: (1fr, 2fr),
     table.header(
       [*FIFO queues*],
       [*FastQueue* @bcl],
-      [*dLTQueue* + *baseline SPSC* (1)],
-      [*Slotqueue* + *baseline SPSC* (1)],
     ),
 
-    [Supported patterns],
-    [Multi-producer or Multi-consumer],
-    [Multi-producer Single-consumer],
-    [Multi-producer Single-consumer],
-
-    [ABA solution],
-    [No CAS],
-    [Unique timestamp],
-    [ABA-safe #linebreak() by default],
-
-    [Memory reclamation], [Custom scheme], [Custom scheme], [Custom scheme],
-    [Progress guarantee of #linebreak() dequeue],
-    [Wait-free],
-    [Wait-free],
-    [Wait-free],
-
-    [Theoretical #linebreak() performance model of dequeue],
-    [2A],
-    [$Theta(log n)$R #linebreak() + $Theta(log n)$A],
-    [$Theta(1)$R #linebreak() + $Theta(n)$A],
-
-    [Progress guarantee of #linebreak() enqueue],
-    [Wait-free],
-    [Wait-free],
-    [Wait-free],
-
-    [Theoretical #linebreak() performance model of enqueue],
-    [2R],
-    [$Theta(log n)$R #linebreak() + $Theta(log n)$A],
-    [$Theta(1)$R],
-
-    [Number of elements], [Bounded], [Bounded (2)], [Bounded (2)],
+    [Supported patterns], [Multi-producer or Multi-consumer],
+    [Progress guarantee of #linebreak() dequeue], [Wait-free],
+    [Progress guarantee of #linebreak() enqueue], [Wait-free],
+    [Worst-case #linebreak() time-complexity of #linebreak() dequeue], [$2L$],
+    [Worst-case #linebreak() time-complexity of #linebreak() enqueue], [$2R$],
+    [ABA solution], [ABA-safe by default],
+    [Memory reclamation], [No dynamic memory allocation],
+    [Number of elements], [Bounded],
   ),
 ) <summary-of-dFIFOs>
 
@@ -217,4 +195,4 @@ To dequeue, each dequeuer reserves a slot in the queue by FAA-ing the $"First"$ 
 
 To avoid refetching $"First"$ and $"Last"$ indices on every enqueue or dequeue operation, FastQueue uttilizes a caching strategy. That is, each time $"First"$ and $"Last"$ have to be refetched, the values are saved locally. Of course, over time, these cached values can become out-of-sync with the real values. FastQueue lazily updates these cached values, precisely, a dequeuer when based on these cached values finds that the queue is empty, it performs a refetch and similarly an enqueuer when based on these cached values finds that the queue is full, it performs a refetch. This idea of caching inspires our two new MPSC queue algorithms: dLTQueue and Slotqueue.
 
-dLTQueue and Slotqueue although seem to have higher costs for enqueue and dequeue operations, directly support MPSC use cases. These data structures are explained further in @distributed-queues[].
+FastQueue doesn't utilize CAS so ABA problem does not arise. Similarly, FastQueue doesn't perform any dynamic memory allocation so no memory reclamation scheme is needed.

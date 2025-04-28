@@ -32,14 +32,14 @@ This fact has an important implication: when we're talking about the characteris
   - Theoretical performance of the MPSC queue's `enqueue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `enqueue` + Theoretical performance of the SPSC queue's `enqueue` operation.
   - Theoretical performance of the MPSC queue's `dequeue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `dequeue` + Theoretical performance of the SPSC queue's `dequeue` operation.
 
-The characteristics of these MPSC queue wrappers are summarized in @summary-of-distributed-mpscs.
+The characteristics of these MPSC queue wrappers are summarized in @summary-of-distributed-mpscs. For benchmarking purposes, we use a baseline distributed SPSC introduced in @distributed-spsc in combination with the MPSC queue wrappers. The characteristics of the resulting MPSC queues are also shown in @summary-of-distributed-mpscs.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() $n$ is the number of enqueuers, R stands for *remote operation* and A stands for *atomic operation*.],
+  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*.],
   table(
-    columns: (1.3fr, 1fr, 1fr),
+    columns: (1fr, 1.5fr, 1.5fr),
     table.header(
       [*MPSC queues*],
       [*dLTQueue*],
@@ -50,15 +50,24 @@ The characteristics of these MPSC queue wrappers are summarized in @summary-of-d
     [Progress guarantee of dequeue], [Wait-free], [Wait-free],
     [Progress guarantee of enqueue], [Wait-free], [Wait-free],
     [Dequeue wrapping overhead],
-    [$Theta(log n) R$ + $Theta(log n) A$],
-    [$Theta(n) A$],
+    [$Theta(1) R + Theta(log n) L$],
+    [$Theta(n) L$],
 
     [Enqueue wrapping overhead],
-    [$Theta(log n) R$ + $Theta(log n) A$],
-    [$Theta(1) R$ + $Theta(1) A$],
+    [$Theta(log n) R + Theta(log n) L$],
+    [$Theta(1) R + Theta(1) L$],
 
-    [ABA solution], [Unique timestamp], [ABA-safe by default],
-    [Memory reclamation], [Custom scheme], [Custom scheme],
+    [ABA solution],
+    [Unique timestamp],
+    [ABA-safe #linebreak() by default],
+
+    [Memory #linebreak() reclamation],
+    [No dynamic memory allocation],
+    [No dynamic memory allocation],
+
+    [Number of element],
+    [Depending on the underlying SPSC],
+    [Depending on the underlying SPSC],
   ),
 ) <summary-of-distributed-mpscs>
 
@@ -127,54 +136,57 @@ Although we use MPI-3 RMA to implement these algorithms, the algorithm specifica
 
 For prototyping, the two MPSC queue wrapper algorithms we propose here both utilize a baseline distributed SPSC data structure, which we will present first. For implementation simplicity, we present a bounded SPSC, effectively make our proposed algorithms support only a bounded number of elements. However, one can trivially substitute another distributed unbounded SPSC to make our proposed algorithms support an unbounded number of elements, as long as this SPSC supports the same interface as ours.
 
-Placement-wise, all shared data in this SPSC is hosted on the enqueuer.
+Placement-wise, all queue data in this SPSC is hosted on the enqueuer while the control variables i.e. `First` and `Last`, are hosted on the dequeuer.
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
     + *Types*
-      + `data_t` = The type of data stored
+      + `data_t` = The type of data stored.
   ]
 
   #pseudocode-list(line-numbering: none)[
     + *Shared variables*
       + `First`: `remote<uint64_t>`
-        + The index of the last undequeued entry. Hosted at the enqueuer.
+        + The index of the last undequeued entry.
+        + Hosted at the dequeuer.
       + `Last`: `remote<uint64_t>`
-        + The index of the last unenqueued entry. Hosted at the enqueuer.
+        + The index of the last unenqueued entry.
+        + Hosted at the dequeuer.
       + `Data`: `remote<data_t*>`
-        + An array of `data_t` of some known capacity. Hosted at the enqueuer.
+        + An array of `data_t` of some known capacity.
+        + Hosted at the enqueuer.
   ]
 
   #colbreak()
 
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer-local variables*
-      + `Capacity`: A read-only value indicating the capacity of the SPSC
-      + `First_buf`: The cached value of `First`
-      + `Last_buf`: The cached value of `Last`
+      + `Capacity`: A read-only value indicating the capacity of the SPSC.
+      + `First_buf`: The cached value of `First`.
+      + `Last_buf`: The cached value of `Last`.
   ]
 
   #pseudocode-list(line-numbering: none)[
     + *Dequeuer-local variables*
-      + `Capacity`: A read-only value indicating the capacity of the SPSC
-      + `First_buf`: The cached value of `First`
-      + `Last_buf`: The cached value of `Last`
+      + `Capacity`: A read-only value indicating the capacity of the SPSC.
+      + `First_buf`: The cached value of `First`.
+      + `Last_buf`: The cached value of `Last`.
   ]
 ]
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer initialization*
-      + Initialize `First` and `Last` to `0`
-      + Initialize `Capacity`
-      + Allocate array in `Data`
-      + `First_buf = Last_buf = 0`
+      + Initialize `First` and `Last` to `0`.
+      + Initialize `Capacity`.
+      + Allocate array in `Data`.
+      + Initialize `First_buf = Last_buf = 0`.
   ]
   #colbreak()
   #pseudocode-list(line-numbering: none)[
     + *Dequeuer initialization*
-      + Initialize `Capacity`
-      + `First_buf = Last_buf = 0`
+      + Initialize `Capacity`.
+      + Initialize `First_buf = Last_buf = 0`.
   ]
 ]
 
@@ -266,14 +278,11 @@ The procedures of the dequeuer are given as follows.
 
 `spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
 
-
 == dLTQueue - Modified distributed LTQueue without LL/SC <naive-LTQueue>
 
 This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSC queues, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
 
-=== Data structure & Algorithm overview
-
-=== Data structure
+=== Overview
 
 The structure of our dLTQueue is shown as in @modified-ltqueue-tree.
 
@@ -305,25 +314,25 @@ Placement-wise:
 - All the *tree nodes* are hosted at the *dequeuer*.
 - The distributed counter, which the enqueuers use to timestamp their enqueued value, is hosted at the *dequeuer*.
 
-=== Algorithm
+=== Data structure
 
 Below is the types utilized in dLTQueue.
 
 #pseudocode-list(line-numbering: none)[
   + *Types*
-    + `data_t` = The type of the data to be stored
-    + `spsc_t` = The type of the SPSC, this is assumed to be the distributed SPSC in @distributed-spsc
-    + `rank_t` = The type of the rank of an enqueuer process tagged with a unique timestamp (version) to avoid ABA problem
+    + `data_t` = The type of the data to be stored.
+    + `spsc_t` = The type of the SPSC, this is assumed to be the distributed SPSC in @distributed-spsc.
+    + `rank_t` = The type of the rank of an enqueuer process tagged with a unique timestamp (version) to avoid ABA problem.
       + *struct*
         + `value`: `uint32_t`
         + `version`: `uint32_t`
       + *end*
-    + `timestamp_t` = The type of the timestamp tagged with a unique timestamp (version) to avoid ABA problem
+    + `timestamp_t` = The type of the timestamp tagged with a unique timestamp (version) to avoid ABA problem.
       + *struct*
         + `value`: `uint32_t`
         + `version`: `uint32_t`
       + *end*
-    + `node_t` = The type of a tree node
+    + `node_t` = The type of a tree node.
       + *struct*
         + `rank`: `rank_t`
       + *end*
@@ -365,8 +374,6 @@ Similar to the fact that each process in our program is assigned a rank, each en
 
 This procedure is rather straightforward: Each enqueuer is assigned an order in the range `[0, size - 2]`, with `size` being the number of processes and the total ordering among the enqueuers based on their ranks is the same as the total ordering among the enqueuers based on their orders.
 
-#pagebreak()
-
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer-local variables*
@@ -390,7 +397,7 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
   ]
 ]
 
-
+Initially, the enqueuers and the dequeuer are initialized as follows:
 
 #columns(2)[
   #pseudocode-list(line-numbering: none)[
@@ -412,6 +419,8 @@ This procedure is rather straightforward: Each enqueuer is assigned an order in 
       + Initialize `Timestamps`, synchronizing each entry with the corresponding enqueuer.
   ]
 ]
+
+=== Algorithm
 
 We first present the tree-structure utility procedures that are shared by both the enqueuer and the dequeuer:
 
@@ -719,15 +728,11 @@ The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with 
 
 == Slotqueue - Optimized dLTQueue for distributed context <slotqueue>
 
-=== Motivation
-
 Even though the straightforward dLTQueue algorithm we have ported in @naive-LTQueue pretty much preserve the original algorithm's characteristics, i.e. wait-freedom and time complexity of $Theta(log n)$ for both `enqueue` and `dequeue` operations (which we will prove in @theoretical-aspects[]), we have to be aware that this is $Theta(log n)$ remote operations, which is potentially expensive and a bottleneck in the algorithm.
 
 Therefore, to be more suitable for distributed context, we propose a new algorithm that's inspired by LTQueue, in which both `enqueue` and `dequeue` only perform a constant number of remote operations, at the cost of `dequeue` having to perform $Theta(n)$ local operations, where $n$ is the number of enqueuers. Because remote operations are much more expensive, this might be a worthy tradeoff.
 
-=== Data structure & Algorithm overview
-
-=== Data structure
+=== Overview
 
 The structure of Slotqueue is shown as in @slotqueue-structure.
 
@@ -740,15 +745,16 @@ Additionally, the dequeuer hosts an array whose entries each corresponds with an
   caption: [Basic structure of Slotqueue.],
 ) <slotqueue-structure>
 
-=== Algorithm
+
+=== Data structure
 
 We first introduce the types and shared variables utilized in Slotqueue.
 
 #pseudocode-list(line-numbering: none)[
   + *Types*
-    + `data_t` = The type of data stored
+    + `data_t` = The type of data stored.
     + `timestamp_t` = `uint64_t`
-    + `spsc_t` = The type of the SPSC each enqueuer uses, this is assumed to be the distributed SPSC in @distributed-spsc
+    + `spsc_t` = The type of the SPSC each enqueuer uses, this is assumed to be the distributed SPSC in @distributed-spsc.
 ]
 
 #pseudocode-list(line-numbering: none)[
@@ -759,8 +765,6 @@ We first introduce the types and shared variables utilized in Slotqueue.
     + `Counter`: `remote<uint64_t>`
       + A distributed counter.
       + Hosted at the dequeuer.
-    + `Dequeuer_rank`: `uint32_t`
-      + The rank of the dequeuer process. This is read-only.
 ]
 
 Similar to the idea of assigning an order to each enqueuer in dLTQueue, the following procedure computes an enqueuer's order based on its rank:
@@ -797,6 +801,7 @@ Reversely, `enqueuerRank` computes an enqueuer's rank given its order.
   #pseudocode-list(line-numbering: none)[
     + *Enqueuer-local variables*
       + `Dequeuer_rank`: `uint64_t`
+        + The rank of the dequeuer.
       + `Enqueuer_count`: `uint64_t`
         + The number of enqueuers.
       + `Self_rank`: `uint32_t`
@@ -810,12 +815,36 @@ Reversely, `enqueuerRank` computes an enqueuer's rank given its order.
   #pseudocode-list(line-numbering: none)[
     + *Dequeuer-local variables*
       + `Dequeuer_rank`: `uint64_t`
+        + The rank of the dequeuer.
       + `Enqueuer_count`: `uint64_t`
         + The number of enqueuers.
       + `Spscs`: *array* of `spsc_t` with `Enqueuer_count` entries.
         + The entry at index $i$ corresponds to the `Spsc` at the enqueuer with an order of $i$.
   ]
 ]
+
+Initially, the enqueuer and the dequeuer are initialized as follows.
+
+#columns(2)[
+  #pseudocode-list(line-numbering: none)[
+    + *Enqueuer initialization*
+      + Initialize `Dequeuer_rank`.
+      + Initialize `Enqueuer_count`.
+      + Initialize `Self_rank`.
+      + Initialize the local `Spsc` to its initial state.
+  ]
+  #colbreak()
+  #pseudocode-list(line-numbering: none)[
+    + *Dequeuer initialization*
+      + Initialize `Dequeuer_rank`.
+      + Initialize `Enqueuer_count`.
+      + Initialize `Counter` to 0.
+      + Initialize the `Slots` array with size equal to the number of enqueuers and every entry is initialized to `MAX_TIMESTAMP`.
+      + Initialize the `Spscs` array, the `i`-th entry corresponds to the `Spsc` variable of the enqueuer of order `i`.
+  ]
+]
+
+=== Algorithm
 
 The enqueuer operations are given as follows.
 

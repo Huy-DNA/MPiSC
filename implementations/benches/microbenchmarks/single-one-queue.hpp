@@ -586,7 +586,7 @@ inline void slotqueueV2bc_single_one_queue_microbenchmark(
     if (rank == 0) {
       CALI_MARK_BEGIN("slot-dequeuer-v2bc-init-1");
       SlotDequeuerV2bc<int> queue(elements_per_queue, rank, rank,
-                                 MPI_COMM_WORLD);
+                                  MPI_COMM_WORLD);
       CALI_MARK_END("slot-dequeuer-v2bc-init-1");
       CALI_MARK_BEGIN("slot-dequeuer-v2bc-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
@@ -882,9 +882,8 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
       CALI_MARK_BEGIN("fast-enqueuer-init-1");
       FastEnqueuer<int> queue(number_of_elements, 0, rank, MPI_COMM_WORLD);
       CALI_MARK_END("fast-enqueuer-init-1");
-      int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
-      for (unsigned long long i = 0; i < warm_up_elements; ++i) {
+      for (unsigned long long i = 0; i < elements_per_queue; ++i) {
         if (queue.enqueue(i)) {
           ++local_enqueues;
           ++local_successful_enqueues;
@@ -893,26 +892,13 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
         }
       }
       auto t2 = std::chrono::high_resolution_clock::now();
+      local_microseconds =
+          std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1)
+              .count();
+      local_enqueues_microseconds = local_microseconds;
       CALI_MARK_BEGIN("fast-enqueuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
       CALI_MARK_END("fast-enqueuer-init-2");
-      auto t3 = std::chrono::high_resolution_clock::now();
-      for (unsigned long long i = 0; i < elements_per_queue - warm_up_elements;
-           ++i) {
-        if (queue.enqueue(i)) {
-          ++local_enqueues;
-          ++local_successful_enqueues;
-        } else {
-          ++local_enqueues;
-        }
-      }
-      auto t4 = std::chrono::high_resolution_clock::now();
-      local_microseconds =
-          std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1)
-              .count() +
-          std::chrono::duration_cast<std::chrono::microseconds>(t4 - t3)
-              .count();
-      local_enqueues_microseconds = local_microseconds;
     }
 
     double enqueues = 0;

@@ -202,26 +202,26 @@ As a reminder, here's how CAS is often utilized in non-blocking concurrent algor
 #subpar.grid(
   figure(
     image("../../static/images/ABA-problem-1.png"),
-    caption: [Process X enqueues a value 0, observes $"Tail"_A = 0$ then suspends.],
+    caption: [Process X wants to pop a value, it observes $"Top" = $ `A` and $"Top"->"next" = $ `C` then suspends.],
   ),
   <ABA-problem-case-1>,
   figure(
     image("../../static/images/ABA-problem-2.png"),
-    caption: [Another enqueuer enqueues a value 1 and another dequeuer dequeues the value 0.],
+    caption: [Another process pops the value `A` and sets $"Top"$ to `C`.],
   ),
   <ABA-problem-case-2>,
   figure(
     image("../../static/images/ABA-problem-3.png"),
-    caption: [Another enqueue enqueues a value 2. Process X continues and #linebreak() performs `CAS(&`$"Tail"$`, `$"Tail"_A$`, 1)`.],
+    caption: [Another process pushes two values `B` and `A` and sets $"Top"$ to `A`.],
   ),
   <ABA-problem-case-3>,
   figure(
     image("../../static/images/ABA-problem-4.png"),
-    caption: [Process X successfully performs the CAS and the queue looks as if it's empty, which is incorrect.],
+    caption: [Process X successfully performs the pop by calling `CAS(&Top, A, C)`. `Top` no longer points to the top of the stack.],
   ),
   <ABA-problem-case-4>,
   columns: (1fr, 1fr),
-  caption: [ABA problem in a 2-entry circular queue with $"Head"$ and $"Tail"$ pointers.],
+  caption: [ABA problem in a linked-list stack.],
   label: <ABA-problem-case>,
 )
 
@@ -463,7 +463,7 @@ In pure MPI, we use MPI exclusively for communication and synchronization. With 
 
 For lock-free synchronization, we choose to use *passive target synchronization* with `MPI_Win_lock_all`/`MPI_Win_unlock_all`.
 
-In the MPI-3 specification @mpi-3.1, these functions are specified as follows:
+In the MPI-3 specification @mpi-3.1, these functions are specified as in @mpi-win-sync-spec.
 
 #figure(
   kind: "table",
@@ -478,7 +478,7 @@ In the MPI-3 specification @mpi-3.1, these functions are specified as follows:
     [`MPI_Win_unlock_all`],
     [Matches with an `MPI_Win_lock_all` to unlock a window previously locked by that `MPI_Win_lock_all`.],
   ),
-)
+) <mpi-win-sync-spec>
 
 The reason we choose this is 3-fold:
 - Unlike *active target synchronization*, *passive target synchronization* does not require the process whose memory is being accessed by an MPI RMA communication call to participate in. This is in line with our intention to use MPI RMA to easily model irregular applications like MPSC queues.

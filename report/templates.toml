@@ -9,8 +9,8 @@ name = "Specialized Project"
 id = "CO4029"
 
 [committee]
-id = 0
-secretary = ""
+id = 6
+secretary = "Nguyễn Phương Duy"
 
 [[teachers]] 
 name = "Thoại Nam"
