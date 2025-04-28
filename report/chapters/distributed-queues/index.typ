@@ -50,7 +50,7 @@ The characteristics of these MPSC queue wrappers are summarized in @summary-of-d
     [Progress guarantee of dequeue], [Wait-free], [Wait-free],
     [Progress guarantee of enqueue], [Wait-free], [Wait-free],
     [Dequeue wrapping overhead],
-    [$Theta(1) R + Theta(log n) L$],
+    [$Theta(log n) R + Theta(log n) L$],
     [$Theta(n) L$],
 
     [Enqueue wrapping overhead],

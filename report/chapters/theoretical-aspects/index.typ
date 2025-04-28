@@ -679,7 +679,7 @@ We analyze the wrapping overhead of dLTQueue's methods.
 
 For every enqueue, every tree node has to be refreshed. Because the tree is a balanced binary tree with $n$ leaf nodes, with $n$ being the number of enqueuers, the tree height is $Theta(log n)$. Because the tree nodes are hosted on the dequeuer, this takes $Theta(log n)$ remote operations and $Theta(log n)$ local operations.
 
-For each dequeue, every tree node also has to be refreshed, however, they are hosted on the dequeuer, so this only takes $Theta(log n)$ local operations. The `min_timestamp` variable at an enqueuer node also has to be refreshed, so $Theta(1)$ local operations are required.
+For each dequeue, every tree node also has to be refreshed. Although they are hosted on the dequeuer, each refresh needs to follow the rank at each child node to read the `min-timestamp` variable of the corresponding enqueuer node, which is remote to the dequeuer, so this still takes $Theta(log n)$ remote operations and $Theta(log n)$ local operations.
 
 The summary of this analysis is shown in @ltqueue-perf.
 
@@ -694,7 +694,7 @@ The summary of this analysis is shown in @ltqueue-perf.
       [*dLTQueue*],
     ),
 
-    [Dequeue wrapping overhead], [$Theta(1) R + Theta(log n) L$],
+    [Dequeue wrapping overhead], [$Theta(log n) R + Theta(log n) L$],
     [Enqueue wrapping overhead], [$Theta(log n) R + Theta(log n) L$],
   ),
 ) <ltqueue-perf>
