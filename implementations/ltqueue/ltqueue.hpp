@@ -101,8 +101,8 @@ private:
       MPI_Aint new_last = this->_last_buf + 1;
 
       if (new_last - this->_first_buf > this->_capacity) {
-        aread_sync(&this->_first_buf, this->_self_rank, this->_dequeuer_rank,
-                   this->_first_win);
+        fetch_and_add_sync(&this->_first_buf, 0, this->_self_rank,
+                           this->_dequeuer_rank, this->_first_win);
         if (new_last - this->_first_buf > this->_capacity) {
           return false;
         }
@@ -121,8 +121,8 @@ private:
       MPI_Aint new_last = this->_last_buf + data.size();
 
       if (new_last - this->_first_buf > this->_capacity) {
-        aread_sync(&this->_first_buf, this->_self_rank, this->_dequeuer_rank,
-                   this->_first_win);
+        fetch_and_add_sync(&this->_first_buf, 0, this->_self_rank,
+                           this->_dequeuer_rank, this->_first_win);
         if (new_last - this->_first_buf > this->_capacity) {
           return false;
         }
@@ -146,8 +146,8 @@ private:
       if (this->_first_buf >= this->_last_buf) {
         return false;
       }
-      aread_sync(&this->_first_buf, this->_self_rank, this->_dequeuer_rank,
-                 this->_first_win);
+      fetch_and_add_sync(&this->_first_buf, 0, this->_self_rank,
+                         this->_dequeuer_rank, this->_first_win);
       if (this->_first_buf >= this->_last_buf) {
         return false;
       }
@@ -522,8 +522,8 @@ private:
     bool dequeue(data_t *output, int enqueuer_rank) {
       MPI_Aint new_first = this->_first_buf[enqueuer_rank] + 1;
       if (new_first > this->_last_buf[enqueuer_rank]) {
-        aread_sync(&this->_last_buf[enqueuer_rank], enqueuer_rank,
-                   this->_self_rank, this->_last_win);
+        fetch_and_add_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
+                           this->_self_rank, this->_last_win);
         if (new_first > this->_last_buf[enqueuer_rank]) {
           return false;
         }
@@ -555,7 +555,7 @@ private:
 
     bool read_front(uint32_t *output_timestamp, int enqueuer_rank) {
       if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
-        aread_sync(&this->_last_buf[enqueuer_rank], enqueuer_rank,
+        fetch_and_add_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
                    this->_self_rank, this->_last_win);
         if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
           return false;
