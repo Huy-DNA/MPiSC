@@ -143,8 +143,8 @@ public:
     MPI_Win_unlock_all(this->_data_win);
     MPI_Win_free(&this->_head_win);
     MPI_Win_free(&this->_tail_win);
-    MPI_Win_free(this->_reserved_head_win);
-    MPI_Win_free(this->_reserved_tail_win);
+    MPI_Win_free(&this->_reserved_head_win);
+    MPI_Win_free(&this->_reserved_tail_win);
     MPI_Win_free(&this->_data_win);
     MPI_Info_free(&this->_info);
   }
@@ -320,8 +320,8 @@ public:
     MPI_Win_unlock_all(this->_data_win);
     MPI_Win_free(&this->_head_win);
     MPI_Win_free(&this->_tail_win);
-    MPI_Win_free(this->_reserved_head_win);
-    MPI_Win_free(this->_reserved_tail_win);
+    MPI_Win_free(&this->_reserved_head_win);
+    MPI_Win_free(&this->_reserved_tail_win);
     MPI_Win_free(&this->_data_win);
     MPI_Info_free(&this->_info);
   }
@@ -371,7 +371,7 @@ private:
     }
     Backoff backoff{1, backoff_value};
     do {
-      compare_and_swap_sync(old_head, new_head, &rv, 0, this->_host,
+      compare_and_swap_sync(&old_head, &new_head, &rv, 0, this->_host,
                             this->_reserved_head_win);
       if (rv != old_head) {
         backoff.backoff();
@@ -386,7 +386,7 @@ private:
     MPI_Aint new_head = old_head + 1;
 
     if (new_head > this->_tail_buf) {
-      aread_sync(&this->tail_buf, 0, this->_host, this->_tail_win);
+      aread_sync(&this->_tail_buf, 0, this->_host, this->_tail_win);
       if (new_head > this->_tail_buf) {
         MPI_Aint _tmp;
         fetch_and_add_sync(&_tmp, -1, 0, this->_host, this->_head_win);
