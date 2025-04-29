@@ -31,7 +31,7 @@ Following this discussion, we should aim to discover and optimize out highly con
 == Benchmarking baselines
 
 We have two main baselines:
-- dLTQueue (@ltqueue): A naively ported shared-memory MPSC queue to distributed environments.
+- dLTQueue (@naive-LTQueue): A naively ported shared-memory MPSC queue to distributed environments.
 - FastQueue: BCL's MP/MC queue, which is closest to an MPSC we can find in the distributed literature.
 
 Our algorithm Slotqueue (@slotqueue) is compared against these two baselines, in terms of latency and throughput.
