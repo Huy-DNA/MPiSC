@@ -145,6 +145,8 @@ In this section, we focus on the correctness and progress guarantee of the simpl
 
 === Correctness
 
+This section establishes the correctness of our distributed SPSC.
+
 ==== ABA problem
 
 There's no CAS instruction in our simple distributed SPSC, so there's no potential for ABA problem.

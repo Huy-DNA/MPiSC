@@ -6,7 +6,7 @@
 
 Irregular applications are a class of programs particularly interesting in distributed computing. They are characterized by:
 - Unpredictable memory access: Before the program is actually run, we cannot know which data it will need to access. We can only know that at run time.
-- Data-dependent control flow: The decision of what to do next (such as which data to access next) is highly dependent on the values of the data already accessed. Hence the unpredictable memory access property because we cannot statically analyze the program to know which data it will access. The control flow is inherently engraved in the data, which is not known until runtime.
+- Data-dependent control flow: The decision of what to do next (such as which data to access next) is highly dependent on the values of the data already accessed, hence the unpredictable memory access property because we cannot statically analyze the program to know which data it will access. The control flow is inherently engraved in the data, which is not known until runtime.
 Irregular applications are interesting because they demand special techniques to achieve high performance. One specific challenge is that this type of applications is hard to model in traditional MPI APIs using the Send/Receive interface. This is specifically because using this interface requires a programmer to have already anticipated communication within pairs of processes before runtime, which is difficult with irregular applications. The introduction of MPI remote memory access (RMA) in MPI-2 and its improvement in MPI-3 has significantly improved MPI's capability to express irregular applications comfortably. This will be explained further in @mpi.
 
 === Actor model as an irregular application
@@ -18,7 +18,7 @@ Irregular applications are interesting because they demand special techniques to
 
 Actor model in actuality is a type of irregular application supported by the concurrent MPSC queue data structure.
 
-Each actor can be a process or a compute node in the cluster, carrying out a specific responsibility in the system. From time to time, there's a need for the actors to communicate with each other. For this purpose, the actor model offers a mailbox local to each actor. This mailbox exhibits MPSC queue behaviors: Other actors can send messages to the mailbox to notify the owner actor and the owner actor at their leisure repeatedly reads extracted message from its mailbox. The actor model provide a simple programming model for concurrent processing.
+Each actor can be a process or a compute node in the cluster, carrying out a specific responsibility in the system. From time to time, there's a need for the actors to communicate with each other. For this purpose, the actor model offers a mailbox local to each actor. This mailbox exhibits MPSC queue behavior: Other actors can send messages to the mailbox to notify the owner actor and the owner actor at their leisure repeatedly extracts message from its mailbox. The actor model provides a simple programming model for concurrent processing.
 
 The reasons why the actor model being an irregular application are straightforward to see:
 - Unpredictable memory access: The cases in which one actor can anticipate which one of the other actors can send it a message are pretty rare and application-specific. As a general framework, in an actor model, the usual assumption is that any number of actors can try to communicate with an actor at some arbitrary time. By this nature, the communication pattern is unpredictable.
@@ -35,9 +35,9 @@ The fan-out/fan-in pattern is another type of irregular application supported by
 
 In this pattern, there's a big task that can be splitted into subtasks to be executed concurrently on some work nodes. In the execution process, each worker produces a result set, each enqueued back to a result queue located on an aggregation node. The aggregation node can then dequeue from this result queue to perform further processing. Clearly, this result queue exhibits MPSC behavior.
 
-The fan-out/fan-in pattern exhibits less irregularity than the actor model, however. Usually, the worker nodes and the aggregation node are known in advance. The aggregation node can anticipate Send calls from the worker nodes. Still, there's a degree of irregularity that this pattern exhibit: How can the aggregation node know how many Send calls a worker nodes will issue? This is highly driven by the task and the data involved in this task, hence, we have the data-dependent control-flow property. One can still statically calculate or predict how many Send calls a worker node will issue, however, this is problem-specific. Therefore, the memory access pattern is somewhat unpredictable. Notice that if supported by a concurrent MPSC queue data structure, the fan-out/fan-in pattern is free from this burden of organizing the right amount of Send/Receive calls. Thus, combining with the MPSC queue, the fan-out/fan-in pattern becomes more general and easier to program.
+The fan-out/fan-in pattern exhibits less irregularity than the actor model, however. Usually, the worker nodes and the aggregation node are known in advance. The aggregation node can anticipate Send calls from the worker nodes. Still, there's a degree of irregularity that this pattern exhibit: How can the aggregation node know how many Send calls a worker nodes will issue? This is highly driven by the task and the data involved in this task, hence, we have the data-dependent control-flow property. One can still statically calculate or predict how many Send calls a worker node will issue. Nevertheless, this is problem-specific. Therefore, the memory access pattern is somewhat unpredictable. Notice that if supported by a concurrent MPSC queue data structure, the fan-out/fan-in pattern is free from this burden of organizing the right amount of Send/Receive calls. Thus, combining with the MPSC queue, the fan-out/fan-in pattern becomes more general and easier to program.
 
-We have seen the role the MPSC queue plays in supporting irregular applications. It's important to understand what really comprises an MPSC queue data structure.
+We have seen the role MPSC queues play in supporting irregular applications. It's important to understand what really comprises an MPSC queue data structure.
 
 == MPSC queue
 
@@ -263,7 +263,7 @@ An example of unsafe memory reclamation is given in @unsafe-memory-reclamation-c
   label: <unsafe-memory-reclamation-case>,
 )
 
-Solutions to this problem must ensure that memory is only freed when no other processes are holding references to it. In garbage-collected programming environments, this problem can be conveniently push to the garbage collector. In non-garbage-collected programming environments, however, custom schemes must be utilized.
+Solutions to this problem must ensure that memory is only freed when no other processes are holding references to it. In garbage-collected programming environments, this problem can be conveniently pushed to the garbage collector. In non-garbage-collected programming environments, however, custom schemes must be utilized.
 
 // == C++11 concurrency
 //

@@ -7,7 +7,8 @@ In this thesis, we have looked into the principles of shared-memory programming 
   supplement: "Table",
   caption: [Future works for the next semester],
   table(
-    columns: (1fr, 1fr),
+    columns: (1fr, 6fr),
+    align: (left, left),
     table.header(
       [*Weeks*],
       [*Work*],

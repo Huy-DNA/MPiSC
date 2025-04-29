@@ -69,18 +69,18 @@ The fundamental idea contributes to LTQueue's wait-freedom is the wait-free time
 + Call load-link on the node's `(timestamp, rank)`.
 + Look at all the timestamps of the node's children and determine the minimum timestamp and its owner rank.
 + Call store-conditional to store the new minimum timestamp and the new owner rank to the current node.
-Notice that due to contention, the timestamp-refreshing procedure can fail. In that case, the timestamp-propagation procedure simply retries the timestamp-refreshing procedure one more time. This second call, again can fail. However, after this second call, the node's timestamp is guaranteed to be up-to-date. The intuition behind this is demonstrated in @original-ltqueue-refresh-correctness. Furthermore, because every node is refreshed at most twice, the timestamp-refresh procedure should finish in a finite number of steps.
+Notice that due to contention, the timestamp-refreshing procedure can fail. In that case, the timestamp-propagation procedure simply retries the timestamp-refreshing procedure one more time. This second call, again, can fail. However, after this second call, the node's timestamp is guaranteed to be up-to-date. The intuition behind this is demonstrated in @original-ltqueue-refresh-correctness. Furthermore, because every node is refreshed at most twice, the timestamp-refresh procedure should finish in a finite number of steps.
 
 #figure(
   image("/static/images/double-refresh.png"),
-  caption: [LTQueue structure.],
+  caption: [Intuition on how timestamp-refreshing works.],
 ) <original-ltqueue-refresh-correctness>
 
 The LTQueue algorithm avoids ABA entirely by utilizing load-link/store-conditional. This represents a challenge to directly implementing this algorithm in distributed environment.
 
 The memory reclamation responsibility is handled by the SPSC structure, which is pretty trivial with a custom scheme.
 
-The design of each enqueuer maintaining a separate SPSC allows multiple enqueuer to successfully enqueues its data in parallel without stepping on the others' feet. This can potentially scale well to a large number of processes. However, scalability may be limite due to potentially growing contention during timestamp propagation. The performance of LTQueue in shared-memory environments may still have a lot of room for improvement, i.e. more cache-awareness design, avoiding unnecessary contention, etc. Nevertheless, their timestamp-refreshing scheme is interesting in and out of itself and can potentially inspire the design of new algorithms. In fact, LTQueue's idea is core to one of our optimized distributed MPSC queue algorithm, Slotqueue (@slotqueue). Because DQueue does not use a proper memory reclamation scheme, ABA problem is consequently not properly resolved.
+The design of each enqueuer maintaining a separate SPSC allows multiple enqueuer to successfully enqueues its data in parallel without stepping on the others' feet. This can potentially scale well to a large number of processes. However, scalability may be limite due to potentially growing contention during timestamp propagation. The performance of LTQueue in shared-memory environments may still have a lot of room for improvement, i.e. more cache-awareness design, avoiding unnecessary contention, etc. Nevertheless, their timestamp-refreshing scheme is interesting in and out of itself and can potentially inspire the design of new algorithms. In fact, LTQueue's idea is core to one of our optimized distributed MPSC queue algorithm, Slotqueue (@slotqueue).
 
 === DQueue
 
@@ -150,7 +150,7 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
 
 == Remarks
 
-Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and WRLQueue as a potential candidate for porting naively to distributed environment because they either do not provide a sufficient progress guarantee or protection against ABA problem and memory reclamation problem. Jiffy's idea of the dequeuer rescanning the global queue looking for a `SET` slot is quite useful and partly contributes to our idea of double scanning in Slotqueue (@slotqueue), which is our improvement over indefinite repeated scans as in Jiffy. LTQueue remains our primary inspiration, owing to how it splits the MPSC queue data across multiple processes, which signals a good fit for distributed environment.
+Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and WRLQueue as a potential candidate for porting naively to distributed environment because they either do not provide a sufficient progress guarantee or protection against ABA problem and memory reclamation problem. Jiffy's idea of the dequeuer rescanning the global queue looking for a `SET` slot is quite useful and partly contributes to our idea of double scanning in Slotqueue (@slotqueue), which is our improvement over indefinite repeated scans as in Jiffy. For the time being, LTQueue remains our primary inspiration, owing to how it splits the MPSC queue data across multiple processes, which signals a good fit for distributed environment.
 
 == Distributed FIFO queues <dfifo-related-works>
 
