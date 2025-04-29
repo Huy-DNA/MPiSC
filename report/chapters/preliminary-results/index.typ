@@ -40,15 +40,21 @@ Note that as dLTQueue and Slotqueue are MPSC queue wrappers, the underlying SPSC
 
 == Microbenchmark program
 
-Our microbenchmark is as follows:
+Our microbenchmark is as follows, aptly named "producer-consumer":
 - All processes share a single MPSC (or MP/MC) queue, one of the processes is a dequeuer, and the rest are enqueuers.
 - The enqueuers enqueue a total of $10^4$ elements.
 - The dequeuer dequeue out $10^4$ elements.
 - For MPSC, the MPSC is warmed up before the dequeuer starts. For MP/MC, any enqueuer must finish enqueueing before the dequeuer can start.
 
-This microbenchmark is repeated 5 times for each algorithm and we take the mean of the results.
+We measure the latency and throughput of the enqueue and dequeue operation. This microbenchmark is repeated 5 times for each algorithm and we take the mean of the results.
 
 == Benchmarking setup
+
+The experiments are carried out on a four-node cluster resided in HPC Lab at Ho Chi Minh University of Technology. Each node is an Intel Xeon CPU e5-2680 v3 with has 8 cores and 16 GB RAM. The interconnect used is Ethernet and so does not support true one-sided communication.
+
+The operating system used is Ubuntu 22.04.5. The MPI implementation used is MPICH version 4.0, released on January 21st, 2022.
+
+We run the producer-consumer microbenchmark on 1 to 4 nodes to measure both the latency and performance of our MPSC algorithms.
 
 == Benchmarking results
 
@@ -68,7 +74,7 @@ This microbenchmark is repeated 5 times for each algorithm and we take the mean 
   ),
   <enqueue-throughput-benchmark>,
   columns: (1fr, 1fr),
-  caption: [Enqueue benchmark results.],
+  caption: [Producer-consumer microbenchmark results for enqueue operation.],
   label: <enqueue-benchmark>,
 )
 
@@ -84,8 +90,12 @@ This microbenchmark is repeated 5 times for each algorithm and we take the mean 
   ),
   <dequeue-throughput-benchmark>,
   columns: (1fr, 1fr),
-  caption: [Dequeue benchmark results.],
+  caption: [Producer-consumer microbenchmark results for dequeue operation.],
   label: <dequeue-benchmark>,
 )
 
+The latency and throughput of the enqueue and dequeue operations of dLTQueue, Slotqueue and FastQueue degrade significantly when increasing the number nodes from 1 to 2. This can be explained by the increased overhead introduced by inter-node communication.
 
+The latency and throughput of dLTQueue degrade much faster than Slotqueue and FastQueue. This is in line with our theoretical model that the number of remote operations in dLTQueue increases logarithmically with the number of processes while the others always make a constant number of remote operations. Our Slotqueue algorithm is able to match the performance of FastQueue regarding the enqueue operation. However. Slotqueue performs worse than FastQueue in terms of dequeue operation. This is expected, as our benchmark favors FastQueue, considering that the dequeuer of FastQueue runs completely in isolation, and FastQueue is designed for a more specialized workload (MP/MC rather than MPSC).
+
+One concerning point is that while our theoretical model claims that the enqueue and dequeue methods of Slotqueue always make constant number of remote operations, the latency of enqueue and dequeue of Slotqueue degrade with the number of nodes. This can be attributed to the fact that our cluster uses Ethernet for interconnect, which doesn't support truly one-sided communication between compute nodes and our theoretical model assumes otherwise. Another notable point is that Slotqueue's enqueue operation degrades much faster than dequeue. If the reason of degradation is because of the Ethernet interconnect, then this effect should manifest equally in both enqueue and dequeue operations. The much faster degradation trend in enqueue latency may be due to the fact that one the remote operations of enqueue is on line 14 of @slotqueue-enqueue, which is a fetch-and-add operation to increase the distributed counter. Contention should increase when the number of nodes increases, so this may cause increased overhead with this one remote operation. All of these hypotheses deserve more proper investigation.
