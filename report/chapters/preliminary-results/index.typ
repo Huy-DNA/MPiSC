@@ -50,6 +50,42 @@ This microbenchmark is repeated 5 times for each algorithm and we take the mean 
 
 == Benchmarking setup
 
-== Benchmark results
+== Benchmarking results
 
-== Discussion
+#import "@preview/subpar:0.2.2"
+
+@enqueue-benchmark and @dequeue-benchmark showcase our benchmarking results.
+
+#subpar.grid(
+  figure(
+    image("../../static/images/enqueue_latency_comparison.png"),
+    caption: [Enqueue latency benchmark results.],
+  ),
+  <enqueue-latency-benchmark>,
+  figure(
+    image("../../static/images/enqueue_throughput_comparison.png"),
+    caption: [Enqueue throughput benchmark results],
+  ),
+  <enqueue-throughput-benchmark>,
+  columns: (1fr, 1fr),
+  caption: [Enqueue benchmark results.],
+  label: <enqueue-benchmark>,
+)
+
+#subpar.grid(
+  figure(
+    image("../../static/images/dequeue_latency_comparison.png"),
+    caption: [Dequeue latency benchmark results.],
+  ),
+  <dequeue-latency-benchmark>,
+  figure(
+    image("../../static/images/dequeue_throughput_comparison.png"),
+    caption: [Dequeue throughput benchmark results],
+  ),
+  <dequeue-throughput-benchmark>,
+  columns: (1fr, 1fr),
+  caption: [Dequeue benchmark results.],
+  label: <dequeue-benchmark>,
+)
+
+
