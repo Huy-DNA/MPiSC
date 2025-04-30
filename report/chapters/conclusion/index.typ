@@ -17,7 +17,7 @@ In this thesis, we have looked into the principles of shared-memory programming 
     [1-3],
     [
       - Adapt Jiffy to distributed environment.
-      - Discover optimization opportuinities with dLTQueue and Slotqueue.],
+      - Discover optimization opportunities with dLTQueue and Slotqueue.],
 
     [4-6],
     [- Perform benchmarks on RDMA cluster and investigate the performance degradation problem.],
