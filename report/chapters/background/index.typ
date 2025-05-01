@@ -90,7 +90,7 @@ Blocking algorithms introduces many problems such as:
 - Priority inversion: A higher-priority process effectively has very low priority because it has to wait for another low priority process.
 Furthermore, if a process that holds the lock dies, this will render the whole program unable to make any progress. This consideration holds even more weight in distributed computing because of a lot more failure modes, such as network failures, node falures, etc.
 
-Therefore, while blocking algorithms, especially those using locks, are easy to write, they do not provide *progress guarantee* because *deadlock* or *livelock* can occur and its use of mutual exclusion is unnecessarily restrictive. Forturnately, there are other class of algorithms which offer stronger progress guarantees.
+Therefore, while blocking algorithms, especially those using locks, are easy to write, they do not provide *progress guarantee* because *deadlock* or *livelock* can occur and its use of mutual exclusion is unnecessarily restrictive. Forturnately, there are other classes of algorithms which offer stronger progress guarantees.
 
 === Non-blocking algorithms
 
