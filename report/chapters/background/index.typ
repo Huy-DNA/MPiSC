@@ -184,7 +184,7 @@ Practically, store-conditional can still fail even if there's no writes to the s
 + Thread X calls store-conditional to store $v'$ to $x$. It _should succeed_ but _fails_ anyways.
 Exceptional events that can cause the store-conditional to fail spuriously include:
 - Cache line flushing: If the cache line that caches the memory location $x$ is written back to memory, logically, the memory location $x$ has been accessed and therefore, the store-conditional fails.
-- Context switch: If thread $x$ is swapped out by the OS, cache lines may be invalidated and flushed out, which consequently leads to the first scenario.
+- Context switch: If thread $X$ is swapped out by the OS, cache lines may be invalidated and flushed out, which consequently leads to the first scenario.
 
 LL/SC even though as powerful as CAS, is not as widespread as CAS, in fact, as of MPI-3, only CAS is supported.
 
