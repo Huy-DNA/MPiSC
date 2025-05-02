@@ -106,7 +106,7 @@ public:
     return true;
   }
 
-  bool read_front(uint32_t *output_timestamp) {
+  bool read_front(data_t *output) {
     if (this->_first_buf >= this->_last_buf) {
       return false;
     }
@@ -120,7 +120,7 @@ public:
     aread_sync(&data, this->_first_buf % this->_capacity, this->_self_rank,
                this->_data_win);
 
-    *output_timestamp = data.timestamp;
+    *output = data;
     return true;
   }
 };
@@ -241,7 +241,7 @@ public:
     return true;
   }
 
-  bool read_front(uint32_t *output_timestamp, int enqueuer_rank) {
+  bool read_front(data_t *output, int enqueuer_rank) {
     if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
       fetch_and_add_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
                          this->_self_rank, this->_last_win);
@@ -262,9 +262,8 @@ public:
       }
       flush(enqueuer_rank, this->_data_win);
     }
-    *output_timestamp =
-        this->_cached_data[enqueuer_rank][this->_cached_size[enqueuer_rank] - 1]
-            .timestamp;
+    *output = this->_cached_data[enqueuer_rank]
+                                [this->_cached_size[enqueuer_rank] - 1];
     return true;
   }
 };

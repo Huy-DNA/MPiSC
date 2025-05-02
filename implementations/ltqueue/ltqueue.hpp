@@ -134,8 +134,8 @@ private:
 
     bool res;
 
-    uint32_t min_timestamp;
-    bool min_timestamp_succeeded = this->_spsc.read_front(&min_timestamp);
+    data_t front;
+    bool min_timestamp_succeeded = this->_spsc.read_front(&front);
 
     timestamp_t current_timestamp;
     aread_sync(&current_timestamp, 0, this->_self_rank,
@@ -150,8 +150,7 @@ private:
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
     } else {
-
-      const timestamp_t new_timestamp = {min_timestamp,
+      const timestamp_t new_timestamp = {front.timestamp,
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
       compare_and_swap_sync(&current_timestamp, &new_timestamp,
@@ -365,9 +364,9 @@ private:
 
     bool res;
 
-    uint32_t min_timestamp;
+    data_t front;
     bool min_timestamp_succeeded =
-        this->_spsc.read_front(&min_timestamp, enqueuer_rank);
+        this->_spsc.read_front(&front, enqueuer_rank);
 
     timestamp_t current_timestamp;
     aread_sync(&current_timestamp, 0, enqueuer_rank, this->_min_timestamp_win);
@@ -382,7 +381,7 @@ private:
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
     } else {
-      const timestamp_t new_timestamp = {min_timestamp,
+      const timestamp_t new_timestamp = {front.timestamp,
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
       compare_and_swap_sync(&current_timestamp, &new_timestamp,
