@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../comm.hpp"
-#include "utils/spsc.hpp"
+#include "../utils/spsc.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
