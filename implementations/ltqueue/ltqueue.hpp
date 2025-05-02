@@ -110,8 +110,9 @@ private:
 
       awrite_sync(&data, this->_last_buf % this->_capacity, this->_self_rank,
                   this->_data_win);
-      awrite_sync(&new_last, this->_self_rank, this->_dequeuer_rank,
-                  this->_last_win);
+      MPI_Aint _tmp;
+      fetch_and_add_sync(&_tmp, 1, this->_self_rank, this->_dequeuer_rank,
+                         this->_last_win);
       this->_last_buf = new_last;
 
       return true;
@@ -134,9 +135,9 @@ private:
         awrite_async(data.data() + i, disp, this->_self_rank, this->_data_win);
       }
       flush(this->_self_rank, this->_data_win);
-
-      awrite_sync(&new_last, this->_self_rank, this->_dequeuer_rank,
-                  this->_last_win);
+      MPI_Aint _tmp;
+      fetch_and_add_sync(&_tmp, data.size(), this->_self_rank,
+                         this->_dequeuer_rank, this->_last_win);
       this->_last_buf = new_last;
 
       return true;
@@ -546,8 +547,9 @@ private:
         }
         flush(enqueuer_rank, this->_data_win);
       }
-      awrite_sync(&new_first, enqueuer_rank, this->_self_rank,
-                  this->_first_win);
+      MPI_Aint _tmp;
+      fetch_and_add_sync(&_tmp, 1, enqueuer_rank, this->_self_rank,
+                         this->_first_win);
       this->_first_buf[enqueuer_rank] = new_first;
 
       return true;
@@ -556,7 +558,7 @@ private:
     bool read_front(uint32_t *output_timestamp, int enqueuer_rank) {
       if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
         fetch_and_add_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
-                   this->_self_rank, this->_last_win);
+                           this->_self_rank, this->_last_win);
         if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
           return false;
         }
