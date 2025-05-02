@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../comm.hpp"
+#include "utils/spsc.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -31,124 +32,7 @@ private:
 
   MPI_Info _info;
 
-  class Spsc {
-    const MPI_Aint _self_rank;
-    const MPI_Aint _dequeuer_rank;
-
-    const MPI_Aint _capacity;
-
-    MPI_Win _data_win;
-    data_t *_data_ptr;
-
-    MPI_Win _first_win;
-    MPI_Aint *_first_ptr;
-    MPI_Aint _first_buf;
-
-    MPI_Win _last_win;
-    MPI_Aint *_last_ptr;
-    MPI_Aint _last_buf;
-
-    MPI_Info _info;
-
-  public:
-    Spsc(MPI_Aint capacity, MPI_Aint self_rank, MPI_Aint dequeuer_rank,
-         MPI_Comm comm)
-        : _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
-          _capacity{capacity}, _first_buf{0}, _last_buf{0} {
-      MPI_Info_create(&this->_info);
-      MPI_Info_set(this->_info, "same_disp_unit", "true");
-      MPI_Info_set(this->_info, "accumulate_ordering", "none");
-
-      MPI_Win_allocate(capacity * sizeof(data_t), sizeof(data_t), this->_info,
-                       comm, &this->_data_ptr, &this->_data_win);
-      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
-                       &this->_first_ptr, &this->_first_win);
-      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
-                       &this->_last_ptr, &this->_last_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, _first_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, _last_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_win);
-
-      *this->_first_ptr = 0;
-      *this->_last_ptr = 0;
-
-      MPI_Win_flush_all(this->_first_win);
-      MPI_Win_flush_all(this->_last_win);
-      MPI_Win_flush_all(this->_data_win);
-      MPI_Barrier(comm);
-      MPI_Win_flush_all(this->_first_win);
-      MPI_Win_flush_all(this->_last_win);
-      MPI_Win_flush_all(this->_data_win);
-    }
-
-    ~Spsc() {
-      MPI_Win_unlock_all(_first_win);
-      MPI_Win_unlock_all(_last_win);
-      MPI_Win_unlock_all(_data_win);
-      MPI_Win_free(&this->_data_win);
-      MPI_Win_free(&this->_first_win);
-      MPI_Win_free(&this->_last_win);
-      MPI_Info_free(&this->_info);
-    }
-
-    bool enqueue(const data_t &data) {
-      MPI_Aint new_last = this->_last_buf + 1;
-
-      if (new_last - this->_first_buf > this->_capacity) {
-        aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
-        if (new_last - this->_first_buf > this->_capacity) {
-          return false;
-        }
-      }
-
-      awrite_sync(&data, this->_last_buf % this->_capacity, this->_self_rank,
-                  this->_data_win);
-      awrite_sync(&new_last, 0, this->_self_rank, this->_last_win);
-      this->_last_buf = new_last;
-
-      return true;
-    }
-
-    bool enqueue(const std::vector<data_t> &data) {
-      MPI_Aint new_last = this->_last_buf + data.size();
-
-      if (new_last - this->_first_buf > this->_capacity) {
-        aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
-        if (new_last - this->_first_buf > this->_capacity) {
-          return false;
-        }
-      }
-
-      const uint64_t size = data.size();
-      for (int i = 0; i < size; ++i) {
-        const uint64_t disp = (this->_last_buf + i) % this->_capacity;
-        awrite_async(data.data() + i, disp, this->_self_rank, this->_data_win);
-      }
-      flush(this->_self_rank, this->_data_win);
-
-      awrite_sync(&new_last, 0, this->_self_rank, this->_last_win);
-      this->_last_buf = new_last;
-
-      return true;
-    }
-
-    bool read_front(timestamp_t *output_timestamp) {
-      if (this->_first_buf >= this->_last_buf) {
-        return false;
-      }
-      aread_sync(&this->_first_buf, 0, this->_self_rank, this->_first_win);
-      if (this->_first_buf >= this->_last_buf) {
-        return false;
-      }
-
-      data_t data;
-      aread_sync(&data, this->_first_buf % this->_capacity, this->_self_rank,
-                 this->_data_win);
-
-      *output_timestamp = data.timestamp;
-      return true;
-    }
-  } _spsc;
+  SpscEnqueuer<data_t> _spsc;
 
   bool _refreshEnqueue(timestamp_t ts) {
 #ifdef PROFILE
@@ -295,98 +179,7 @@ private:
 
   MPI_Info _info;
 
-  class Spsc {
-    const MPI_Aint _self_rank;
-
-    const MPI_Aint _capacity;
-
-    MPI_Win _data_win;
-    data_t *_data_ptr;
-
-    MPI_Win _first_win;
-    MPI_Aint *_first_ptr;
-    std::vector<MPI_Aint> _first_buf;
-
-    MPI_Win _last_win;
-    MPI_Aint *_last_ptr;
-    std::vector<MPI_Aint> _last_buf;
-    MPI_Info _info;
-
-  public:
-    Spsc(MPI_Aint capacity, MPI_Aint self_rank, MPI_Comm comm)
-        : _self_rank{self_rank}, _capacity{capacity} {
-      int size;
-      MPI_Comm_size(comm, &size);
-      _first_buf = std::vector<MPI_Aint>(size);
-      _last_buf = std::vector<MPI_Aint>(size);
-
-      MPI_Info_create(&this->_info);
-      MPI_Info_set(this->_info, "same_disp_unit", "true");
-      MPI_Info_set(this->_info, "accumulate_ordering", "none");
-
-      MPI_Win_allocate(0, sizeof(data_t), this->_info, comm, &this->_data_ptr,
-                       &this->_data_win);
-      MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm,
-                       &this->_first_ptr, &this->_first_win);
-      MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_last_ptr,
-                       &this->_last_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, _first_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, _last_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_win);
-
-      MPI_Win_flush_all(this->_first_win);
-      MPI_Win_flush_all(this->_last_win);
-      MPI_Win_flush_all(this->_data_win);
-      MPI_Barrier(comm);
-      MPI_Win_flush_all(this->_first_win);
-      MPI_Win_flush_all(this->_last_win);
-      MPI_Win_flush_all(this->_data_win);
-    }
-
-    ~Spsc() {
-      MPI_Win_unlock_all(_first_win);
-      MPI_Win_unlock_all(_last_win);
-      MPI_Win_unlock_all(_data_win);
-      MPI_Win_free(&this->_data_win);
-      MPI_Win_free(&this->_first_win);
-      MPI_Win_free(&this->_last_win);
-      MPI_Info_free(&this->_info);
-    }
-
-    bool dequeue(data_t *output, int enqueuer_rank) {
-      MPI_Aint new_first = this->_first_buf[enqueuer_rank] + 1;
-      if (new_first > this->_last_buf[enqueuer_rank]) {
-        aread_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
-                   this->_last_win);
-        if (new_first > this->_last_buf[enqueuer_rank]) {
-          return false;
-        }
-      }
-
-      aread_sync(output, this->_first_buf[enqueuer_rank] % this->_capacity,
-                 enqueuer_rank, this->_data_win);
-      awrite_sync(&new_first, 0, enqueuer_rank, this->_first_win);
-      this->_first_buf[enqueuer_rank] = new_first;
-
-      return true;
-    }
-
-    bool read_front(timestamp_t *output_timestamp, int enqueuer_rank) {
-      if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
-        aread_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
-                   this->_last_win);
-        if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
-          return false;
-        }
-      }
-
-      data_t data;
-      aread_sync(&data, this->_first_buf[enqueuer_rank] % this->_capacity,
-                 enqueuer_rank, this->_data_win);
-      *output_timestamp = data.timestamp;
-      return true;
-    }
-  } _spsc;
+  SpscDequeuer<data_t> _spsc;
 
   MPI_Aint _readMinimumRank() {
 #ifdef PROFILE
