@@ -63,12 +63,12 @@ public:
 
   // Warning: must not be called on skipped rank
   MPI_Aint get_and_increment() {
-    for (int i = 0; i < this->_size; ++i) {
+    for (int i = 0; i < this->_size - 1; ++i) {
       aread_async(this->_buffer + i, i, this->_host, this->_counter_win);
     }
     flush(this->_host, this->_counter_win);
     MPI_Aint maximum_counter = -1;
-    for (int i = 0; i < this->_size; ++i) {
+    for (int i = 0; i < this->_size - 1; ++i) {
       maximum_counter = std::max(maximum_counter, this->_buffer[i]);
     }
     ++maximum_counter;
