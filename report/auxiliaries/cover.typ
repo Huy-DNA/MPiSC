@@ -49,6 +49,7 @@ Major: Computer Science
     [
       #t.committee.id\
       #for s in t.at("teachers") [
+        #s.at("title")
         #s.at("name")\
       ]
     ],

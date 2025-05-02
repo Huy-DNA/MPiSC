@@ -13,9 +13,11 @@ id = 6
 secretary = "Nguyễn Phương Duy"
 
 [[teachers]] 
+title = "Assoc. Prof. Dr."
 name = "Thoại Nam"
 
 [[teachers]] 
+title = "Dr."
 name = "Diệp Thanh Đăng"
 
 [[students]]
