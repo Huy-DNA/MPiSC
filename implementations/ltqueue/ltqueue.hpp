@@ -253,6 +253,18 @@ public:
     if (!this->_spsc.enqueue({data, timestamp})) {
       return false;
     }
+
+    data_t front;
+    uint32_t cur_timestamp;
+    if (!this->_spsc.read_front(&front)) {
+      cur_timestamp = MAX_TIMESTAMP;
+    } else {
+      cur_timestamp = front.timestamp;
+    }
+    if (cur_timestamp != timestamp) {
+      return true;
+    }
+
     if (!this->_refresh_timestamp()) {
       this->_refresh_timestamp();
     }
@@ -278,6 +290,18 @@ public:
     if (!this->_spsc.enqueue(timestamped_data)) {
       return false;
     }
+
+    data_t front;
+    uint32_t cur_timestamp;
+    if (!this->_spsc.read_front(&front)) {
+      cur_timestamp = MAX_TIMESTAMP;
+    } else {
+      cur_timestamp = front.timestamp;
+    }
+    if (cur_timestamp != timestamp) {
+      return true;
+    }
+
     if (!this->_refresh_timestamp()) {
       this->_refresh_timestamp();
     }
