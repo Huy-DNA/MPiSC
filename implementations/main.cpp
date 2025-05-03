@@ -1,9 +1,6 @@
-#define PROFILE 1
-
 #include "benches/benchmarks/single-one-queue.hpp"
 #include "benches/microbenchmarks/single-one-queue.hpp"
 #include "benches/utils.h"
-#include <caliper/cali.h>
 #include <comm.hpp>
 #include <cstring>
 #include <iostream>
