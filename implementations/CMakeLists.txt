@@ -16,12 +16,9 @@ ExternalProject_Add(
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks
-  ${MPI_INCLUDE_PATH} ${CMAKE_BINARY_DIR}/Caliper/include)
+  ${MPI_INCLUDE_PATH})
 
 add_executable(out ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-add_dependencies(out caliper_ext)
-target_link_libraries(out ${MPI_CXX_LIBRARIES}
-                      ${CMAKE_BINARY_DIR}/Caliper/lib64/libcaliper.so)
 
 message(STATUS "MPI libraries: ${MPI_CXX_LIBRARIES}")
 message(STATUS "MPI include path: ${MPI_INCLUDE_PATH}")

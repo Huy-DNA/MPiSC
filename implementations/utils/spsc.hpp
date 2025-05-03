@@ -164,7 +164,7 @@ template <typename data_t> class SpscDequeuer {
 public:
   SpscDequeuer(MPI_Aint capacity, MPI_Aint self_rank, MPI_Comm comm,
                MPI_Aint batch_size)
-      : _self_rank{self_rank}, _capacity{capacity}, _batch_size{batch_size} {
+      : _self_rank{self_rank}, _capacity{capacity}, _batch_size{40} {
     MPI_Comm_size(comm, &this->_comm_size);
     _first_buf = std::vector<MPI_Aint>(this->_comm_size);
     _last_buf = std::vector<MPI_Aint>(this->_comm_size);
