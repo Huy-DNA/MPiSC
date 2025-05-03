@@ -39,8 +39,10 @@ public:
                        &this->_counter_ptr, &this->_counter_win);
     }
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_counter_win);
-    for (int i = 0; i < this->_size - 1; ++i) {
-      this->_counter_ptr[i] = 0;
+    if (host == rank) {
+      for (int i = 0; i < this->_size - 1; ++i) {
+        this->_counter_ptr[i] = 0;
+      }
     }
     if (rank == skipped_rank) {
       this->_buffer = nullptr;
