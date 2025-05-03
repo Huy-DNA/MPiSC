@@ -2,6 +2,7 @@
 
 #include "../../comm.hpp"
 #include <algorithm>
+#include <iostream>
 #include <mpi.h>
 
 class FaaCounter {
@@ -30,7 +31,9 @@ public:
                        &this->_counter_ptr, &this->_counter_win);
     }
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_counter_win);
-    *this->_counter_ptr = 0;
+    if (host == rank) {
+      *this->_counter_ptr = 0;
+    }
 
     MPI_Win_flush_all(this->_counter_win);
     MPI_Barrier(comm);
