@@ -296,7 +296,15 @@ inline void fetch_and_add_sync(T *dst, uint64_t increment, int disp,
     MPI_Fetch_and_op(&inc, dst, MPI_UINT8_T, target_rank, disp, MPI_SUM, win);
     MPI_Win_flush(target_rank, win);
   } else {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
    // static_assert(false, "Invalid template type");
+=======
+ //   static_assert(false, "Invalid template type");
+>>>>>>> Stashed changes
+=======
+ //   static_assert(false, "Invalid template type");
+>>>>>>> Stashed changes
   }
 }
 
