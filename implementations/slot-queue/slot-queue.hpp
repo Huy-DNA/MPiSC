@@ -185,12 +185,12 @@ private:
     if (order == DUMMY_RANK) {
       return DUMMY_RANK;
     }
-    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
+    for (int i = 0; i < order; ++i) {
       aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
                   this->_min_timestamp_win);
     }
     flush(this->_self_rank, this->_min_timestamp_win);
-    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
+    for (int i = 0; i < order; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
         order = i;
