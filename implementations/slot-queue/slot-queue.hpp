@@ -229,7 +229,7 @@ private:
 
 public:
   SlotDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
-               MPI_Comm comm, MPI_Aint batch_size = 50)
+               MPI_Comm comm, MPI_Aint batch_size = 21)
       : _comm{comm}, _self_rank{self_rank},
         _spsc{capacity, self_rank, comm, batch_size},
         _counter{dequeuer_rank, dequeuer_rank, comm} {
