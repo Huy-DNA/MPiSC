@@ -19,6 +19,8 @@ template <typename data_t> class SpscEnqueuer {
 
   MPI_Win _last_win;
   MPI_Aint *_last_ptr;
+  MPI_Win _enqueuer_local_last_win;
+  MPI_Aint *_enqueuer_local_last_ptr;
   MPI_Aint _last_buf;
   MPI_Info _info;
 
@@ -37,26 +39,35 @@ public:
                      &this->_first_win);
     MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_last_ptr,
                      &this->_last_win);
+    MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
+                     &this->_enqueuer_local_last_ptr,
+                     &this->_enqueuer_local_last_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, _first_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, _last_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, _enqueuer_local_last_win);
+    *_enqueuer_local_last_ptr = 0;
 
     MPI_Win_flush_all(this->_data_win);
     MPI_Win_flush_all(this->_first_win);
     MPI_Win_flush_all(this->_last_win);
+    MPI_Win_flush_all(this->_enqueuer_local_last_win);
     MPI_Barrier(comm);
     MPI_Win_flush_all(this->_data_win);
     MPI_Win_flush_all(this->_first_win);
     MPI_Win_flush_all(this->_last_win);
+    MPI_Win_flush_all(this->_enqueuer_local_last_win);
   }
 
   ~SpscEnqueuer() {
     MPI_Win_unlock_all(_first_win);
     MPI_Win_unlock_all(_last_win);
+    MPI_Win_unlock_all(_enqueuer_local_last_win);
     MPI_Win_unlock_all(_data_win);
     MPI_Win_free(&this->_data_win);
     MPI_Win_free(&this->_first_win);
     MPI_Win_free(&this->_last_win);
+    MPI_Win_free(&this->_enqueuer_local_last_win);
     MPI_Info_free(&this->_info);
   }
 
@@ -64,8 +75,8 @@ public:
     MPI_Aint new_last = this->_last_buf + 1;
 
     if (new_last - this->_first_buf > this->_capacity) {
-      fetch_and_add_sync(&this->_first_buf, 0, this->_self_rank,
-                         this->_dequeuer_rank, this->_first_win);
+      aread_sync(&this->_first_buf, this->_self_rank, this->_dequeuer_rank,
+                 this->_first_win);
       if (new_last - this->_first_buf > this->_capacity) {
         return false;
       }
@@ -73,9 +84,11 @@ public:
 
     awrite_sync(&data, this->_last_buf % this->_capacity, this->_self_rank,
                 this->_data_win);
-    MPI_Aint _tmp;
-    fetch_and_add_sync(&_tmp, 1, this->_self_rank, this->_dequeuer_rank,
-                       this->_last_win);
+    awrite_sync(&new_last, 0, this->_self_rank, this->_enqueuer_local_last_win);
+    if (new_last % 10 == 0) {
+      awrite_sync(&new_last, this->_self_rank, this->_dequeuer_rank,
+                  this->_last_win);
+    }
     this->_last_buf = new_last;
 
     return true;
@@ -85,8 +98,8 @@ public:
     MPI_Aint new_last = this->_last_buf + data.size();
 
     if (new_last - this->_first_buf > this->_capacity) {
-      fetch_and_add_sync(&this->_first_buf, 0, this->_self_rank,
-                         this->_dequeuer_rank, this->_first_win);
+      aread_sync(&this->_first_buf, this->_self_rank, this->_dequeuer_rank,
+                 this->_first_win);
       if (new_last - this->_first_buf > this->_capacity) {
         return false;
       }
@@ -98,9 +111,8 @@ public:
       awrite_async(data.data() + i, disp, this->_self_rank, this->_data_win);
     }
     flush(this->_self_rank, this->_data_win);
-    MPI_Aint _tmp;
-    fetch_and_add_sync(&_tmp, data.size(), this->_self_rank,
-                       this->_dequeuer_rank, this->_last_win);
+    awrite_sync(&new_last, this->_self_rank, this->_dequeuer_rank,
+                this->_last_win);
     this->_last_buf = new_last;
 
     return true;
@@ -110,8 +122,8 @@ public:
     if (this->_first_buf >= this->_last_buf) {
       return false;
     }
-    fetch_and_add_sync(&this->_first_buf, 0, this->_self_rank,
-                       this->_dequeuer_rank, this->_first_win);
+    aread_sync(&this->_first_buf, this->_self_rank, this->_dequeuer_rank,
+               this->_first_win);
     if (this->_first_buf >= this->_last_buf) {
       return false;
     }
@@ -140,6 +152,8 @@ template <typename data_t> class SpscDequeuer {
   MPI_Win _last_win;
   MPI_Aint *_last_ptr;
   std::vector<MPI_Aint> _last_buf;
+  MPI_Win _enqueuer_local_last_win;
+  MPI_Aint *_enqueuer_local_last_ptr;
   MPI_Info _info;
 
   int _comm_size;
@@ -165,6 +179,9 @@ public:
                      this->_info, comm, &this->_first_ptr, &this->_first_win);
     MPI_Win_allocate(this->_comm_size * sizeof(MPI_Aint), sizeof(MPI_Aint),
                      this->_info, comm, &this->_last_ptr, &this->_last_win);
+    MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm,
+                     &this->_enqueuer_local_last_ptr,
+                     &this->_enqueuer_local_last_win);
     this->_cached_data = (data_t **)malloc(sizeof(data_t *) * this->_comm_size);
     this->_cached_size =
         (MPI_Aint *)malloc(sizeof(MPI_Aint) * this->_comm_size);
@@ -177,6 +194,7 @@ public:
     MPI_Win_lock_all(MPI_MODE_NOCHECK, _first_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, _last_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, _enqueuer_local_last_win);
     for (int i = 0; i < this->_comm_size; ++i) {
       this->_first_ptr[i] = 0;
       this->_last_ptr[i] = 0;
@@ -185,19 +203,23 @@ public:
     MPI_Win_flush_all(this->_data_win);
     MPI_Win_flush_all(this->_first_win);
     MPI_Win_flush_all(this->_last_win);
+    MPI_Win_flush_all(this->_enqueuer_local_last_win);
     MPI_Barrier(comm);
     MPI_Win_flush_all(this->_data_win);
     MPI_Win_flush_all(this->_first_win);
     MPI_Win_flush_all(this->_last_win);
+    MPI_Win_flush_all(this->_enqueuer_local_last_win);
   }
 
   ~SpscDequeuer() {
     MPI_Win_unlock_all(_first_win);
     MPI_Win_unlock_all(_last_win);
+    MPI_Win_unlock_all(_enqueuer_local_last_win);
     MPI_Win_unlock_all(_data_win);
     MPI_Win_free(&this->_data_win);
     MPI_Win_free(&this->_first_win);
     MPI_Win_free(&this->_last_win);
+    MPI_Win_free(&this->_enqueuer_local_last_win);
     MPI_Info_free(&this->_info);
     for (int i = 0; i < this->_comm_size; ++i) {
       free(this->_cached_data[i]);
@@ -209,10 +231,14 @@ public:
   bool dequeue(data_t *output, int enqueuer_rank) {
     MPI_Aint new_first = this->_first_buf[enqueuer_rank] + 1;
     if (new_first > this->_last_buf[enqueuer_rank]) {
-      fetch_and_add_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
-                         this->_self_rank, this->_last_win);
+      aread_sync(&this->_last_buf[enqueuer_rank], enqueuer_rank,
+                 this->_self_rank, this->_last_win);
       if (new_first > this->_last_buf[enqueuer_rank]) {
-        return false;
+        aread_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
+                   this->_enqueuer_local_last_win);
+        if (new_first > this->_last_buf[enqueuer_rank]) {
+          return false;
+        }
       }
     }
 
@@ -233,9 +259,7 @@ public:
       }
       flush(enqueuer_rank, this->_data_win);
     }
-    MPI_Aint _tmp;
-    fetch_and_add_sync(&_tmp, 1, enqueuer_rank, this->_self_rank,
-                       this->_first_win);
+    awrite_sync(&new_first, enqueuer_rank, this->_self_rank, this->_first_win);
     this->_first_buf[enqueuer_rank] = new_first;
 
     return true;
@@ -243,10 +267,14 @@ public:
 
   bool read_front(data_t *output, int enqueuer_rank) {
     if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
-      fetch_and_add_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
-                         this->_self_rank, this->_last_win);
+      aread_sync(&this->_last_buf[enqueuer_rank], enqueuer_rank,
+                 this->_self_rank, this->_last_win);
       if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
-        return false;
+        aread_sync(&this->_last_buf[enqueuer_rank], 0, enqueuer_rank,
+                   this->_enqueuer_local_last_win);
+        if (this->_first_buf[enqueuer_rank] >= this->_last_buf[enqueuer_rank]) {
+          return false;
+        }
       }
     }
 
