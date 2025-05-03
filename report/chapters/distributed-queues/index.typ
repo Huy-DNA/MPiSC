@@ -57,10 +57,7 @@ The characteristics of these MPSC queue wrappers are summarized in @summary-of-d
     [$Theta(log n) R + Theta(log n) L$],
     [$Theta(1) R + Theta(1) L$],
 
-    [ABA solution],
-    [Unique timestamp],
-    [ABA-safe #linebreak() by default],
-
+    [ABA solution], [Unique timestamp], [ABA-safe #linebreak() by default],
     [Memory #linebreak() reclamation],
     [No dynamic memory allocation],
     [No dynamic memory allocation],
@@ -933,17 +930,17 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
     + `flush(Slots)`
     + *if* every entry in `bufferred_slots` is `MAX_TIMESTAMP`
       + *return* `DUMMY_RANK`
-    + *for* `index` *in* `0..Enqueuer_count`
+    + *let* `rank` be the index of the first slot that contains the minimum timestamp among `bufferred_slots`
+    + *for* `index` *in* `0..rank`
       + `aread_async(Slots, index, &bufferred_slots[index])`
     + `flush(Slots)`
-    + `rank = DUMMY_RANK`
     + `min_timestamp = MAX_TIMESTAMP`
-    + *for* `index` *in* `0..Enqueuer_count`
+    + *for* `index` *in* `0..rank`
       + `timestamp = buffered_slots[index]`
       + *if* `(min_timestamp < timestamp)`
-        + `rank = enqueuerRank(index)`
+        + `min_rank = enqueuerRank(index)`
         + `min_timestamp = timestamp`
-    + *return* `rank`
+    + *return* `min_rank`
   ],
 ) <slotqueue-read-minimum-rank>
 
