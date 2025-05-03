@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <mpi.h>
+#include <typeinfo>
 #ifdef PROFILE
 #include <caliper/cali.h>
 #endif
@@ -90,7 +91,7 @@ inline void batch_read_sync(T *dst, int size, int disp,
   CALI_CXX_MARK_FUNCTION;
 #endif
   MPI_Get(dst, sizeof(T) * size, MPI_CHAR, target_rank, disp, size * sizeof(T),
-           MPI_CHAR, win);
+          MPI_CHAR, win);
   MPI_Win_flush(target_rank, win);
 }
 
@@ -279,17 +280,37 @@ inline void fetch_and_add_sync(T *dst, uint64_t increment, int disp,
 #ifdef PROFILE
   CALI_CXX_MARK_FUNCTION;
 #endif
-  if constexpr (sizeof(T) == 8) {
+  if constexpr (typeid(T).name() == typeid(int64_t).name()) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_INT64_T, target_rank, disp, MPI_SUM, win);
+    MPI_Win_flush(target_rank, win);
+  } else if constexpr (sizeof(T) == 8) {
     uint64_t inc = increment;
     MPI_Fetch_and_op(&inc, dst, MPI_UINT64_T, target_rank, disp, MPI_SUM, win);
+    MPI_Win_flush(target_rank, win);
+  } else if constexpr (typeid(T).name() == typeid(int32_t).name()) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_INT32_T, target_rank, disp, MPI_SUM, win);
     MPI_Win_flush(target_rank, win);
   } else if constexpr (sizeof(T) == 4) {
     uint32_t inc = increment;
     MPI_Fetch_and_op(&inc, dst, MPI_UINT32_T, target_rank, disp, MPI_SUM, win);
     MPI_Win_flush(target_rank, win);
+  } else if constexpr (typeid(T).name() == typeid(int16_t).name()) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_INT16_T, target_rank, disp, MPI_SUM, win);
+    MPI_Win_flush(target_rank, win);
   } else if constexpr (sizeof(T) == 2) {
     uint16_t inc = increment;
     MPI_Fetch_and_op(&inc, dst, MPI_UINT16_T, target_rank, disp, MPI_SUM, win);
+    MPI_Win_flush(target_rank, win);
+  } else if constexpr (typeid(T).name() == typeid(int8_t).name()) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_INT8_T, target_rank, disp, MPI_SUM, win);
+    MPI_Win_flush(target_rank, win);
+  } else if constexpr (typeid(T).name() == typeid(bool).name()) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_C_BOOL, target_rank, disp, MPI_SUM, win);
     MPI_Win_flush(target_rank, win);
   } else if constexpr (sizeof(T) == 1) {
     uint8_t inc = increment;
@@ -310,12 +331,22 @@ inline void compare_and_swap_sync(const T *old_val, const T *new_val, T *result,
 #endif
 
   MPI_Datatype type;
-  if constexpr (sizeof(T) == 8) {
+  if constexpr (typeid(T).name() == typeid(int64_t).name()) {
+    type = MPI_INT64_T;
+  } else if constexpr (sizeof(T) == 8) {
     type = MPI_UINT64_T;
+  } else if (typeid(T).name() == typeid(int32_t).name()) {
+    type = MPI_INT32_T;
   } else if constexpr (sizeof(T) == 4) {
     type = MPI_UINT32_T;
+  } else if (typeid(T).name() == typeid(int16_t).name()) {
+    type = MPI_INT16_T;
   } else if constexpr (sizeof(T) == 2) {
     type = MPI_UINT16_T;
+  } else if (typeid(T).name() == typeid(int8_t).name()) {
+    type = MPI_INT8_T;
+  } else if (typeid(T).name() == typeid(bool).name()) {
+    type = MPI_C_BOOL;
   } else if constexpr (sizeof(T) == 1) {
     type = MPI_UINT8_T;
   } else {
