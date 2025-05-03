@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../comm.hpp"
-#include "../utils/distributed-counters/max-stutter.hpp"
+#include "../utils/distributed-counters/faa.hpp"
 #include "../utils/spsc.hpp"
 #include <cstdint>
 #include <cstdio>
@@ -24,7 +24,7 @@ private:
   const MPI_Aint _enqueuer_order;
   const MPI_Aint _dequeuer_rank;
 
-  MaxStutterCounter _counter;
+  FaaCounter _counter;
 
   MPI_Win _min_timestamp_win;
   timestamp_t *_min_timestamp_ptr;
@@ -153,7 +153,7 @@ private:
   MPI_Comm _comm;
   MPI_Aint _number_of_enqueuers;
 
-  MaxStutterCounter _counter;
+  FaaCounter _counter;
 
   MPI_Win _min_timestamp_win;
   timestamp_t *_min_timestamp_ptr;
