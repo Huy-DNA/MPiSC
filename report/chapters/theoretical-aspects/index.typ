@@ -1,4 +1,4 @@
-= Theoretical aspects \<reworking> <theoretical-aspects>
+= Theoretical aspects <theoretical-aspects>
 
 #import "@preview/lovelace:0.3.0": *
 #import "@preview/lemmify:0.1.7": *
@@ -135,7 +135,9 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
   - After reordering, all method calls' response events on the concurrent object $S$ stay the same.
 ]
 
-=== Performance model \<reworking>
+=== Performance model
+
+We use a simple performance model, projecting the performance of a distributed algorithm by calculating or approximating how many remote operations and local operations are made in the usual case. An example of our model has been shown in the dequeue and enqueue wrapping overhead rows of @summary-of-distributed-mpscs.
 
 == Theoretical proofs of the distributed SPSC
 
