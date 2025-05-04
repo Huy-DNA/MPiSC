@@ -1,4 +1,4 @@
-= Theoretical aspects <theoretical-aspects>
+= Theoretical aspects \<reworking> <theoretical-aspects>
 
 #import "@preview/lovelace:0.3.0": *
 #import "@preview/lemmify:0.1.7": *
@@ -221,7 +221,7 @@ We analyze the time complexity of our simple SPSC queue.
 
 For both enqueue and dequeue, we can see that there are always a total of $Theta(1)$ operations and the number of remote operations is greater than 0. Therefore, the time complexities of enqueue and dequeue are both $Theta(1)R + Theta(1)L$.
 
-== Theoretical proofs of dLTQueue
+== Theoretical proofs of dLTQueue \<reworking>
 
 In this section, we provide proofs covering all of our interested theoretical aspects in dLTQueue.
 

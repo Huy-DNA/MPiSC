@@ -152,7 +152,7 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
 
 Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and WRLQueue as a potential candidate for porting naively to distributed environment because they either do not provide a sufficient progress guarantee or protection against ABA problem and memory reclamation problem. Jiffy's idea of the dequeuer rescanning the global queue looking for a `SET` slot is quite useful and partly contributes to our idea of double scanning in Slotqueue (@slotqueue), which is our improvement over indefinite repeated scans as in Jiffy. For the time being, LTQueue remains our primary inspiration, owing to how it splits the MPSC queue data across multiple processes, which signals a good fit for distributed environment.
 
-== Distributed MPSC queues <dmpsc-related-works>
+== Distributed MPSC queues \<reworking> <dmpsc-related-works>
 
 #figure(
   kind: "table",

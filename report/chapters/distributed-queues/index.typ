@@ -729,7 +729,9 @@ node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
 
 The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with appropriate changes to accommodate the dequeuer.
 
-== Slotqueue - Optimized dLTQueue for distributed context <slotqueue>
+== Slotqueue - Optimized dLTQueue for distributed context <slotqueue> 
+
+\<this-intro-line-is-in-progress>
 
 Even though the straightforward dLTQueue algorithm we have ported in @naive-LTQueue pretty much preserve the original algorithm's characteristics, i.e. wait-freedom and time complexity of $Theta(log n)$ for both `enqueue` and `dequeue` operations (which we will prove in @theoretical-aspects[]), we have to be aware that this is $Theta(log n)$ remote operations, which is potentially expensive and a bottleneck in the algorithm.
 
