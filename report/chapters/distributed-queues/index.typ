@@ -488,7 +488,7 @@ The followings are the enqueuer procedures.
   ],
 ) <ltqueue-enqueue>
 
-To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed counter `Counter` (line 14). Then, we enqueue the data tagged with the timestamp into the local SPSC (line 15). We check if the front element's timestamp is the same as the just enqueued timestamp to avoid unnecessary propagation processes (line 19). If necessary, `enqueue` propagates the changes by invoking `propagate`#sub(`e`)`()` (line 21) and returns `true`.
+To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed counter `Counter` (line 14). Then, we enqueue the data tagged with the timestamp into the local SPSC (line 15). We check if the front element's timestamp is the same as the just enqueued timestamp to avoid unnecessary propagation processes (line 19) - this is an idea we have corporated into the original LTQueue algorithm, which always performs propagation. If necessary, `enqueue` propagates the changes by invoking `propagate`#sub(`e`)`()` (line 21) and returns `true`.
 
 #figure(
   kind: "algorithm",
