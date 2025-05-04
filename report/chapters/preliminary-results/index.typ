@@ -91,8 +91,10 @@ We run the producer-consumer microbenchmark on 1 to 4 nodes to measure both the 
   label: <dequeue-benchmark>,
 )
 
-For enqueue latency and throughput, dLTQueue and Slotqueue are on par with each other while being better than AMQueue. This is in line with our theoretical projection in @summary-of-distributed-mpscs, which projects that the enqueue wrapping overhead of Slotqueue is better than dLTQueue by only a local operation.
+For enqueue latency and throughput, dLTQueue and Slotqueue are on par with each other while being better than AMQueue. This is in line with our theoretical projection in @summary-of-distributed-mpscs, which projects that the enqueue wrapping overhead of Slotqueue is better than dLTQueue by only a local operation. One concerning trend is that Slotqueue's enqueue throughput seems to degrade with the number of nodes, which signals a potential scalability problem. This is problematic further in that our theoretical model suggests that the cost of enqueue is always fixed. This is to be investigated further in the future.
 
-For dequeue latency and throughput, Slotqueue and AMQueue can quite match each other, while being better than dLTQueue. This is expected, agreeing with our projection of dequeue wrapping overhead in @summary-of-distributed-mpscs. Furthermore, Slotqueue is conceived as a more dequeuer-optimized version of dLTQueue. Based on this empirical result, it's reasonable to believe this is to be the case.
+For dequeue latency and throughput, Slotqueue and AMQueue can quite match each other, while being better than dLTQueue. This is expected, agreeing with our projection of dequeue wrapping overhead in @summary-of-distributed-mpscs. Furthermore, Slotqueue is conceived as a more dequeuer-optimized version of dLTQueue. Based on this empirical result, it's reasonable to believe this is to be the case. Unlike enqueue, dequeue latency of Slotqueue seems to be quite stable, increasing very slowly. Because the dequeuer is the bottleneck of an MPSC, this is a good sign for the scalability of Slotqueue.
 
-In conclusion, Slotqueue seems to perform better than dLTQueue and AMQueue in terms of both enqueue and dequeue operations, latency-wise and throughput-wise. However, the scalability problem is imminent, as we can see Slotqueue's throughput, especially of enqueue, degrades with the increasing number of compute nodes. This will be investigated further in the future.
+In conclusion, Slotqueue seems to perform better than dLTQueue and AMQueue in terms of both enqueue and dequeue operations, latency-wise and throughput-wise. Additionally, compared to AMQueue, dLTQueue and Slotqueue also have the advantage of fault-tolerance, which due to the blocking nature of AMQueue, cannot be promised.
+
+
