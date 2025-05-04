@@ -49,7 +49,7 @@ The characteristics of these MPSC queue wrappers are summarized in @summary-of-d
     [Correctness], [Linearizable], [Linearizable],
     [Progress guarantee of dequeue], [Wait-free], [Wait-free],
     [Progress guarantee of enqueue], [Wait-free], [Wait-free],
-    [Dequeue wrapping overhead], [$4 log(n) R + 6 log(n) L$], [$n L$],
+    [Dequeue wrapping overhead], [$4 log_2(n) R + 6 log_2(n) L$], [$n L$],
     [Enqueue wrapping overhead], [$R + L$], [$R$],
     [ABA solution], [Unique timestamp], [No hazardous ABA problem],
     [Safe memory #linebreak() reclamation],
