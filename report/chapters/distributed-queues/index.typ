@@ -725,11 +725,7 @@ The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with 
 
 == Slotqueue - Optimized dLTQueue for distributed context <slotqueue>
 
-\<this-intro-line-is-in-progress>
-
-Even though the straightforward dLTQueue algorithm we have ported in @dLTQueue pretty much preserve the original algorithm's characteristics, i.e. wait-freedom and time complexity of $Theta(log n)$ for both `enqueue` and `dequeue` operations (which we will prove in @theoretical-aspects[]), we have to be aware that this is $Theta(log n)$ remote operations, which is potentially expensive and a bottleneck in the algorithm.
-
-Therefore, to be more suitable for distributed context, we propose a new algorithm that's inspired by LTQueue, in which both `enqueue` and `dequeue` only perform a constant number of remote operations, at the cost of `dequeue` having to perform $Theta(n)$ local operations, where $n$ is the number of enqueuers. Because remote operations are much more expensive, this might be a worthy tradeoff.
+The straightforward dLTQueue algorithm we have ported in @dLTQueue pretty much preserves the original algorithm's characteristics, i.e. wait-freedom and time complexity of $Theta(log n)$ for `dequeue` operations (which we will prove in @theoretical-aspects[]). At the same time, we have optimized `enqueue` to perform in $Theta(1)$ time in most of the cases using a simple front-queue check to avoid unnecessary propagation processes. However, notice that for MPSC queues, the bottleneck is really in the `dequeue` operation. Therefore, the $Theta(log n)$ remote operations in `dequeue` are potentially expensive in dLTQueue and pose a bottleneck. We cannot optimize `dequeue` the using the front-queue check trick as in `enqueue` though, so we're forced to perform a propagation process in every dequeue. This propagation process causes $Theta(log n)$ remote operations because it has to traverse every level in the tree. Intuitively, this is the problem of we trying to maintain the tree structure. Therefore, to be more suitable for distributed context, we propose a new algorithm Slotqueue inspired by LTQueue, which uses a slightly different structure. The key point is that both `enqueue` and `dequeue` only perform a constant number of remote operations, at the cost of `dequeue` having to perform $Theta(n)$ local operations, where $n$ is the number of enqueuers. Because remote operations are much more expensive, this might be a worthy tradeoff.
 
 === Overview
 
