@@ -166,7 +166,7 @@ The only paper we have found so far that either mentions directly or indirectly 
     columns: (1fr, 2fr),
     table.header(
       [*FIFO queues*],
-      [*Active-message queue*],
+      [*Active-message queue (AMQueue) @amqueue*],
     ),
 
     [Progress guarantee of #linebreak() dequeue], [Blocking],
@@ -176,3 +176,19 @@ The only paper we have found so far that either mentions directly or indirectly 
     [Number of elements], [Bounded],
   ),
 ) <summary-of-dMPSCs>
+
+The structure of AMQueue is given in @amqueue-structure. The MPSC is split into 2 queues, each maintains its own set of control variables:
+- `WriterCnt`: The number of enqueuer currently writing in this queue.
+- `Offset`: The index to the first empty entry in the queue.
+Note that any shared data and control variables are hosted on the dequeuer.
+
+To determine which queue to read and write, the `QueueNum` binary variable is used. If `QueueNum` is `0`, then the first queue is being actively written by enqueuers and the second queue is being reserved for the dequeuer, and otherwise.
+
+#figure(
+  image("/static/images/amqueue.png"),
+  caption: [AMQueue structure.],
+) <amqueue-structure>
+
+To enqueue, the enqueuer first reads the `QueueNum` variable to see which of the queue is active. The enqueuer then registers for that queue by atomically FAA-ing the corresponding `WriteCnt` variable. If the fetched value is negative though, the `QueueNum` queue is being swapped for dequeueing and the enqueuer has to decrement the `WriteCnt` variable and repeat the process until `WriteCnt` is positive. After a successful registration, the enqueuer then reserves an entry in the data array by FAA-ing the `Offset` variable. After that, the enqueuer can enqueue data at its leisure. Upon success, the enqueuer has to decrement `WriteCnt` before returning.
+
+To dequeue, the dequeuer inverts `QueueNum` to direct future enqueuers to the other queue. The dequeuer then subtracts a sufficiently large number from `WriterCnt` to signal to other enqueuers that it has started processing. The dequeuer has to wait for all current enqueuers in the queue to finish by repeatedly checking the `WriterCnt` variable, hence the blocking property. After all enqueuers have finished, the dequeuer then batch-dequeues all data in the queue, resets the `Offset` and `WriterCnt` variables to `0`.
