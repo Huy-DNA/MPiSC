@@ -53,11 +53,11 @@ The operating system used is Ubuntu 22.04.5. The MPI implementation used is MPIC
 
 We run the producer-consumer microbenchmark on 1 to 4 nodes to measure both the latency and performance of our MPSC algorithms.
 
-== Benchmarking results \<in-progress>
+== Benchmarking results
 
 #import "@preview/subpar:0.2.2"
 
-@enqueue-benchmark and @dequeue-benchmark showcase our benchmarking results.
+@enqueue-benchmark and @dequeue-benchmark showcase our benchmarking results, with the y-axis drawin in log scale.
 
 #subpar.grid(
   figure(
@@ -90,3 +90,9 @@ We run the producer-consumer microbenchmark on 1 to 4 nodes to measure both the 
   caption: [Microbenchmark results for dequeue operation.],
   label: <dequeue-benchmark>,
 )
+
+For enqueue latency and throughput, dLTQueue and Slotqueue are on par with each other while being better than AMQueue. This is in line with our theoretical projection in @summary-of-distributed-mpscs, which projects that the enqueue wrapping over head of Slotqueue is better than dLTQueue by only a local operation.
+
+For dequeue latency and throughput, Slotqueue and AMQueue can quite match each other, while being better than dLTQueue. This is expected, agreeing with our projection of dequeue wrapping overhead in @summary-of-distributed-mpscs. Furthermore, Slotqueue is conceived as a more dequeuer-optimized version of dLTQueue. Based on this empirical result, it's reasonable to believe this to be the case.
+
+In conclusion, Slotqueue seems to perform better than dLTQueue and AMQueue in terms of both enqueue and dequeue operations, latency-wise and throughput-wise. However, a scalability problem is imminent, as we can see Slotqueue's latency and throughput degrades with the increasing number of compute nodes. This will be investigated further in the future.
