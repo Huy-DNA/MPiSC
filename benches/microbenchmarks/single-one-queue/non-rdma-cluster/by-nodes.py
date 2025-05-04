@@ -14,7 +14,7 @@ queue_data = {
         "enqueue_latency": [14.9976, 362.104, 851.116, 1321.98],
         "total_throughput": [3.14455, 0.30058, 0.260807, 0.237505],
     },
-    "LTQueue": {
+    "dLTQueue": {
         "dequeue_throughput": [0.862575, 0.00980247, 0.0064194, 0.00556359],
         "dequeue_latency": [11.5932, 1020.15, 1557.78, 1797.4],
         "enqueue_throughput": [5.17603, 0.419166, 0.254151, 0.207099],
@@ -48,7 +48,7 @@ metric_labels = {
 
 queue_styles = {
     "SlotQueue": {"color": "blue", "marker": "o"},
-    "LTQueue": {"color": "red", "marker": "s"},
+    "dLTQueue": {"color": "red", "marker": "s"},
     "AMQueue": {"color": "purple", "marker": "d"},
 }
 
