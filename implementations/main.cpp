@@ -65,7 +65,6 @@ int main(int argc, char **argv) {
   if (run_micro) {
     slotqueue_single_one_queue_microbenchmark(1000, 5);
     ltqueue_single_one_queue_microbenchmark(1000, 5);
-    fastqueue_single_one_queue_microbenchmark(1000, 5);
     amqueue_single_one_queue_microbenchmark(1000, 5);
   }
 
