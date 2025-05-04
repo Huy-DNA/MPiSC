@@ -28,15 +28,20 @@ One question is how to optimize for latency? As we have discussed, we should min
 
 Following this discussion, we should aim to discover and optimize out highly contended areas in our algorithms if we want to make them scale well to a large number of nodes/processes.
 
-== Benchmarking baselines \<in-progress>
+== Benchmarking baselines
+
+We use three MPSC queue algorithms as benchmarking baselines:
+- dLTQueue + our custom SPSC: Our most optimized version of LTQueue while still keeping the core algorithm in tact.
+- Slotqueue + our custom SPSC: Our modification to dLTQueue to obtain a more optimized distributed version of LTQueue.
+- AMQueue @amqueue: A hosted bounded MPSC queue algorithm, already detailed in @dmpsc-related-works.
 
 == Microbenchmark program
 
 Our microbenchmark is as follows:
-- All processes share a single MPSC (or MP/MC) queue, one of the processes is a dequeuer, and the rest are enqueuers.
+- All processes share a single MPSC, one of the processes is a dequeuer, and the rest are enqueuers.
 - The enqueuers enqueue a total of $10^4$ elements.
 - The dequeuer dequeue out $10^4$ elements.
-- For MPSC, the MPSC is warmed up before the dequeuer starts. For MP/MC, any enqueuer must finish enqueueing before the dequeuer can start.
+- For MPSC, the MPSC is warmed up before the dequeuer starts.
 
 We measure the latency and throughput of the enqueue and dequeue operation. This microbenchmark is repeated 5 times for each algorithm and we take the mean of the results.
 
