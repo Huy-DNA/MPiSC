@@ -258,27 +258,27 @@ We will refer `propagate`#sub(`e`) and `propagate`#sub(`d`) as `propagate` if th
 
 #definition[For an enqueue or a dequeue $op$, the set of nodes that it calls `refreshNode` (@ltqueue-enqueue-refresh-node or @ltqueue-dequeue-refresh-node) or `refreshLeaf` (@ltqueue-enqueue-refresh-leaf or @ltqueue-dequeue-refresh-leaf) on is denoted as $p a t h(op)$.]
 
-#definition[For an enqueue or a dequeue, *timestamp-refresh phase* refer to its execution of line 18-19 in `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) or line 71-72 in `propagate`#sub(`d`) (@ltqueue-dequeue-propagate).]
+#definition[For an enqueue or a dequeue, *timestamp-refresh phase* refer to its execution of line 23-24 in `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) or line 76-77 in `propagate`#sub(`d`) (@ltqueue-dequeue-propagate).]
 
 #definition[For an enqueue $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of:
-  - Line 20-21 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) if $n$ is a leaf node.
-  - Line 25-26 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.]
+  - Line 25-26 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) if $n$ is a leaf node.
+  - Line 30-31 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.]
 
 #definition[For a dequeue $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of:
-  - Line 73-74 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) if $n$ is a leaf node.
-  - Line 78-79 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.]
+  - Line 78-79 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) if $n$ is a leaf node.
+  - Line 83-84 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.]
 
-#definition[`refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 29. `refreshTimestamp`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 34 or line 36.]
+#definition[`refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 34. `refreshTimestamp`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 39 or line 41.]
 
-#definition[`refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 83. `refreshTimestamp`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 88 or line 90.]
+#definition[`refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 88. `refreshTimestamp`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 93 or line 95.]
 
-#definition[`refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node) is said to start its *CAS-sequence* if it finishes line 38. `refreshNode`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 52.]
+#definition[`refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node) is said to start its *CAS-sequence* if it finishes line 43. `refreshNode`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 57.]
 
-#definition[`refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node) is said to start its *CAS-sequence* if it finishes line 92. `refreshNode`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 106.]
+#definition[`refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node) is said to start its *CAS-sequence* if it finishes line 97. `refreshNode`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 111.]
 
-#definition[`refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 55. `refreshLeaf`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 60.]
+#definition[`refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 60. `refreshLeaf`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 65.]
 
-#definition[`refreshLeaf`#sub(`d`) (@ltqueue-dequeue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 109. `refreshLeaf`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 114.]
+#definition[`refreshLeaf`#sub(`d`) (@ltqueue-dequeue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 114. `refreshLeaf`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 119.]
 
 === Correctness
 
@@ -287,12 +287,12 @@ This section establishes the correctness of LTQueue introduced in @ltqueue.
 ==== ABA problem
 
 We use CAS instructions on:
-- Line 34 and line 36 of `refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp).
-- Line 52 of `refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node).
-- Line 60 of `refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf).
-- Line 88 and line 90 of `refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp).
-- Line 106 of `refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node).
-- Line 114 of `refreshLeaf`#sub(`e`) (@ltqueue-dequeue-refresh-leaf).
+- Line 39 and line 41 of `refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp).
+- Line 57 of `refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node).
+- Line 65 of `refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf).
+- Line 93 and line 95 of `refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp).
+- Line 111 of `refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node).
+- Line 119 of `refreshLeaf`#sub(`e`) (@ltqueue-dequeue-refresh-leaf).
 
 Notice that at these locations, we increase the associated version tags of the CAS-ed values. These version tags are 32-bit in size, therefore, practically, ABA problem can't virtually occur. It's safe to assume that there's no ABA problem in dLTQueue.
 

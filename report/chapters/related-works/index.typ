@@ -152,9 +152,7 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
 
 Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and WRLQueue as a potential candidate for porting naively to distributed environment because they either do not provide a sufficient progress guarantee or protection against ABA problem and memory reclamation problem. Jiffy's idea of the dequeuer rescanning the global queue looking for a `SET` slot is quite useful and partly contributes to our idea of double scanning in Slotqueue (@slotqueue), which is our improvement over indefinite repeated scans as in Jiffy. For the time being, LTQueue remains our primary inspiration, owing to how it splits the MPSC queue data across multiple processes, which signals a good fit for distributed environment.
 
-== Distributed FIFO queues <dfifo-related-works>
-
-@summary-of-dFIFOs summarizes to the best of our knowledge all distributed FIFO queues that can be used as a baseline for our MPSC queue algorithms, although they are not truly MPSC queues.
+== Distributed MPSC queues <dmpsc-related-works>
 
 #figure(
   kind: "table",
@@ -167,7 +165,6 @@ Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and
       [*FastQueue* @bcl],
     ),
 
-    [Supported patterns], [Multi-producer or Multi-consumer],
     [Progress guarantee of #linebreak() dequeue], [Wait-free],
     [Progress guarantee of #linebreak() enqueue], [Wait-free],
     [Worst-case #linebreak() time-complexity of #linebreak() dequeue], [$2L$],
@@ -176,23 +173,4 @@ Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and
     [Memory reclamation], [No dynamic memory allocation],
     [Number of elements], [Bounded],
   ),
-) <summary-of-dFIFOs>
-
-FastQueue @bcl is a wait-free multi-producer or multiple-consumer (MP/MC) queue data structure that's part of the Berkeley Container Library (BCL). FastQueue's data is entirely hosted on a process. Its structure is simple, as demonstrated in @original-fastqueue-structure. Note that this figure assumes that all data is hosted on a dequeuer, as well as the $"First"$ and $"Last"$ indices.
-
-#figure(
-  image("/static/images/original-fastqueue.png"),
-  caption: [FastQueue structure.],
-) <original-fastqueue-structure>
-
-The queue is represented as a circular array, with $"First"$ and $"Last"$ indices. These indices point to entries in the array when taking modulo $"Capacity"$, with $"Capacity"$ being the maximum size of the array.
-
-Multiple enqueuers or multiple dequeuers can run concurrently. However, enqueues and dequeues must not overlap.
-
-To enqueue, each enqueuer reserves a slot in the queue by FAA-ing the $"Last"$ index and then writes its data value at its leisure.
-
-To dequeue, each dequeuer reserves a slot in the queue by FAA-ing the $"First"$ pointer and read out the value at the obtain index.
-
-To avoid refetching $"First"$ and $"Last"$ indices on every enqueue or dequeue operation, FastQueue uttilizes a caching strategy. That is, each time $"First"$ and $"Last"$ have to be refetched, the values are saved locally. Of course, over time, these cached values can become out-of-sync with the real values. FastQueue lazily updates these cached values, precisely, a dequeuer when based on these cached values finds that the queue is empty, it performs a refetch and similarly an enqueuer when based on these cached values finds that the queue is full, it performs a refetch. This idea of caching inspires our two new MPSC queue algorithms: dLTQueue and Slotqueue.
-
-FastQueue doesn't utilize CAS so ABA problem does not arise. Similarly, FastQueue doesn't perform any dynamic memory allocation so no memory reclamation scheme is needed.
+) <summary-of-dMPSCs>
