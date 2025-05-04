@@ -73,6 +73,7 @@ for metric in metrics:
     plt.xlabel("Number of Nodes (x8 cores)", fontsize=14)
     plt.ylabel(f"{title} ({unit})", fontsize=14)
 
+    plt.yscale("log")  # Set y-axis to logarithmic scale
     plt.grid(True, alpha=0.3)
     plt.legend(title="Queue Types", loc="best", fontsize=12)
 
