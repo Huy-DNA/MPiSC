@@ -24,7 +24,7 @@ There exists numerous research into the design of lock-free shared memory MPMCs 
     [Custom scheme],
     [Custom scheme],
 
-    [Memory reclamation],
+    [Safe memory reclamation],
     [Custom scheme],
     [Incorrect custom scheme (\*)],
     [Custom scheme],
@@ -172,7 +172,7 @@ The only paper we have found so far that either mentions directly or indirectly 
     [Progress guarantee of #linebreak() dequeue], [Blocking],
     [Progress guarantee of #linebreak() enqueue], [Wait-free],
     [ABA solution], [No compare-and-swap usage],
-    [Memory reclamation], [Custom scheme],
+    [Safe memory reclamation], [Custom scheme],
     [Number of elements], [Bounded],
   ),
 ) <summary-of-dMPSCs>

@@ -135,9 +135,7 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
   - After reordering, all method calls' response events on the concurrent object $S$ stay the same.
 ]
 
-=== Performance model
-
-We use a simple performance model, inspiring by the big-O notation for worst-case time complexity. Specifically, we model the latency of a method by counting the number of remote operations and local operations taken by that method. This model is simple but sufficient, as our two new algorithms are wait-free, which ensures that the worst-case time complexity of them cannot be infinite.
+=== Performance model \<reworking>
 
 == Theoretical proofs of the distributed SPSC
 
@@ -215,11 +213,7 @@ Our simple distributed SPSC is wait-free:
 - `spsc_readFront`#sub(`e`) (@spsc-enqueue-readFront) does not execute any loops or wait for any other method calls.
 - `spsc_readFront`#sub(`d`) (@spsc-dequeue-readFront) does not execute any loops or wait for any other method calls.
 
-=== Performance model
-
-We analyze the time complexity of our simple SPSC queue.
-
-For both enqueue and dequeue, we can see that there are always a total of $Theta(1)$ operations and the number of remote operations is greater than 0. Therefore, the time complexities of enqueue and dequeue are both $Theta(1)R + Theta(1)L$.
+=== Performance model \<reworking>
 
 == Theoretical proofs of dLTQueue \<reworking>
 
@@ -675,13 +669,7 @@ We immediately obtain the following result.
 
 Notice that every loop in dLTQueue is bounded, and no method have to wait for another. Therefore, dLTQueue is wait-free.
 
-=== Performance model
-
-We analyze the wrapping overhead of dLTQueue's methods.
-
-For every enqueue, every tree node has to be refreshed. Because the tree is a balanced binary tree with $n$ leaf nodes, with $n$ being the number of enqueuers, the tree height is $Theta(log n)$. Because the tree nodes are hosted on the dequeuer, this takes $Theta(log n)$ remote operations and $Theta(log n)$ local operations.
-
-For each dequeue, every tree node also has to be refreshed. Although they are hosted on the dequeuer, each refresh needs to follow the rank at each child node to read the `min-timestamp` variable of the corresponding enqueuer node, which is remote to the dequeuer, so this still takes $Theta(log n)$ remote operations and $Theta(log n)$ local operations.
+=== Performance model \<reworking>
 
 The summary of this analysis is shown in @ltqueue-perf.
 
@@ -696,8 +684,8 @@ The summary of this analysis is shown in @ltqueue-perf.
       [*dLTQueue*],
     ),
 
-    [Dequeue wrapping overhead], [$Theta(log n) R + Theta(log n) L$],
-    [Enqueue wrapping overhead], [$Theta(log n) R + Theta(log n) L$],
+    [Dequeue wrapping overhead], [$$],
+    [Enqueue wrapping overhead], [$$],
   ),
 ) <ltqueue-perf>
 
@@ -1062,13 +1050,7 @@ Notice that Slotqueue pushes the memory reclamation problem to the underlying SP
 
 Notice that every loop in Slotqueue is bounded, and no method have to wait for another. Therefore, Slotqueue is wait-free.
 
-=== Performance model
-
-We analyze the wrapping overhead of Slotqueue's methods.
-
-For every enqueue, only one slot has to be refreshed and the rest of the method takes only $Theta(1)$ local operations. Because the slot is hosted on the dequeuer, this takes $Theta(1)$ remote operations and $Theta(1)$ local operations.
-
-For each dequeue, the slot array has to be scanned 2 times and a slot needs to be refreshed. All of these data are hosted on the dequeuer so no remote operations are needed. The scan, however, takes $Theta(n)$ local operations.
+=== Performance model \<reworking>
 
 The summary of this analysis is shown in @slotqueue-perf.
 
@@ -1083,7 +1065,7 @@ The summary of this analysis is shown in @slotqueue-perf.
       [*Slotqueue*],
     ),
 
-    [Dequeue wrapping overhead], [$Theta(n) L$],
-    [Enqueue wrapping overhead], [$Theta(1) R + Theta(1) L$],
+    [Dequeue wrapping overhead], [$n L$],
+    [Enqueue wrapping overhead], [$R$],
   ),
 ) <slotqueue-perf>

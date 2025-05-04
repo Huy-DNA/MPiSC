@@ -49,16 +49,10 @@ The characteristics of these MPSC queue wrappers are summarized in @summary-of-d
     [Correctness], [Linearizable], [Linearizable],
     [Progress guarantee of dequeue], [Wait-free], [Wait-free],
     [Progress guarantee of enqueue], [Wait-free], [Wait-free],
-    [Dequeue wrapping overhead],
-    [$Theta(log n) R + Theta(log n) L$],
-    [$Theta(n) L$],
-
-    [Enqueue wrapping overhead],
-    [$Theta(log n) R + Theta(log n) L$],
-    [$Theta(1) R + Theta(1) L$],
-
-    [ABA solution], [Unique timestamp], [ABA-safe #linebreak() by default],
-    [Memory #linebreak() reclamation],
+    [Dequeue wrapping overhead], [$4 log(n) R + 6 log(n) L$], [$n L$],
+    [Enqueue wrapping overhead], [$R + L$], [$R$],
+    [ABA solution], [Unique timestamp], [No hazardous ABA problem],
+    [Safe memory #linebreak() reclamation],
     [No dynamic memory allocation],
     [No dynamic memory allocation],
 
@@ -729,7 +723,7 @@ node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
 
 The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with appropriate changes to accommodate the dequeuer.
 
-== Slotqueue - Optimized dLTQueue for distributed context <slotqueue> 
+== Slotqueue - Optimized dLTQueue for distributed context <slotqueue>
 
 \<this-intro-line-is-in-progress>
 
