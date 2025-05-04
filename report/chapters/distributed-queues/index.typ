@@ -18,7 +18,7 @@
 #show: definition-rules
 
 Based on the MPSC queue algorithms we have surveyed in @related-works[], we propose two wait-free distributed MPSC queue algorithms:
-- dLTQueue (@naive-LTQueue) is a direct modification of the original LTQueue @ltqueue without any usage of LL/SC, adapted for distributed environment.
+- dLTQueue (@dLTQueue) is a direct modification of the original LTQueue @ltqueue without any usage of LL/SC, adapted for distributed environment.
 - Slotqueue (@slotqueue) is inspired by the timestamp-refreshing idea of LTQueue @ltqueue and repeated-rescan of Jiffy @jiffy. Although it still bears some resemblance to LTQueue, we believe it to be more optimized for distributed context.
 
 In actuality, dLTQueue and Slotqueue are more than simple MPSC algorithms. They are "MPSC queue wrappers", that is, given an SPSC queue implementation, they yield an MPSC implementation. There's one additional constraint: The SPSC interface must support an additional `readFront` operation, which returns the first data item currently in the SPSC queue.
@@ -275,7 +275,7 @@ The procedures of the dequeuer are given as follows.
 
 `spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
 
-== dLTQueue - Modified distributed LTQueue without LL/SC <naive-LTQueue>
+== dLTQueue - Optimized distributed LTQueue without LL/SC <dLTQueue>
 
 This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSC queues, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
 
@@ -733,7 +733,7 @@ The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with 
 
 \<this-intro-line-is-in-progress>
 
-Even though the straightforward dLTQueue algorithm we have ported in @naive-LTQueue pretty much preserve the original algorithm's characteristics, i.e. wait-freedom and time complexity of $Theta(log n)$ for both `enqueue` and `dequeue` operations (which we will prove in @theoretical-aspects[]), we have to be aware that this is $Theta(log n)$ remote operations, which is potentially expensive and a bottleneck in the algorithm.
+Even though the straightforward dLTQueue algorithm we have ported in @dLTQueue pretty much preserve the original algorithm's characteristics, i.e. wait-freedom and time complexity of $Theta(log n)$ for both `enqueue` and `dequeue` operations (which we will prove in @theoretical-aspects[]), we have to be aware that this is $Theta(log n)$ remote operations, which is potentially expensive and a bottleneck in the algorithm.
 
 Therefore, to be more suitable for distributed context, we propose a new algorithm that's inspired by LTQueue, in which both `enqueue` and `dequeue` only perform a constant number of remote operations, at the cost of `dequeue` having to perform $Theta(n)$ local operations, where $n$ is the number of enqueuers. Because remote operations are much more expensive, this might be a worthy tradeoff.
 
@@ -741,7 +741,7 @@ Therefore, to be more suitable for distributed context, we propose a new algorit
 
 The structure of Slotqueue is shown as in @slotqueue-structure.
 
-Each enqueuer hosts a distributed SPSC as in dLTQueue (@naive-LTQueue). The enqueuer when enqueues a value to its local SPSC will timestamp the value using a distributed counter hosted at the dequeuer.
+Each enqueuer hosts a distributed SPSC as in dLTQueue (@dLTQueue). The enqueuer when enqueues a value to its local SPSC will timestamp the value using a distributed counter hosted at the dequeuer.
 
 Additionally, the dequeuer hosts an array whose entries each corresponds with an enqueuer. Each entry stores the minimum timestamp of the local SPSC of the corresponding enqueuer.
 
