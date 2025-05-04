@@ -219,3 +219,11 @@ wrlqueue:
   serial-number:
     doi: 10.1109/HPCC-DSS-SmartCity-DependSys57074.2022.00197
 
+amqueue:
+  type: article
+  author: ["Schuchart, Joseph", "Bouteiller, Aurelien", "Bosilca, George"]
+  title: "Using MPI-3 RMA for Active Messages"
+  date: 2019
+  page-range: 47-56
+  serial-number:
+    doi: 10.1109/ExaMPI49596.2019.00011

@@ -152,25 +152,27 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
 
 Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and WRLQueue as a potential candidate for porting naively to distributed environment because they either do not provide a sufficient progress guarantee or protection against ABA problem and memory reclamation problem. Jiffy's idea of the dequeuer rescanning the global queue looking for a `SET` slot is quite useful and partly contributes to our idea of double scanning in Slotqueue (@slotqueue), which is our improvement over indefinite repeated scans as in Jiffy. For the time being, LTQueue remains our primary inspiration, owing to how it splits the MPSC queue data across multiple processes, which signals a good fit for distributed environment.
 
-== Distributed MPSC queues \<reworking> <dmpsc-related-works>
+== Distributed MPSC queues <dmpsc-related-works>
+
+This section summarizes to the best of our knowledge existing MPSC queue algorithms, which is reflected in @dmpsc-related-works.
+
+The only paper we have found so far that either mentions directly or indirectly the design of an MPSC queue is @amqueue. @amqueue introduces a hosted blocking bounded distributed MPSC queue called active-message queue (AMQueue) that bares resemblance to WRLQueue in @wrlqueue. The paper further claims that the algorithm is indeed blocking, which backs our belief that WRLQueue is blocking, contrary to what @wrlqueue claims.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of existing distributed FIFO queues. #linebreak() $R$ stands for remote operations and $L$ stands for local operations #linebreak().],
+  caption: [Characteristic summary of existing distributed MPSC queues. #linebreak() $R$ stands for remote operations and $L$ stands for local operations #linebreak().],
   table(
     columns: (1fr, 2fr),
     table.header(
       [*FIFO queues*],
-      [*FastQueue* @bcl],
+      [*Active-message queue*],
     ),
 
-    [Progress guarantee of #linebreak() dequeue], [Wait-free],
+    [Progress guarantee of #linebreak() dequeue], [Blocking],
     [Progress guarantee of #linebreak() enqueue], [Wait-free],
-    [Worst-case #linebreak() time-complexity of #linebreak() dequeue], [$2L$],
-    [Worst-case #linebreak() time-complexity of #linebreak() enqueue], [$2R$],
-    [ABA solution], [ABA-safe by default],
-    [Memory reclamation], [No dynamic memory allocation],
+    [ABA solution], [No compare-and-swap usage],
+    [Memory reclamation], [Custom scheme],
     [Number of elements], [Bounded],
   ),
 ) <summary-of-dMPSCs>
