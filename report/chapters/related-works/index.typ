@@ -193,4 +193,4 @@ To enqueue, the enqueuer first reads the `QueueNum` variable to see which of the
 
 To dequeue, the dequeuer inverts `QueueNum` to direct future enqueuers to the other queue. The dequeuer then subtracts a sufficiently large number from `WriterCnt` to signal to other enqueuers that it has started processing. The dequeuer has to wait for all current enqueuers in the queue to finish by repeatedly checking the `WriterCnt` variable, hence the blocking property. After all enqueuers have finished, the dequeuer then batch-dequeues all data in the queue, resets the `Offset` and `WriterCnt` variables to `0`.
 
-AMQueue will serve as a benchmarking baseline for our MPSC queues in @result.
+AMQueue will serve as a benchmarking baseline for our MPSC queues in @result[].
