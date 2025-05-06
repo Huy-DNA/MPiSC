@@ -77,7 +77,7 @@ An overview of this thesis is given in @thesis-overview.
 
 This thesis explores the shared-memory programming model to design fault-tolerant and performant concurrent algorithms using atomic operations. Traditionally, in this aspect, two notorious problems often arise: ABA problem and safe memory reclamation. We investigate the traditional techniques used in the shared-memory literature to resolve these problems and appropriately adapt them to solve similar issues when designing fault-tolerant and performant distributed MPSC queues.
 
-This thesis contributes two new distributed wait-free distributed MPSC queue algorithms. Theoretically, we're concerned ourselves with their correctness (linearizability), progress guarantee (lock-freedom and wait-freedom) which has an implication on their fault-tolerance and their theoretical performance, which is approximated by their number of remote operations and local operations.
+This thesis contributes two new distributed wait-free distributed MPSC queue algorithms. Theoretically, we're concerned with their correctness (linearizability), progress guarantee (lock-freedom and wait-freedom) which has an implication on their fault-tolerance and their theoretical performance, which is approximated by their number of remote operations and local operations.
 
 This thesis concludes with an empirical analysis of our novel algorithms to see if their actual behavior matches our theoretical performance model, interpret these results and discuss its implication.
 
