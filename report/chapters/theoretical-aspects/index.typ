@@ -384,7 +384,7 @@ We immediately obtain the following result.
 
   $r a n k(n', t_x)$ can only change after each successful `refreshNode`, therefore, the sequence of its value is $r a n k(n', t_(e n d \- 0))$, $r a n k(n', t_(e n d \- 1))$, ..., $r a n k(n', t_(e n d \- k))$. $(**)$
 
-  Note that if `refreshNode` observes that an enqueuer has a `Min_timestamp` of `MAX_TIMESTAMP`, it would never try to CAS $n'$'s rank to the rank of that enqueuer (line 46 of @ltqueue-enqueue-refresh-node and line 100 of @ltqueue-dequeue-refresh-node). So, if `refreshNode` actually set the rank of $n'$ to some non-`DUMMY_RANK` value, the corresponding enqueuer must actually has a non-`MAX_TIMESTAMP` `Min-timestamp` _at some point_. Due to $(2)$, this is constant up until $t_1$. Therefore, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 1$. $m i n \- t s(r a n k(n', t_(e n d \- 0)), t))$ is constant for any $t gt.eq t_(e n d \- 0)$ if there's a `refreshNode` before $t_0$. If there's no `refreshNode` before $t_0$, it is constantlt `MAX_TIMESTAMP`. So, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 0$. $(***)$
+  Note that if `refreshNode` observes that an enqueuer has a `Min_timestamp` of `MAX_TIMESTAMP`, it would never try to CAS $n'$'s rank to the rank of that enqueuer (line 51 of @ltqueue-enqueue-refresh-node and line 105 of @ltqueue-dequeue-refresh-node). So, if `refreshNode` actually sets the rank of $n'$ to some non-`DUMMY_RANK` value, the corresponding enqueuer must actually has a non-`MAX_TIMESTAMP` `Min-timestamp` _at some point_. Due to $(2)$, this is constant up until $t_1$. Therefore, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 1$. $m i n \- t s(r a n k(n', t_(e n d \- 0)), t))$ is constant for any $t gt.eq t_(e n d \- 0)$ if there's a `refreshNode` before $t_0$. If there's no `refreshNode` before $t_0$, it is constantly `MAX_TIMESTAMP`. So, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 0$. $(***)$
 
   Combining $(*)$, $(**)$, $(***)$, we obtain the stronger version of the theorem.
 ]
@@ -423,7 +423,7 @@ We immediately obtain the following result.
   - It does not overlap with a dequeue $d$ where $n_i in p a t h(d)$ and $d$ hasn't finished its *node-$n_(i-1)$-refresh phase*.
   Therefore, $m i n \- t s(r a n k(n_(i-1), t_r), t_s) lt.eq c$ for any $t_r, t_s in T_(i-1)$.
 
-  Consider the last successful `refreshNode` on $n_i$ ending not after $T_i$, take $t_s'$ and $t_e'$ to be the start and end time of this `refreshNode`'s CAS-sequence. Because right at the start of $T_i$, a *node-$n_i$-refresh phase* just ends, this `refreshNode` must be within this *node-$n_i$-refresh phase*. $(4)$
+  Consider the last successful `refreshNode` on $n_i$ ending not after $T_i$ starts. Take $t_s'$ and $t_e'$ to be the start and end time of this `refreshNode`'s CAS-sequence. Because right at the start of $T_i$, a *node-$n_i$-refresh phase* just ends, this `refreshNode` must be within this *node-$n_i$-refresh phase*. $(4)$
 
   This `refreshNode`'s CAS-sequence must be within $T_(i-1)$. This is because right at the start of $T_(i-1)$, a *node-$n_(i-1)$-refresh phase* just ends and $T_(i-1) supset.eq T_i$, $T_(i-1)$ must cover the *node-$n_i$-refresh phase* whose end $T_i$ starts from. Combining with $(4)$, $t_s' in T_(i-1)$ and $t_e' in T_i$. $(5)$
 
