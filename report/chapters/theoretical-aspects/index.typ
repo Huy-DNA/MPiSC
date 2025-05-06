@@ -55,7 +55,7 @@ We can define a *strict partial order* on the set of well-formed method calls:
 
 #definition[$->$ is a relation on the set of well-formed method calls. With two method calls $X$ and $Y$, we have $X -> Y <=>$ $X$'s response event is not $bot$ and its response timestamp is not greater than $Y$'s invocation timestamp.]
 
-#definition[Given a *history* H, $->$#sub($H$) is a relation on $H$ such that for two method calls $X$ and $Y$ in $H$, $X ->$#sub($H$)$ Y <=> X -> Y$.]
+#definition[Given a *history* H, $->$#sub($H$) is a relation on $H$ such that for two method calls $X$ and $Y$ in $H$, $X ->$#sub($H$)$Y <=> X -> Y$.]
 
 #definition[A *sequential history* $H$ is a *history* such that $->$#sub($H$) is a total order on $H$.]
 
@@ -70,7 +70,7 @@ The harder case is handled via the notion of *linearizable*.
   2. There exists a one-to-one mapping $M$ of a method call $(i, r) in H'$ to a method call $(i_S, r_S) in H_S$ with the properties that:
     - $i$ must be the same as $i_S$ except for the timestamp.
     - $r$ must be the same $r_S$ except for the timestamp or $r$.
-  3. For any two method calls $X$ and $Y$ in $H'$, #linebreak() $X ->$#sub($H'$)$Y => $ $M(X) ->$#sub($H_S$)$M(Y)$.
+  3. For any two method calls $X$ and $Y$ in $H'$, #linebreak() $X ->$#sub($H'$)$Y =>$ $M(X) ->$#sub($H_S$)$M(Y)$.
 ]
 
 We consider a history to be valid if it's linearizable.
@@ -121,7 +121,7 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
 #definition[A *successful modification instruction* on a variable `v` is an atomic instruction that changes the value of `v` e.g. a store or a successful CAS.]
 
 #definition[A *CAS-sequence* on a variable `v` is a sequence of instructions of a method $m$ such that:
-  - The first instruction is a load $v_0 = $ `load(`$v$`)`.
+  - The first instruction is a load $v_0 =$ `load(`$v$`)`.
   - The last instruction is a `CAS(&`$v$`,`$v_0$`,`$v_1$`)`.
   - There's no modification instruction on `v` between the first and the last instruction.
 ]
@@ -215,7 +215,35 @@ Our simple distributed SPSC is wait-free:
 - `spsc_readFront`#sub(`e`) (@spsc-enqueue-readFront) does not execute any loops or wait for any other method calls.
 - `spsc_readFront`#sub(`d`) (@spsc-dequeue-readFront) does not execute any loops or wait for any other method calls.
 
-=== Performance model \<reworking>
+=== Theoretical performance
+
+A summary of the theoretical performance of our simple SPSC is provided in @theo-perf-spsc.
+
+#figure(
+  kind: "table",
+  supplement: "Table",
+  caption: [Theoretical performance summary of our simple distributed SPSC.],
+  table(
+    columns: (1fr, 1.5fr),
+    table.header(
+      [*Operations*],
+      [*Time-complexity*],
+    ),
+
+    [`spsc_enqueue`], [$R+L$],
+    [`spsc_dequeue`], [$R+L$],
+    [`spsc_readFront`#sub(`e`)], [$R+L$],
+    [`spsc_readFront`#sub(`d`)], [$R$],
+  ),
+) <theo-perf-spsc>
+
+For `spsc_enqueue`, we consider the procedure @spsc-enqueue. In the usual case, the remote operation on line 3 is skipped and so only 2 remote puts are performed on line 6 and line 7. The `Data` array on line 6 is hosted on the enqueuer, so this is actually a local operation, while the control variable is hosted on the dequeuer, so line 7 is truly a remote operation. Therefore, theoretically, it's one remote operation plus a local one.
+
+For `spsc_dequeue`, we consider the procedure @spsc-dequeue. Similarly, in the usual case, the remote operation on line 17 is skipped and only the 2 lines 20-21 are executed always. Here, it's the other way around, the access to the `Data` array on line 20 is a truly remote operation while the access to the `First` control variable is a local one. Therefore, theoretically, it's one remote operation plus a local one.
+
+For `spsc_readFront`#sub(`e`), we consider the procedure @spsc-enqueue-readFront. The operation on line 12 is a truly remote operation, as the `First` control variable is hosted on the dequeuer. The operation on line 15 is a remote operation, as the `Data` array is hosted on the enqueuer. This means, theoretically, it also takes one remote operation plus a local one.
+
+For `spsc_readFront`#sub(`d`), we consider the procedure @spsc-dequeue-readFront. Only the operation on line 28 is executed always, which results in a truly remote operation as the `Data` array is hosted on the enqueuer. Therefore, it only takes one remote operation.
 
 == Theoretical proofs of dLTQueue
 
@@ -258,11 +286,13 @@ We will refer `propagate`#sub(`e`) and `propagate`#sub(`d`) as `propagate` if th
 
 #definition[For an enqueue $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of:
   - Line 25-26 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) if $n$ is a leaf node.
-  - Line 30-31 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.]
+  - Line 30-31 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.
+]
 
 #definition[For a dequeue $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of:
   - Line 78-79 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) if $n$ is a leaf node.
-  - Line 83-84 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.]
+  - Line 83-84 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.
+]
 
 #definition[`refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 30. `refreshTimestamp`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 35 or line 37.]
 
@@ -378,7 +408,7 @@ We immediately obtain the following result.
 
   For any $i gt.eq 1$, we have $t_e (c) lt.eq t_s (n') lt.eq t_(s t a r t \-(i-1)) lt.eq t_(r a n k\-(i-1))(c) lt.eq t_(e n d \-(i-1)) lt.eq t_(s t a r t \-i) lt.eq t_(r a n k \- i)(c) lt.eq t_1$. Combining with $(5)$, $(6)$, we have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(t s\-i)(c_i))$ #linebreak() $lt.eq m i n \- t s (r a n k(c, t_(r a n k\-i)(c)), t_(t s\-i)(c))$ #linebreak() $lt.eq m i n \- t s (r a n k(c, t_(r a n k\-(i-1))(c)), t_(t s\-i)(c))$.
 
-  Choose $c = c_(i-1)$ as in $(4)$. We have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(t s\-i)(c_i))$ #linebreak() $lt.eq m i n \- t s (r a n k(c_(i-1), t_(r a n k\-(i-1))(c_(i-1))),$$ t_(t s\-i)(c_(i-1)))$ #linebreak() $= m i n\- t s(r a n k(n', t_(e n d \- (i-1))), t_(t s \-i)(c_(i-1))$.
+  Choose $c = c_(i-1)$ as in $(4)$. We have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(t s\-i)(c_i))$ #linebreak() $lt.eq m i n \- t s (r a n k(c_(i-1), t_(r a n k\-(i-1))(c_(i-1))),$$t_(t s\-i)(c_(i-1)))$ #linebreak() $= m i n\- t s(r a n k(n', t_(e n d \- (i-1))), t_(t s \-i)(c_(i-1))$.
 
   Because $t_(t s \-i)(c_i) lt.eq t_(e n d \- i)$ and $t_(t s \-i)(c_(i-1)) gt.eq t_(e n d \- (i-1))$ and $(2)$, we have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(e n d\-i))$ #linebreak() $lt.eq m i n \- t s (r a n k(n', t_(e n d \- (i-1))), t_(e n d \- (i-1)))$. $(*)$
 
@@ -651,7 +681,7 @@ We immediately obtain the following result.
   - The order of item dequeues is the same as the order of item enqueues: Suppose there are two enqueues $e_1$, $e_2$ such that $e_1 arrow.double$#sub($H'$)$e_2$ and suppose they match $d_1$ and $d_2$. Then we have obtained $e_1 arrow.double$#sub($H'$)$e_2$ either because:
     - $(3)$ applies, in this case $d_1 arrow.double$#sub($H'$)$d_2$ is a condition for it to apply.
     - $(1)$ applies, then $e_1$ precedes $e_2$, by @ltqueue-enqueue-enqueue-theorem, $d_1$ must precede $d_2$, thus $d_1 arrow.double$#sub($H'$)$d_2$.
-    Therefore, if $e_1 arrow.double$#sub($H'$)$ e_2$ then $d_1 arrow.double$#sub($H'$)$d_2$.
+    Therefore, if $e_1 arrow.double$#sub($H'$)$e_2$ then $d_1 arrow.double$#sub($H'$)$d_2$.
   - An enqueue can only be matched by a later dequeue: Suppose there is an enqueue $e$ matched by $d$. By $(2)$, obviously $e =>$#sub($H'$)$d$.
     - If the queue is empty, dequeues return `false`. Suppose a dequeue $d$ such that any $e arrow.double$#sub($H'$)$d$ is all matched by some $d'$ and $d' arrow.double$#sub($H'$)$d$, we will prove that $d$ is unmatched. By @ltqueue-matching-dequeue-enqueue-theorem, $d$ can only match an enqueue $e_0$ that precedes or overlaps with $d$.
       - If $e_0$ precedes $d$, by our assumption, it's already matched by another dequeue.
@@ -671,25 +701,7 @@ We immediately obtain the following result.
 
 Notice that every loop in dLTQueue is bounded, and no method have to wait for another. Therefore, dLTQueue is wait-free.
 
-=== Performance model \<reworking>
-
-The summary of this analysis is shown in @ltqueue-perf.
-
-#figure(
-  kind: "table",
-  supplement: "Table",
-  caption: [Summary of wrapping overhead of dLTQueue. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*.],
-  table(
-    columns: (1fr, 1fr),
-    table.header(
-      [*MPSC queues*],
-      [*dLTQueue*],
-    ),
-
-    [Dequeue wrapping overhead], [$$],
-    [Enqueue wrapping overhead], [$$],
-  ),
-) <ltqueue-perf>
+=== Theoretical performance \<reworking>
 
 == Theoretical proofs of Slotqueue
 
@@ -814,9 +826,9 @@ Both `CAS`es target some slot in the `Slots` array.
 
   Therefore, $t_d = t_e$.
 
-  If $t_d = t_e = $ `MAX_TIMESTAMP`, this means $e$ observes a value of `MAX_TIMESTAMP` before $d$ even sets `s` to `MAX_TIMESTAMP` due to $(*)$. If this `MAX_TIMESTAMP` value is the initialized value of `s`, it's a contradiction, as `s` must be non-`MAX_TIMESTAMP` at some point for a dequeue such as $d$ to enter its CAS sequence. If this `MAX_TIMESTAMP` value is set by an enqueue, it's also a contradiction, as `refreshEnqueue` cannot set a slot to `MAX_TIMESTAMP`. Therefore, this `MAX_TIMESTAMP` value is set by a dequeue $d'$. If $d' != d$ then it's a contradiction, because between $d'$ and $d$, `s` must be set to be a non-`MAX_TIMESTAMP` value before $d$ can be run, thus, $e$ cannot have observed a value set by $d'$. Therefore, $d' = d$. But, this means $e$ observes a value set by $d$, which violates our assumption $(*)$.
+  If $t_d = t_e =$ `MAX_TIMESTAMP`, this means $e$ observes a value of `MAX_TIMESTAMP` before $d$ even sets `s` to `MAX_TIMESTAMP` due to $(*)$. If this `MAX_TIMESTAMP` value is the initialized value of `s`, it's a contradiction, as `s` must be non-`MAX_TIMESTAMP` at some point for a dequeue such as $d$ to enter its CAS sequence. If this `MAX_TIMESTAMP` value is set by an enqueue, it's also a contradiction, as `refreshEnqueue` cannot set a slot to `MAX_TIMESTAMP`. Therefore, this `MAX_TIMESTAMP` value is set by a dequeue $d'$. If $d' != d$ then it's a contradiction, because between $d'$ and $d$, `s` must be set to be a non-`MAX_TIMESTAMP` value before $d$ can be run, thus, $e$ cannot have observed a value set by $d'$. Therefore, $d' = d$. But, this means $e$ observes a value set by $d$, which violates our assumption $(*)$.
 
-  Therefore $t_d = t_e = t' != $ `MAX_TIMESTAMP`. $e$ cannot observe the value $t'$ set by $d$ due to our assumption $(*)$. Suppose $e$ observes the value $t'$ from `s` set by another enqueue/dequeue call other than $d$.
+  Therefore $t_d = t_e = t' !=$ `MAX_TIMESTAMP`. $e$ cannot observe the value $t'$ set by $d$ due to our assumption $(*)$. Suppose $e$ observes the value $t'$ from `s` set by another enqueue/dequeue call other than $d$.
 
   If this "another call" is a dequeue $d'$ other than $d$, $d'$ precedes $d$. By @slotqueue-spsc-timestamp-monotonicity-theorem, after each dequeue, the front element's timestamp will be increasing, therefore, $d'$ must have set `s` to a timestamp smaller than $t_d$. However, $e$ observes $t_e = t_d$. This is a contradiction.
 
@@ -1032,7 +1044,7 @@ Notice that Slotqueue pushes the memory reclamation problem to the underlying SP
   - The order of item dequeues is the same as the order of item enqueues: Suppose there are two enqueues $e_1$, $e_2$ such that $e_1 arrow.double$#sub($H'$)$e_2$ and suppose they match $d_1$ and $d_2$. Then we have obtained $e_1 arrow.double$#sub($H'$)$e_2$ either because:
     - $(3)$ applies, in this case $d_1 arrow.double$#sub($H'$)$d_2$ is a condition for it to apply.
     - $(1)$ applies, then $e_1$ precedes $e_2$, by @slotqueue-enqueue-enqueue-theorem, $d_1$ must precede $d_2$, thus $d_1 arrow.double$#sub($H'$)$d_2$.
-    Therefore, if $e_1 arrow.double$#sub($H'$)$ e_2$ then $d_1 arrow.double$#sub($H'$)$d_2$.
+    Therefore, if $e_1 arrow.double$#sub($H'$)$e_2$ then $d_1 arrow.double$#sub($H'$)$d_2$.
   - An enqueue can only be matched by a later dequeue: Suppose there is an enqueue $e$ matched by $d$. By $(2)$, obviously $e =>$#sub($H'$)$d$.
     - If the queue is empty, dequeues return `false`. Suppose a dequeue $d$ such that any $e arrow.double$#sub($H'$)$d$ is all matched by some $d'$ and $d' arrow.double$#sub($H'$)$d$, we will prove that $d$ is unmatched. By @slotqueue-matching-dequeue-enqueue-theorem, $d$ can only match an enqueue $e_0$ that precedes or overlaps with $d$.
       - If $e_0$ precedes $d$, by our assumption, it's already matched by another dequeue.
@@ -1052,22 +1064,4 @@ Notice that Slotqueue pushes the memory reclamation problem to the underlying SP
 
 Notice that every loop in Slotqueue is bounded, and no method have to wait for another. Therefore, Slotqueue is wait-free.
 
-=== Performance model \<reworking>
-
-The summary of this analysis is shown in @slotqueue-perf.
-
-#figure(
-  kind: "table",
-  supplement: "Table",
-  caption: [Summary of wrapping overhead of Slotqueue. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*.],
-  table(
-    columns: (1fr, 1fr),
-    table.header(
-      [*MPSC queues*],
-      [*Slotqueue*],
-    ),
-
-    [Dequeue wrapping overhead], [$n L$],
-    [Enqueue wrapping overhead], [$R$],
-  ),
-) <slotqueue-perf>
+=== Theoretical performance \<reworking>
