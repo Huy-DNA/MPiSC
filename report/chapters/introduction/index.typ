@@ -86,9 +86,7 @@ This thesis concludes with an empirical analysis of our novel algorithms to see 
   scope: "parent",
   [#figure(
       image("/static/images/thesis-overview.png"),
-      caption: [
-        An overview of this thesis.
-      ],
+      caption: [An overview of this thesis.],
     ) <thesis-overview>
   ],
 )
