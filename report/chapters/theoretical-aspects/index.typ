@@ -701,7 +701,34 @@ We immediately obtain the following result.
 
 Notice that every loop in dLTQueue is bounded, and no method have to wait for another. Therefore, dLTQueue is wait-free.
 
-=== Theoretical performance \<reworking>
+=== Theoretical performance
+
+A summary of the theoretical performance of dLTQueue is provided in @theo-perf-dltqueue, which is already shown in @summary-of-distributed-mpscs.
+
+#figure(
+  kind: "table",
+  supplement: "Table",
+  caption: [Theoretical performance summary of dLTQueue.],
+  table(
+    columns: (1fr, 1.5fr),
+    table.header(
+      [*Operations*],
+      [*Time-complexity*],
+    ),
+
+    [`enqueue`], [$6log_2(n)R + 4log_2(n)L$],
+    [`dequeue`], [$4log_2(n)R + 6log_2(n)L$],
+  ),
+) <theo-perf-dltqueue>
+
+For `enqueue`, we consider the procedure @ltqueue-enqueue. We consider the propagation process, which causes most of the remote operations, while line 14 and line 15 are negligible. Notice that the number of node refreshes are proportional to the number of the level of the trees, which is $O(n)$ for $n$ being the number of processes. Each level of the tree in the worst case needs 2 retries, each retry would have to:
+- Read the current node (which is a truly remote operation for `enqueue`).
+- Read the two child nodes (which is 2 truly remote operations for `enqueue`).
+- Read the two `min-timestamp` variables in the two child nodes (which is 2 truly local operations for `enqueue`). 
+- Compare-and-swap the current node (which is a truly remote opoeration for `enqueue`).
+In total, each level requires 6 remote operations and 4 local operations. Therefore, `enqueue` requires about $6log_2(n)R + 4log_2(n)L$ operations.
+
+For `dequeue`, it's similar to `enqueue` but the other way around, what makes for a remote operation in `enqueue` is a local operation in `dequeue` and otherwise. Therefore, `dequeue` requires about $4log_2(n)R + 6log_2(n)L$ operations.
 
 == Theoretical proofs of Slotqueue
 
