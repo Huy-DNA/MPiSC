@@ -43,7 +43,7 @@ Non-blocking MPSC queues and other FIFO variants, such as multi-producer multi-c
 Based on what we have listed out in the previous section, we aim to:
 - Investigate the principles underpinning the design of fault-tolerant and performant shared-memory algorithms.
 - Investigate state-of-the-art shared-memory MPSC queue algorithms as case studies to support our design of distributed MPSC queue algorithms.
-- Investigate existing distributed FIFO algorithms that can be adapted for MPSC use cases to serve as a comparison baseline.
+- Investigate existing distributed MPSC algorithms to serve as a comparison baseline.
 - Model and design distributed MPSC queue algorithms using techniques from the shared-memory literature.
 - Utilize the shared-memory programming model to evaluate various theoretical aspects of distributed MPSC queue algorithms: correctness and progress guarantee.
 - Model the theoretical performance of distributed MPSC queue algorithms that are designed using techniques from the shared-memory literature.
