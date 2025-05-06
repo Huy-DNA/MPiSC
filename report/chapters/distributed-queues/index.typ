@@ -269,7 +269,7 @@ The procedures of the dequeuer are given as follows.
 
 `spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
 
-== dLTQueue - Optimized distributed LTQueue without LL/SC <dLTQueue>
+== dLTQueue - Optimized LTQueue adapted for distributed environment <dLTQueue>
 
 This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSC queues, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
 
@@ -723,7 +723,7 @@ node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
 
 The `refreshLeaf`#sub(`d`) procedure is similar to `refreshLeaf`#sub(`e`), with appropriate changes to accommodate the dequeuer.
 
-== Slotqueue - Optimized dLTQueue for distributed context <slotqueue>
+== Slotqueue - dLTQueue-inspired distributed MPSC queue with all constant-time operations <slotqueue>
 
 The straightforward dLTQueue algorithm we have ported in @dLTQueue pretty much preserves the original algorithm's characteristics, i.e. wait-freedom and time complexity of $Theta(log n)$ for `dequeue` operations (which we will prove in @theoretical-aspects[]). At the same time, we have optimized `enqueue` to perform in $Theta(1)$ time in most of the cases using a simple front-queue check to avoid unnecessary propagation processes. However, notice that for MPSC queues, the bottleneck is really in the `dequeue` operation. Therefore, the $Theta(log n)$ remote operations in `dequeue` are potentially expensive in dLTQueue and pose a bottleneck. We cannot optimize `dequeue` the using the front-queue check trick as in `enqueue` though, so we're forced to perform a propagation process in every dequeue. This propagation process causes $Theta(log n)$ remote operations because it has to traverse every level in the tree. Intuitively, this is the problem of we trying to maintain the tree structure. Therefore, to be more suitable for distributed context, we propose a new algorithm Slotqueue inspired by LTQueue, which uses a slightly different structure. The key point is that both `enqueue` and `dequeue` only perform a constant number of remote operations, at the cost of `dequeue` having to perform $Theta(n)$ local operations, where $n$ is the number of enqueuers. Because remote operations are much more expensive, this might be a worthy tradeoff.
 
