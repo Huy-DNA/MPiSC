@@ -105,7 +105,8 @@ private:
     int self_index = this->_get_self_index();
     tree_node_t self_node;
     timestamp_t min_timestamp;
-    aread_sync(&min_timestamp, 0, this->_self_rank, this->_min_timestamp_win);
+    aread_sync(&min_timestamp, this->_self_rank, this->_dequeuer_rank,
+               this->_min_timestamp_win);
 
     aread_sync(&self_node, self_index, this->_dequeuer_rank, this->_tree_win);
     if (min_timestamp.timestamp == MAX_TIMESTAMP) {
@@ -138,15 +139,15 @@ private:
     bool min_timestamp_succeeded = this->_spsc.read_front(&front);
 
     timestamp_t current_timestamp;
-    aread_sync(&current_timestamp, 0, this->_self_rank,
+    aread_sync(&current_timestamp, this->_self_rank, this->_dequeuer_rank,
                this->_min_timestamp_win);
     if (!min_timestamp_succeeded) {
       const timestamp_t new_timestamp = {MAX_TIMESTAMP,
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
       compare_and_swap_sync(&current_timestamp, &new_timestamp,
-                            &result_timestamp, 0, this->_self_rank,
-                            this->_min_timestamp_win);
+                            &result_timestamp, this->_self_rank,
+                            this->_dequeuer_rank, this->_min_timestamp_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
     } else {
@@ -154,8 +155,8 @@ private:
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
       compare_and_swap_sync(&current_timestamp, &new_timestamp,
-                            &result_timestamp, 0, this->_self_rank,
-                            this->_min_timestamp_win);
+                            &result_timestamp, this->_self_rank,
+                            this->_dequeuer_rank, this->_min_timestamp_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
     }
@@ -180,7 +181,7 @@ private:
         continue;
       }
       timestamp_t child_timestamp;
-      aread_sync(&child_timestamp, 0, child_node.rank,
+      aread_sync(&child_timestamp, child_node.rank, this->_dequeuer_rank,
                  this->_min_timestamp_win);
       if (child_timestamp.timestamp < min_timestamp) {
         min_timestamp = child_timestamp.timestamp;
@@ -207,18 +208,13 @@ public:
 
     MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm,
                      &this->_counter_ptr, &this->_counter_win);
-    MPI_Win_allocate(sizeof(timestamp_t), sizeof(timestamp_t), this->_info,
-                     comm, &this->_min_timestamp_ptr,
-                     &this->_min_timestamp_win);
+    MPI_Win_allocate(0, sizeof(timestamp_t), this->_info, comm,
+                     &this->_min_timestamp_ptr, &this->_min_timestamp_win);
     MPI_Win_allocate(0, sizeof(tree_node_t), this->_info, comm,
                      &this->_tree_ptr, &this->_tree_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_min_timestamp_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_counter_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tree_win);
-
-    const timestamp_t start_timestamp = {MAX_TIMESTAMP, 0};
-    awrite_async(&start_timestamp, 0, this->_self_rank,
-                 this->_min_timestamp_win);
 
     MPI_Win_flush_all(this->_min_timestamp_win);
     MPI_Win_flush_all(this->_counter_win);
@@ -393,14 +389,15 @@ private:
         this->_spsc.read_front(&front, enqueuer_rank);
 
     timestamp_t current_timestamp;
-    aread_sync(&current_timestamp, 0, enqueuer_rank, this->_min_timestamp_win);
+    aread_sync(&current_timestamp, enqueuer_rank, this->_self_rank,
+               this->_min_timestamp_win);
 
     if (!min_timestamp_succeeded) {
       const timestamp_t new_timestamp = {MAX_TIMESTAMP,
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
       compare_and_swap_sync(&current_timestamp, &new_timestamp,
-                            &result_timestamp, 0, enqueuer_rank,
+                            &result_timestamp, enqueuer_rank, this->_self_rank,
                             this->_min_timestamp_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             result_timestamp.timestamp == current_timestamp.timestamp;
@@ -409,7 +406,7 @@ private:
                                          current_timestamp.tag + 1};
       timestamp_t result_timestamp;
       compare_and_swap_sync(&current_timestamp, &new_timestamp,
-                            &result_timestamp, 0, enqueuer_rank,
+                            &result_timestamp, enqueuer_rank, this->_self_rank,
                             this->_min_timestamp_win);
       res = result_timestamp.tag == current_timestamp.tag &&
             current_timestamp.timestamp == result_timestamp.timestamp;
@@ -426,7 +423,8 @@ private:
     int self_index = this->_get_enqueuer_index(enqueuer_rank);
     tree_node_t self_node;
     timestamp_t min_timestamp;
-    aread_sync(&min_timestamp, 0, enqueuer_rank, this->_min_timestamp_win);
+    aread_sync(&min_timestamp, enqueuer_rank, this->_self_rank,
+               this->_min_timestamp_win);
 
     aread_sync(&self_node, self_index, this->_self_rank, this->_tree_win);
     if (min_timestamp.timestamp == MAX_TIMESTAMP) {
@@ -463,7 +461,7 @@ private:
         continue;
       }
       timestamp_t child_timestamp;
-      aread_sync(&child_timestamp, 0, child_node.rank,
+      aread_sync(&child_timestamp, child_node.rank, this->_self_rank,
                  this->_min_timestamp_win);
       if (child_timestamp.timestamp < min_timestamp) {
         min_timestamp = child_timestamp.timestamp;
@@ -506,7 +504,8 @@ public:
 
     MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
                      &this->_counter_ptr, &this->_counter_win);
-    MPI_Win_allocate(0, sizeof(timestamp_t), this->_info, comm,
+    MPI_Win_allocate(sizeof(timestamp_t) * (_get_number_of_enqueuers() + 1),
+                     sizeof(timestamp_t), this->_info, comm,
                      &this->_min_timestamp_ptr, &this->_min_timestamp_win);
     MPI_Win_allocate(this->_get_tree_size() * sizeof(tree_node_t),
                      sizeof(tree_node_t), this->_info, comm, &this->_tree_ptr,
@@ -519,6 +518,12 @@ public:
 
     for (int i = 0; i < this->_get_tree_size(); ++i) {
       this->_tree_ptr[i] = {DUMMY_RANK, 0};
+    }
+
+    const timestamp_t start_timestamp = {MAX_TIMESTAMP, 0};
+    for (int i = 0; i < this->_get_number_of_enqueuers(); ++i) {
+      awrite_async(&start_timestamp, i, this->_self_rank,
+                   this->_min_timestamp_win);
     }
 
     MPI_Win_flush_all(this->_min_timestamp_win);
