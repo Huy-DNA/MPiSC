@@ -54,8 +54,8 @@ Based on what we have listed out in the previous section, we aim to:
 The following narrows down what we're going to investigate in the shared-memory literature and which theoretical and empirical aspects we're interested in our distributed algorithms:
 - Regarding the investigation of the design principles in the shared-memory literature, we focus on fault-tolerant and performant concurrent algorithm design using atomic operations and common problems that often arise in this area, namely, ABA problem and safe memory reclamation problem.
 - Regarding the investigation of shared-memory MPSC queues currently in the literature, we focus on linearizable MPSC queues that support at least lock-free `enqueue` and `dequeue` operations.
-- Regarding correctness, we're concerned ourselves with the linearizability correctness condition.
-- Regarding fault-tolerance, we're concerned ourselves with the concept of progress guarantee, that is, the ability of the system to continue to make forward process despite the failure of one or more components of the system.
+- Regarding correctness, we concern ourselves with the linearizability correctness condition.
+- Regarding fault-tolerance, we concern ourselves with the concept of progress guarantee, that is, the ability of the system to continue to make forward process despite the failure of one or more components of the system.
 - Regarding algorithm prototyping, benchmarking and optimizations, we assume an MPI-3 setting.
 - Regarding empirical results, we focus on performance-related metrics, e.g. throughput and latency.
 
