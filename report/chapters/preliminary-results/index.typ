@@ -71,7 +71,7 @@ We run the producer-consumer microbenchmark on 1 to 4 nodes to measure both the 
   ),
   <enqueue-throughput-benchmark>,
   columns: (1fr, 1fr),
-  caption: [Producer-consumer microbenchmark results for enqueue operation.],
+  caption: [Microbenchmark results for enqueue operation.],
   label: <enqueue-benchmark>,
 )
 
