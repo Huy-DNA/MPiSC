@@ -217,7 +217,7 @@ Our simple distributed SPSC is wait-free:
 
 === Performance model \<reworking>
 
-== Theoretical proofs of dLTQueue \<reworking>
+== Theoretical proofs of dLTQueue
 
 In this section, we provide proofs covering all of our interested theoretical aspects in dLTQueue.
 
@@ -278,7 +278,7 @@ We will refer `propagate`#sub(`e`) and `propagate`#sub(`d`) as `propagate` if th
 
 === Correctness
 
-This section establishes the correctness of LTQueue introduced in @ltqueue.
+This section establishes the correctness of dLTQueue introduced in @dLTQueue.
 
 ==== ABA problem
 
