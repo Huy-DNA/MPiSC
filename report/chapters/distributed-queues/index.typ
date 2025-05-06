@@ -295,9 +295,7 @@ Note that if a local SPSC is empty, the `min_timestamp` variable of the correspo
   scope: "parent",
   [#figure(
       image("/static/images/modified-ltqueue.png"),
-      caption: [
-        dLTQueue's structure.
-      ],
+      caption: [dLTQueue's structure.],
     ) <modified-ltqueue-tree>
   ],
 )

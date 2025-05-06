@@ -261,9 +261,7 @@ As a reminder, the bottom rectangular nodes are called the *enqueuer nodes* and 
   scope: "parent",
   [#figure(
       image("/static/images/modified-ltqueue.png"),
-      caption: [
-        dLTQueue's structure.
-      ],
+      caption: [dLTQueue's structure.],
     ) <remind-modified-ltqueue-tree>
   ],
 )
