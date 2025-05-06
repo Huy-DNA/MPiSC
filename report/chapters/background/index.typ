@@ -79,9 +79,7 @@ Blocking is the weakest progress guarantee one algorithm can offer, it allows on
 
 #figure(
   image(width: 200pt, "../../static/images/blocking.png"),
-  caption: [
-    Blocking algorithm visualization: When a process is suspended, it can potentially block other processes from making further progress.
-  ],
+  caption: [Blocking algorithm: When a process is suspended, it can potentially block other processes from making further progress.],
 ) <blocking-algorithms>
 
 Blocking algorithms introduces many problems such as:
@@ -102,9 +100,7 @@ Lock-free algorithms provide the following guarantee: Even if some processes are
 
 #figure(
   image(width: 200pt, "../../static/images/lock-freedom.png"),
-  caption: [
-    Lock-free algorithm: All the live processes together always finish in a finite amount of steps.
-  ],
+  caption: [Lock-free algorithm: All the live processes together always finish in a finite amount of steps.],
 ) <lock-free-algorithms>
 
 ==== Wait-free algorithms
@@ -113,9 +109,7 @@ Wait-freedom offers the strongest degree of progress guarantee. It mandates that
 
 #figure(
   image(width: 200pt, "../../static/images/wait-freedom.png"),
-  caption: [
-    Wait-free algorithm: Any live process always finishes in a finite amount of steps.
-  ],
+  caption: [Wait-free algorithm: Any live process always finishes in a finite amount of steps.],
 ) <wait-free-algorithms>
 
 == Popular atomic instructions in designing non-blocking algorithms <atomic-instructions>
