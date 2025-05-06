@@ -156,7 +156,7 @@ Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and
 
 This section summarizes to the best of our knowledge existing MPSC queue algorithms, which is reflected in @dmpsc-related-works.
 
-The only paper we have found so far that either mentions directly or indirectly the design of an MPSC queue is @amqueue. @amqueue introduces a hosted blocking bounded distributed MPSC queue called active-message queue (AMQueue) that bares resemblance to WRLQueue in @wrlqueue. The paper further claims that the algorithm is indeed blocking, which backs our belief that WRLQueue is blocking, contrary to what @wrlqueue claims.
+The only paper we have found so far that either mentions directly or indirectly the design of an MPSC queue is @amqueue. @amqueue introduces a hosted blocking bounded distributed MPSC queue called active-message queue (AMQueue) that bares resemblance to WRLQueue in @wrlqueue.
 
 #figure(
   kind: "table",
