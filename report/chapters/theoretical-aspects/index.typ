@@ -135,9 +135,9 @@ Not every ABA problem is unsafe. We formalize in this section which ABA problem 
   - After reordering, all method calls' response events on the concurrent object $S$ stay the same.
 ]
 
-=== Performance model
+=== Theoretical performance
 
-We use a simple performance model, projecting the performance of a distributed algorithm by calculating or approximating how many remote operations and local operations are made in the usual case. An example of our model has been shown in the dequeue and enqueue wrapping overhead rows of @summary-of-distributed-mpscs.
+We use a simple performance model, projecting the performance of a distributed algorithm by calculating or approximating how many remote operations and local operations are made in the usual case. An example of our model has been shown in the dequeue and enqueue time-complexity rows of @summary-of-distributed-mpscs.
 
 == Theoretical proofs of the distributed SPSC
 

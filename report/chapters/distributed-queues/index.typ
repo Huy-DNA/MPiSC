@@ -35,7 +35,7 @@ The characteristics of these MPSC queue wrappers are summarized in @summary-of-d
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*. (3) (\*) The underlying SPSC is assumed to be our simple distributed SPSC in @distributed-spsc.],
+  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*. #linebreak() (\*) The underlying SPSC is assumed to be our simple distributed SPSC in @distributed-spsc.],
   table(
     columns: (1fr, 1.5fr, 1.5fr),
     table.header(
