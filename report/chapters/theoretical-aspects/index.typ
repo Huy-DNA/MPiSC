@@ -254,7 +254,7 @@ We will refer `propagate`#sub(`e`) and `propagate`#sub(`d`) as `propagate` if th
 
 #definition[For an enqueue or a dequeue $op$, the set of nodes that it calls `refreshNode` (@ltqueue-enqueue-refresh-node or @ltqueue-dequeue-refresh-node) or `refreshLeaf` (@ltqueue-enqueue-refresh-leaf or @ltqueue-dequeue-refresh-leaf) on is denoted as $p a t h(op)$.]
 
-#definition[For an enqueue or a dequeue, *timestamp-refresh phase* refer to its execution of line 23-24 in `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) or line 76-77 in `propagate`#sub(`d`) (@ltqueue-dequeue-propagate).]
+#definition[For an enqueue or a dequeue, *timestamp-refresh phase* refer to its execution of line 19-20 in `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) or line 72-73 in `propagate`#sub(`d`) (@ltqueue-dequeue-propagate).]
 
 #definition[For an enqueue $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of:
   - Line 25-26 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) if $n$ is a leaf node.
@@ -264,17 +264,17 @@ We will refer `propagate`#sub(`e`) and `propagate`#sub(`d`) as `propagate` if th
   - Line 78-79 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) if $n$ is a leaf node.
   - Line 83-84 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.]
 
-#definition[`refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 34. `refreshTimestamp`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 39 or line 41.]
+#definition[`refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 30. `refreshTimestamp`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 35 or line 37.]
 
-#definition[`refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 88. `refreshTimestamp`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 93 or line 95.]
+#definition[`refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 84. `refreshTimestamp`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 89 or line 91.]
 
-#definition[`refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node) is said to start its *CAS-sequence* if it finishes line 43. `refreshNode`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 57.]
+#definition[`refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node) is said to start its *CAS-sequence* if it finishes line 39. `refreshNode`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 53.]
 
-#definition[`refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node) is said to start its *CAS-sequence* if it finishes line 97. `refreshNode`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 111.]
+#definition[`refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node) is said to start its *CAS-sequence* if it finishes line 93. `refreshNode`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 107.]
 
-#definition[`refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 60. `refreshLeaf`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 65.]
+#definition[`refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 56. `refreshLeaf`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 61.]
 
-#definition[`refreshLeaf`#sub(`d`) (@ltqueue-dequeue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 114. `refreshLeaf`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 119.]
+#definition[`refreshLeaf`#sub(`d`) (@ltqueue-dequeue-refresh-leaf) is said to start its *CAS-sequence* if it finishes line 110. `refreshLeaf`#sub(`d`) is said to end its *CAS-sequence* if it finishes line 115.]
 
 === Correctness
 
@@ -283,10 +283,10 @@ This section establishes the correctness of dLTQueue introduced in @dLTQueue.
 ==== ABA problem
 
 We use CAS instructions on:
-- Line 39 and line 41 of `refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp).
-- Line 57 of `refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node).
-- Line 65 of `refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf).
-- Line 93 and line 95 of `refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp).
+- Line 35 and line 37 of `refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp).
+- Line 53 of `refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node).
+- Line 61 of `refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf).
+- Line 89 and line 91 of `refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp).
 - Line 111 of `refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node).
 - Line 119 of `refreshLeaf`#sub(`e`) (@ltqueue-dequeue-refresh-leaf).
 
@@ -384,7 +384,7 @@ We immediately obtain the following result.
 
   $r a n k(n', t_x)$ can only change after each successful `refreshNode`, therefore, the sequence of its value is $r a n k(n', t_(e n d \- 0))$, $r a n k(n', t_(e n d \- 1))$, ..., $r a n k(n', t_(e n d \- k))$. $(**)$
 
-  Note that if `refreshNode` observes that an enqueuer has a `Min_timestamp` of `MAX_TIMESTAMP`, it would never try to CAS $n'$'s rank to the rank of that enqueuer (line 51 of @ltqueue-enqueue-refresh-node and line 105 of @ltqueue-dequeue-refresh-node). So, if `refreshNode` actually sets the rank of $n'$ to some non-`DUMMY_RANK` value, the corresponding enqueuer must actually has a non-`MAX_TIMESTAMP` `Min-timestamp` _at some point_. Due to $(2)$, this is constant up until $t_1$. Therefore, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 1$. $m i n \- t s(r a n k(n', t_(e n d \- 0)), t))$ is constant for any $t gt.eq t_(e n d \- 0)$ if there's a `refreshNode` before $t_0$. If there's no `refreshNode` before $t_0$, it is constantly `MAX_TIMESTAMP`. So, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 0$. $(***)$
+  Note that if `refreshNode` observes that an enqueuer has a `Min_timestamp` of `MAX_TIMESTAMP`, it would never try to CAS $n'$'s rank to the rank of that enqueuer (line 47 of @ltqueue-enqueue-refresh-node and line 101 of @ltqueue-dequeue-refresh-node). So, if `refreshNode` actually sets the rank of $n'$ to some non-`DUMMY_RANK` value, the corresponding enqueuer must actually has a non-`MAX_TIMESTAMP` `Min-timestamp` _at some point_. Due to $(2)$, this is constant up until $t_1$. Therefore, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 1$. $m i n \- t s(r a n k(n', t_(e n d \- 0)), t))$ is constant for any $t gt.eq t_(e n d \- 0)$ if there's a `refreshNode` before $t_0$. If there's no `refreshNode` before $t_0$, it is constantly `MAX_TIMESTAMP`. So, $m i n \- t s(r a n k(n', t_(e n d \- i)), t))$ is constant for any $t gt.eq t_(e n d \- i)$ and $k gt.eq i gt.eq 0$. $(***)$
 
   Combining $(*)$, $(**)$, $(***)$, we obtain the stronger version of the theorem.
 ]

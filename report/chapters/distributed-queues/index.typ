@@ -28,16 +28,14 @@ This fact has an important implication: when we're talking about the characteris
 - The resulting MPSC queue's progress guarantee is the weaker guarantee between the wrapper's and the underlying SPSC's.
 - If the underlying SPSC queue is safe against ABA problem and memory reclamation, the resulting MPSC queue is also safe against these problems.
 - If the underlying SPSC queue is unbounded, the resulting MPSC queue is also unbounded.
-- To highlight specifically the performance of "MPSC queue wrappers", we define the theoretical *wrapping overhead*. Roughly speaking:
-  - Theoretical performance of the MPSC queue's `enqueue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `enqueue` + Theoretical performance of the SPSC queue's `enqueue` operation.
-  - Theoretical performance of the MPSC queue's `dequeue` operation = Theoretical *wrapping overhead* the MPSC queue wrapper impose on `dequeue` + Theoretical performance of the SPSC queue's `dequeue` operation.
+- The theoretical performance of dLTQueue and Slotqueue has to be coupled with the theoretical performance of the underlying SPSC.
 
 The characteristics of these MPSC queue wrappers are summarized in @summary-of-distributed-mpscs. For benchmarking purposes, we use a baseline distributed SPSC introduced in @distributed-spsc in combination with the MPSC queue wrappers. The characteristics of the resulting MPSC queues are also shown in @summary-of-distributed-mpscs.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*.],
+  caption: [Characteristic summary of our proposed distributed MPSC queues. #linebreak() (1) $n$ is the number of enqueuers. #linebreak() (2) $R$ stands for *remote operation* and $L$ stands for *local operation*. (3) (\*) The underlying SPSC is assumed to be our simple distributed SPSC in @distributed-spsc.],
   table(
     columns: (1fr, 1.5fr, 1.5fr),
     table.header(
@@ -49,8 +47,14 @@ The characteristics of these MPSC queue wrappers are summarized in @summary-of-d
     [Correctness], [Linearizable], [Linearizable],
     [Progress guarantee of dequeue], [Wait-free], [Wait-free],
     [Progress guarantee of enqueue], [Wait-free], [Wait-free],
-    [Dequeue wrapping overhead], [$4 log_2(n) R + 6 log_2(n) L$], [$n L$],
-    [Enqueue wrapping overhead], [$R + L$], [$R$],
+    [Dequeue time-complexity (\*)],
+    [$4 log_2(n) R + 6 log_2(n) L$],
+    [$R + n L$],
+
+    [Enqueue time-complexity (\*)],
+    [$6 log_2(n) R + 4 log_2(n) L$],
+    [$5R + 2L$],
+
     [ABA solution], [Unique timestamp], [No hazardous ABA problem],
     [Safe memory #linebreak() reclamation],
     [No dynamic memory allocation],
@@ -269,7 +273,7 @@ The procedures of the dequeuer are given as follows.
 
 `spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
 
-== dLTQueue - Optimized LTQueue adapted for distributed environment <dLTQueue>
+== dLTQueue - Straightforward LTQueue adapted for distributed environment <dLTQueue>
 
 This algorithm presents our most straightforward effort to port LTQueue @ltqueue to distributed context. The main challenge is that LTQueue uses LL/SC as the universal atomic instruction and also an ABA solution, but LL/SC is not available in distributed programming environments. We have to replace any usage of LL/SC in the original LTQueue algorithm. Compare-and-swap is unavoidable in distributed MPSC queues, so we use the well-known monotonic timestamp scheme to guard against ABA problem.
 
@@ -479,22 +483,22 @@ The followings are the enqueuer procedures.
     + `timestamp = fetch_and_add_sync(Counter, 1)                                        `
     + *if* `(!spsc_enqueue(&Spsc, (value, timestamp)))`
       + *return* `false`
-    + `front = (data_t {}, timestamp_t {})`
-    + `is_empty = !spsc_readFront(Spsc, &front)`
-    + *if* `(!is_empty && front.timestamp.value != timestamp)`
-      + *return* `true`
+    // + `front = (data_t {}, timestamp_t {})`
+    // + `is_empty = !spsc_readFront(Spsc, &front)`
+    // + *if* `(!is_empty && front.timestamp.value != timestamp)`
+    //  + *return* `true`
     + `propagate`#sub(`e`)`()`
     + *return* `true`
   ],
 ) <ltqueue-enqueue>
 
-To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed counter `Counter` (line 14). Then, we enqueue the data tagged with the timestamp into the local SPSC (line 15). We check if the front element's timestamp is the same as the just enqueued timestamp to avoid unnecessary propagation processes (line 19) - this is an idea we have corporated into the original LTQueue algorithm, which always performs propagation. If necessary, `enqueue` propagates the changes by invoking `propagate`#sub(`e`)`()` (line 21) and returns `true`.
+To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed counter `Counter` (line 10). Then, we enqueue the data tagged with the timestamp into the local SPSC (line 11). Then, `enqueue` propagates the changes by invoking `propagate`#sub(`e`)`()` (line 17) and returns `true`.
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 22,
+    line-numbering: i => i + 18,
     booktabs: true,
     numbered-title: [`void propagate`#sub(`e`)`()`],
   )[
@@ -511,13 +515,13 @@ To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed cou
   ],
 ) <ltqueue-enqueue-propagate>
 
-The `propagate`#sub(`e`) procedure is responsible for propagating SPSC updates up to the root node as a way to notify other processes of the newly enqueued item. It is split into 3 phases: Refreshing of `Min_timestamp` in the enqueuer node (line 23-24), refreshing of the enqueuer's leaf node (line 25-26), refreshing of internal nodes (line 28-32). On line 25-32, we refresh every tree node that lies between the enqueuer node and the root node.
+The `propagate`#sub(`e`) procedure is responsible for propagating SPSC updates up to the root node as a way to notify other processes of the newly enqueued item. It is split into 3 phases: Refreshing of `Min_timestamp` in the enqueuer node (line 19-20), refreshing of the enqueuer's leaf node (line 21-22), refreshing of internal nodes (line 24-28). On line 21-28, we refresh every tree node that lies between the enqueuer node and the root node.
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 32,
+    line-numbering: i => i + 28,
     booktabs: true,
     numbered-title: [`bool refreshTimestamp`#sub(`e`)`()`],
   )[
@@ -537,13 +541,13 @@ timestamp_t {front.timestamp, old-version + 1})`
   ],
 ) <ltqueue-enqueue-refresh-timestamp>
 
-The `refreshTimestamp`#sub(`e`) procedure is responsible for updating the `Min_timestamp` of the enqueuer node. It simply looks at the front of the local SPSC (line 36) and CAS `Min_timestamp` accordingly (line 38-41).
+The `refreshTimestamp`#sub(`e`) procedure is responsible for updating the `Min_timestamp` of the enqueuer node. It simply looks at the front of the local SPSC (line 32) and CAS `Min_timestamp` accordingly (line 34-37).
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 41,
+    line-numbering: i => i + 37,
     booktabs: true,
     numbered-title: [`bool refreshNode`#sub(`e`)`(uint32_t current_node_index)`],
   )[
@@ -568,13 +572,13 @@ node_t {rank_t {min_rank, old_version + 1}})`
   ],
 ) <ltqueue-enqueue-refresh-node>
 
-The `refreshNode`#sub(`e`) procedure is responsible for updating the ranks of the internal nodes affected by the enqueue. It loops over the children of the current internal nodes (line 47). For each child node, we read the rank stored in it (line 49), if the rank is not `DUMMY_RANK`, we proceed to read the value of `Min_timestamp` of the enqueuer node with the corresponding rank (line 53). At the end of the loop, we obtain the rank stored inside one of the child nodes that has the minimum timestamp stored in its enqueuer node (line 55-56). We then try to CAS the rank inside the current internal node to this rank.
+The `refreshNode`#sub(`e`) procedure is responsible for updating the ranks of the internal nodes affected by the enqueue. It loops over the children of the current internal nodes (line 43). For each child node, we read the rank stored in it (line 45), if the rank is not `DUMMY_RANK`, we proceed to read the value of `Min_timestamp` of the enqueuer node with the corresponding rank (line 49). At the end of the loop, we obtain the rank stored inside one of the child nodes that has the minimum timestamp stored in its enqueuer node (line 51-52). We then try to CAS the rank inside the current internal node to this rank.
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 57,
+    line-numbering: i => i + 53,
     booktabs: true,
     numbered-title: [`bool refreshLeaf`#sub(`e`)`()`],
   )[
@@ -591,7 +595,7 @@ node_t {timestamp == MAX ? DUMMY_RANK : Self_rank, old_version + 1})`
   ],
 ) <ltqueue-enqueue-refresh-leaf>
 
-The `refreshLeaf`#sub(`e`) procedure is responsible for updating the rank of the leaf node affected by the enqueue. It simply reads the value of `Min_timestamp` of the enqueuer node it's logically attached to (line 63) and CAS the leaf node's rank accordingly (line 65).
+The `refreshLeaf`#sub(`e`) procedure is responsible for updating the rank of the leaf node affected by the enqueue. It simply reads the value of `Min_timestamp` of the enqueuer node it's logically attached to (line 59) and CAS the leaf node's rank accordingly (line 61).
 
 The followings are the dequeuer procedures.
 
@@ -599,7 +603,7 @@ The followings are the dequeuer procedures.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 65,
+    line-numbering: i => i + 61,
     booktabs: true,
     numbered-title: [`bool dequeue(data_t* output)`],
   )[
@@ -617,13 +621,13 @@ The followings are the dequeuer procedures.
   ],
 ) <ltqueue-dequeue>
 
-To dequeue a value, `dequeue` reads the rank stored inside the root node (line 67). If the rank is `DUMMY_RANK`, the MPSC queue is treated as empty and failure is signaled (line 69). Otherwise, we invoke `spsc_dequeue` on the SPSC of the enqueuer with the obtained rank (line 71). We then extract out the real data and set it to `output` (line 73). We finally propagate the dequeue from the enqueuer node that corresponds to the obtained rank (line 74) and signal success (line 75).
+To dequeue a value, `dequeue` reads the rank stored inside the root node (line 63). If the rank is `DUMMY_RANK`, the MPSC queue is treated as empty and failure is signaled (line 65). Otherwise, we invoke `spsc_dequeue` on the SPSC of the enqueuer with the obtained rank (line 67). We then extract out the real data and set it to `output` (line 69). We finally propagate the dequeue from the enqueuer node that corresponds to the obtained rank (line 70) and signal success (line 71).
 
 #figure(
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 75,
+    line-numbering: i => i + 71,
     booktabs: true,
     numbered-title: [`void propagate`#sub(`d`)`(uint32_t enqueuer_rank)`],
   )[
@@ -646,7 +650,7 @@ The `propagate`#sub(`d`) procedure is similar to `propagate`#sub(`e`), with appr
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 85,
+    line-numbering: i => i + 81,
     booktabs: true,
     numbered-title: [`bool refreshTimestamp`#sub(`d`)`(uint32_t enqueuer_rank)`],
   )[
@@ -673,7 +677,7 @@ The `refreshTimestamp`#sub(`d`) procedure is similar to `refreshTimestamp`#sub(`
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 95,
+    line-numbering: i => i + 91,
     booktabs: true,
     numbered-title: [`bool refreshNode`#sub(`d`)`(uint32_t current_node_index)`],
   )[
@@ -704,7 +708,7 @@ The `refreshNode`#sub(`d`) procedure is similar to `refreshNode`#sub(`e`), with 
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 111,
+    line-numbering: i => i + 107,
     booktabs: true,
     numbered-title: [`bool refreshLeaf`#sub(`d`)`(uint32_t enqueuer_rank)`],
   )[

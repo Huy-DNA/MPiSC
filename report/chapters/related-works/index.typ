@@ -150,7 +150,7 @@ Regarding memory reclamation, while the dequeuer is scanning the queue, it will 
 
 === Remarks
 
-Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and WRLQueue as a potential candidate for porting naively to distributed environment because they either do not provide a sufficient progress guarantee or protection against ABA problem and memory reclamation problem. Jiffy's idea of the dequeuer rescanning the global queue looking for a `SET` slot is quite useful and partly contributes to our idea of double scanning in Slotqueue (@slotqueue), which is our improvement over indefinite repeated scans as in Jiffy. For the time being, due to time constraints, LTQueue remains our primary inspiration and Jiffy will be adapted for distributed environments in the future.
+Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and WRLQueue as a potential candidate for porting to distributed environment because they either do not provide a sufficient progress guarantee or protection against ABA problem and memory reclamation problem. Jiffy's idea of the dequeuer rescanning the global queue looking for a `SET` slot is quite useful and partly contributes to our idea of double scanning in Slotqueue (@slotqueue), which is our improvement over indefinite repeated scans as in Jiffy. For the time being, due to time constraints, LTQueue remains our primary inspiration and Jiffy will be adapted for distributed environments in the future.
 
 == Distributed MPSC queues <dmpsc-related-works>
 
