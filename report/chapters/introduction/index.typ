@@ -104,6 +104,6 @@ The rest of this report is structured as follows:
 
 @theoretical-aspects[] discusses various interesting theoretical aspects of our distributed MPSC queue algorithms in @distributed-queues[], specifically correctness (linearizability), progress guarantee (lock-freedom and wait-freedom), performance model. Our analysis of the algorithm's performance model helps back our empirical findings in @result[].
 
-@result[] details our benchmarking metrics and elaborates our benchmarking setup. We aim to demonstrate some preliminary results on how well our novel MPSC queue algorithms, additionally compared to existing distributed MPSCs queues. Finally, we discuss important factors that affect the runtime properties distributed MPSC queue algorithm, which have partly been explained by our theoretical analysis in @theoretical-aspects[].
+@result[] details our benchmarking metrics and elaborates our benchmarking setup. We aim to demonstrate some preliminary results on how well our novel MPSC queue algorithms, additionally compared to existing distributed MPSCs queues. Finally, we discuss important factors that affect the runtime properties of distributed MPSC queue algorithms, which have partly been explained by our theoretical analysis in @theoretical-aspects[].
 
 @conclusion[] concludes what we have accomplished in this thesis and considers future possible improvements to our research.
