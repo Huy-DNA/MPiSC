@@ -7,7 +7,7 @@ There exists numerous research into the design of lock-free shared memory MPMCs 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of existing shared memory MPSC queues. The cell marked with (\*) indicates that our evaluation contradicts with the authors's claims.],
+  caption: [Characteristic summary of existing shared memory MPSC queues. The cell marked with (\*) indicates that our evaluation contradicts with the authors' claims.],
   table(
     columns: (1.5fr, 1fr, 1fr, 1fr, 1fr),
     table.header(
