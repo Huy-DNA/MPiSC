@@ -79,7 +79,7 @@ This thesis explores the shared-memory programming model to design fault-toleran
 
 This thesis contributes two new distributed wait-free distributed MPSC queue algorithms. Theoretically, we're concerned with their correctness (linearizability), progress guarantee (lock-freedom and wait-freedom) which has an implication on their fault-tolerance and their theoretical performance, which is approximated by their number of remote operations and local operations.
 
-This thesis concludes with an empirical analysis of our novel algorithms to see if their actual behavior matches our theoretical performance model, interpret these results and discuss its implication.
+This thesis concludes with an empirical analysis of our novel algorithms to see if their actual behavior matches our theoretical performance model, interprets these results and discusses its implication.
 
 #place(
   center + top,
