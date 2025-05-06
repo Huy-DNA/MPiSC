@@ -260,8 +260,6 @@ As a reminder, the bottom rectangular nodes are called the *enqueuer nodes* and 
   float: true,
   scope: "parent",
   [#figure(
-      kind: "image",
-      supplement: "Image",
       image("/static/images/modified-ltqueue.png"),
       caption: [
         dLTQueue's structure.

@@ -187,8 +187,6 @@ LTQueue's idea is to maintain a tree structure as in @ltqueue-tree. Each enqueue
   float: true,
   scope: "parent",
   [#figure(
-      kind: "image",
-      supplement: "Image",
       image("/assets/ltqueue-tree.png"),
       caption: [
         LTQueue's structure.
@@ -312,8 +310,6 @@ The `refresh` procedure is by itself simple: we access all child nodes to determ
   float: true,
   scope: "parent",
   [#figure(
-      kind: "image",
-      supplement: "Image",
       image("/assets/double-refresh.png", height: 200pt, fit: "stretch"),
       caption: [
         Even though two `refresh`s fails, the `currentNode`'s timestamp is still updated correctly.
@@ -369,8 +365,6 @@ The structure of LTQueue is modified as in @modified-ltqueue-tree. At the bottom
   float: true,
   scope: "parent",
   [#figure(
-      kind: "image",
-      supplement: "Image",
       image("/assets/modified-ltqueue.png"),
       caption: [
         Modified LTQueue's structure.
@@ -525,7 +519,7 @@ We can define a *strict partial order* on the set of well-formed method calls:
 
 #definition[$->$ is a relation on the set of well-formed method calls. With two method calls $X$ and $Y$, we have $X -> Y <=>$ $X$'s response event is not $bot$ and its response timestamp is not greater than $Y$'s invocation timestamp.]
 
-#definition[Given a *history* H, $->$#sub($H$) is a relation on $H$ such that for two method calls $X$ and $Y$ in $H$, $X ->$#sub($H$)$ Y <=> X -> Y$.]
+#definition[Given a *history* H, $->$#sub($H$) is a relation on $H$ such that for two method calls $X$ and $Y$ in $H$, $X ->$#sub($H$)$Y <=> X -> Y$.]
 
 #definition[A *sequential history* $H$ is a *history* such that $->$#sub($H$) is a total order on $H$.]
 
@@ -540,7 +534,7 @@ The harder case is handled via the notion of *linearizable*:
   2. There exists a one-to-one mapping $M$ of a method call $(i, r) in H'$ to a method call $(i_S, r_S) in H_S$ with the properties that:
     - $i$ must be the same as $i_S$ except for the timestamp.
     - $r$ must be the same $r_S$ except for the timestamp or $r$.
-  3. For any two method calls $X$ and $Y$ in $H'$, #linebreak() $X ->$#sub($H'$)$Y => $ $M(X) ->$#sub($H_S$)$M(Y)$.
+  3. For any two method calls $X$ and $Y$ in $H'$, #linebreak() $X ->$#sub($H'$)$Y =>$ $M(X) ->$#sub($H_S$)$M(Y)$.
 ]
 
 We consider a history to be valid if it's linearizable.
@@ -659,7 +653,7 @@ We immediately obtain the following result.
 
   For any $i gt.eq 1$, we have $t_e (c) lt.eq t_s (n') lt.eq t_(s t a r t \-(i-1)) lt.eq t_(r a n k\-(i-1))(c) lt.eq t_(e n d \-(i-1)) lt.eq t_(s t a r t \-i) lt.eq t_(r a n k \- i)(c) lt.eq t_1$. Combining with $(5)$, $(6)$, we have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(t s\-i)(c_i))$ #linebreak() $lt.eq m i n \- t s (r a n k(c, t_(r a n k\-i)(c)), t_(t s\-i)(c))$ #linebreak() $lt.eq m i n \- t s (r a n k(c, t_(r a n k\-(i-1))(c)), t_(t s\-i)(c))$.
 
-  Choose $c = c_(i-1)$ as in $(4)$. We have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(t s\-i)(c_i))$ #linebreak() $lt.eq m i n \- t s (r a n k(c_(i-1), t_(r a n k\-(i-1))(c_(i-1))),$$ t_(t s\-i)(c_(i-1)))$ #linebreak() $= m i n\- t s(r a n k(n', t_(e n d \- (i-1))), t_(t s \-i)(c_(i-1))$.
+  Choose $c = c_(i-1)$ as in $(4)$. We have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(t s\-i)(c_i))$ #linebreak() $lt.eq m i n \- t s (r a n k(c_(i-1), t_(r a n k\-(i-1))(c_(i-1))),$$t_(t s\-i)(c_(i-1)))$ #linebreak() $= m i n\- t s(r a n k(n', t_(e n d \- (i-1))), t_(t s \-i)(c_(i-1))$.
 
   Because $t_(t s \-i)(c_i) lt.eq t_(e n d \- i)$ and $t_(t s \-i)(c_(i-1)) gt.eq t_(e n d \- (i-1))$ and $(2)$, we have for any $k gt.eq i gt.eq 1$, #linebreak() $m i n \- t s(r a n k(n', t_(e n d \- i)), t_(e n d\-i))$ #linebreak() $lt.eq m i n \- t s (r a n k(n', t_(e n d \- (i-1))), t_(e n d \- (i-1)))$. $(*)$
 
@@ -929,7 +923,7 @@ We immediately obtain the following result.
   - Items are `dequeue`d in the order they are `enqueue`d: Suppose there are two `enqueue`s $e_1$, $e_2$ such that $e_1 arrow.double$#sub($H'$)$e_2$ and suppose they match $d_1$ and $d_2$. Then we have obtained $e_1 arrow.double$#sub($H'$)$e_2$ either because:
     - $(3)$ applies, in this case $d_1 arrow.double$#sub($H'$)$d_2$ is a condition for it to apply.
     - $(1)$ applies, then $e_1$ precedes $e_2$, by @ltqueue-enqueue-enqueue-theorem, $d_1$ must precede $d_2$, thus $d_1 arrow.double$#sub($H'$)$d_2$.
-    Therefore, if $e_1 arrow.double$#sub($H'$)$ e_2$ then $d_1 arrow.double$#sub($H'$)$d_2$.
+    Therefore, if $e_1 arrow.double$#sub($H'$)$e_2$ then $d_1 arrow.double$#sub($H'$)$d_2$.
   - An item can only be `dequeue`d after it's `enqueue`d: Suppose there is an `enqueue` $e$ matched by $d$. By $(2)$, obviously $e =>$#sub($H'$)$d$.
   - If the queue is empty, `dequeue`s return nothing. Suppose a dequeue $d$ such that any $e arrow.double$#sub($H'$)$d$ is all matched by some $d'$ and $d' arrow.double$#sub($H'$)$d$, we will prove that $d$ is unmatched. By @ltqueue-matching-dequeue-enqueue-lemma, $d$ can only match an `enqueue` $e_0$ that precedes or overlaps with $d$.
     - If $e_0$ precedes $d$, by our assumption, it's already matched by another `dequeue`.

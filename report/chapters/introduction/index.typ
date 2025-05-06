@@ -85,8 +85,6 @@ This thesis concludes with an empirical analysis of our novel algorithms to see 
   float: true,
   scope: "parent",
   [#figure(
-      kind: "image",
-      supplement: "Image",
       image("/static/images/thesis-overview.png"),
       caption: [
         An overview of this thesis.

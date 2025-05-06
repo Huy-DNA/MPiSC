@@ -294,8 +294,6 @@ Note that if a local SPSC is empty, the `min_timestamp` variable of the correspo
   float: true,
   scope: "parent",
   [#figure(
-      kind: "image",
-      supplement: "Image",
       image("/static/images/modified-ltqueue.png"),
       caption: [
         dLTQueue's structure.
