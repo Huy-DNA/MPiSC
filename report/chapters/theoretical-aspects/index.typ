@@ -217,12 +217,12 @@ Our simple distributed SPSC is wait-free:
 
 === Theoretical performance
 
-A summary of the theoretical performance of our simple SPSC is provided in @theo-perf-spsc.
+A summary of the theoretical performance of our simple SPSC is provided in @theo-perf-spsc. In the following discussion, $R$ means remote operations and $L$ means local operations.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Theoretical performance summary of our simple distributed SPSC.],
+  caption: [Theoretical performance summary of our simple distributed SPSC. $R$ means remote operations and $L$ means local operations.],
   table(
     columns: (1fr, 1.5fr),
     table.header(
@@ -703,12 +703,12 @@ Notice that every loop in dLTQueue is bounded, and no method have to wait for an
 
 === Theoretical performance
 
-A summary of the theoretical performance of dLTQueue is provided in @theo-perf-dltqueue, which is already shown in @summary-of-distributed-mpscs.
+A summary of the theoretical performance of dLTQueue is provided in @theo-perf-dltqueue, which is already shown in @summary-of-distributed-mpscs. In the following discussion, $R$ means remote operations and $L$ means local operations.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Theoretical performance summary of dLTQueue.],
+  caption: [Theoretical performance summary of dLTQueue. $R$ means remote operations and $L$ means local operations.],
   table(
     columns: (1fr, 1.5fr),
     table.header(
@@ -724,7 +724,7 @@ A summary of the theoretical performance of dLTQueue is provided in @theo-perf-d
 For `enqueue`, we consider the procedure @ltqueue-enqueue. We consider the propagation process, which causes most of the remote operations, while line 14 and line 15 are negligible. Notice that the number of node refreshes are proportional to the number of the level of the trees, which is $O(n)$ for $n$ being the number of processes. Each level of the tree in the worst case needs 2 retries, each retry would have to:
 - Read the current node (which is a truly remote operation for `enqueue`).
 - Read the two child nodes (which is 2 truly remote operations for `enqueue`).
-- Read the two `min-timestamp` variables in the two child nodes (which is 2 truly local operations for `enqueue`). 
+- Read the two `min-timestamp` variables in the two child nodes (which is 2 truly local operations for `enqueue`).
 - Compare-and-swap the current node (which is a truly remote opoeration for `enqueue`).
 In total, each level requires 6 remote operations and 4 local operations. Therefore, `enqueue` requires about $6log_2(n)R + 4log_2(n)L$ operations.
 
@@ -1091,4 +1091,27 @@ Notice that Slotqueue pushes the memory reclamation problem to the underlying SP
 
 Notice that every loop in Slotqueue is bounded, and no method have to wait for another. Therefore, Slotqueue is wait-free.
 
-=== Theoretical performance \<reworking>
+=== Theoretical performance
+
+A summary of the theoretical performance of Slotqueue is provided in @theo-perf-slotqueue, which is already shown in @summary-of-distributed-mpscs. By $R$, we mean remote operations and by $L$ we mean local operations.
+
+#figure(
+  kind: "table",
+  supplement: "Table",
+  caption: [Theoretical performance summary of Slotqueue. $R$ means remote operations and $L$ means local operations.],
+  table(
+    columns: (1fr, 1.5fr),
+    table.header(
+      [*Operations*],
+      [*Time-complexity*],
+    ),
+
+    [`enqueue`], [$4R + 3L$],
+    [`dequeue`], [$3R + 2n L$],
+  ),
+) <theo-perf-slotqueue>
+
+For `enqueue`, we consider @slotqueue-enqueue. Line 3 causes 1 truly remote operation, as the distributed counter is hosted on the dequeuer. Line 4, as discussed in the theoretical performance of SPSC, causes $R + L$ operations. In the worst case, two `refreshEnqueue` calls are executed. We then consider each `refreshEnqueue` call. Line 10 causes $R + L$ operations. Most of the time, line 14-20 are not executed. Therefore, the two `refreshEnqueue` calls cause at most $2R$ operations. So in total, $4R + 3L$ operations are required.
+
+For `dequeue`, we consider @slotqueue-dequeue. Line 21 causes most of the remote operations: The double scan of the `Slots` array causes about $2n L$ operations. We consider the truly remote operations. Line 25 causes $R + L$ operation. The double retry on line 28-29 each causes $L$ operations (line 50) and $R$ operations. So in total, $3R + 2n L$ operations are required.
+
