@@ -46,7 +46,7 @@ Multi-producer, single-consumer (MPSC) queue is a specialized concurrent first-i
 In concurrent queues, multiple producers and consumers can run concurrently. One class of concurrent FIFOs is the MPSC queue, where one consumer may run in parallel with multiple producers.
 
 The reasons we're interested in MPSC queues instead of the more general multi-producer, multi-consumer (MPMC) queue data structures are that (1) high-performance and high-scalability MPSC queues are much simpler to design than MPMCs while (2) MPSC queues are powerful enough to solve certain problems, as demonstrated in @irregular-applications. The MPSC queue in actuality is an irregular application in and out of itself:
-- Unpredictable memory access: As a general data structure, the MPSC queue allows any process to be a producer or a consumer. By nature, its memory access patern is unpredictable.
+- Unpredictable memory access: As a general data structure, the MPSC queue allows any process to enqueue and dequeue from at any time. By nature, its memory access patern is unpredictable.
 - Data-dependent control-flow: The consumer's behavior is entirely dependent on whether and which data is available in the MPSC queue. The execution paths of MPSC queues can vary, based on the queue contention i.e. some processes may backoff or retry some failed operations, this scenario often arise in lock-free data structures.
 As an implication, some irregular applications can actually "push" the "irregularity burden" to the distributed MPSC queue, which is already designed for high-performance and fault tolerance. This provides a comfortable level of abstraction for programmers that need to deal with irregular applications.
 
