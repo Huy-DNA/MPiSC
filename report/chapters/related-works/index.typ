@@ -50,7 +50,7 @@ There exists numerous research into the design of non-blocking shared memory MPM
 
 To our knowledge, LTQueue @ltqueue is the earliest paper that directly focuses on the design of a wait-free shared memory MPSC queue.
 
-This algorithm is wait-free with $O(log n)$ time complexity for both enqueues and dequeues, with $n$ being the number of enqueuers due to a novel timestamp-update scheme and a tree-structure organization of timestamp.
+This algorithm is wait-free with $O(log n)$ time complexity for both enqueues and dequeues, with $n$ being the number of enqueuers due to a novel timestamp-update scheme and a tree-structure organization of timestamps.
 
 The basic structure of LTQueue is given in @original-ltqueue-structure. In LTQueue, each enqueuer maintains an SPSC queue that only it and the dequeuer access. This SPSC queue must additionally support the `readFront` operation which returns the front element currently in the SPSC. The SPSC can be any implementations that conform to this interface. In the original paper, the SPSC is represented as a simple linked-list.
 
