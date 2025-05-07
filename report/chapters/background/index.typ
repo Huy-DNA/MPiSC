@@ -63,7 +63,7 @@ Then, linerizability means that if we have $l_1 < l_2 < ... < l_n$, the effect o
   caption: [Linerization points of method 1, method 2, method 3, method 4 happens at $t_1 < t_2 < t_3 < t_4$, therefore, their effects will be observed in this order as if we call method 1, method 2, method 3, method 4 sequentially.],
 )
 
-Linearizability is widely used as a correctness condition because of (1) its composability @herlihy-linearizability (if every component in the system is linearizable, the whole system is linearizable), which promotes modularity and ease of proof (2) its compatibility with human intuition, i.e. linearizability respects real-time order @herlihy-linearizability. Naturally, we choose linearizability to be the only correctness condition for our algorithms.
+Linearizability is widely used as a correctness condition because of (1) its composability (if every component in the system is linearizable, the whole system is linearizable @herlihy-linearizability), which promotes modularity and ease of proof (2) its compatibility with human intuition, i.e. linearizability respects real-time order @herlihy-linearizability. Naturally, we choose linearizability to be the only correctness condition for our algorithms.
 
 == Progress guarantee of concurrent algorithms <progress-guarantee>
 
