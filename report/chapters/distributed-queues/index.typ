@@ -488,7 +488,7 @@ The followings are the enqueuer procedures.
   ],
 ) <ltqueue-enqueue>
 
-To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed counter `Counter` (line 10). Then, we enqueue the data tagged with the timestamp into the local SPSC (line 11). Then, `enqueue` propagates the changes by invoking `propagate`#sub(`e`)`()` (line 17) and returns `true`.
+To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed counter `Counter` (line 14). Then, we enqueue the data tagged with the timestamp into the local SPSC (line 15). Then, `enqueue` propagates the changes by invoking `propagate`#sub(`e`)`()` (line 17) and returns `true`.
 
 #figure(
   kind: "algorithm",
