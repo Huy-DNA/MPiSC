@@ -329,7 +329,7 @@ Below is the types utilized in dLTQueue.
       + *end*
 ]
 
-The shared variables in our LTQueue version are as followed.
+The shared variables in our LTQueue version are as follows.
 
 Note that we have described a very specific and simple way to organize the tree nodes in dLTQueue in a min-heap-like array structure hosted on the sole dequeuer. We will resume our description of the related tree-structure procedures `parent()` (@ltqueue-parent), `children()` (@ltqueue-children), `leafNodeIndex()` (@ltqueue-leaf-node-index) with this representation in mind. However, our algorithm doesn't strictly require this representation and can be subtituted with other more-optimized representations & distributed placements, as long as the similar tree-structure procedures are supported.
 
