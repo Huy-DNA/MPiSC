@@ -281,13 +281,13 @@ We will refer `propagate`#sub(`e`) and `propagate`#sub(`d`) as `propagate` if th
 #definition[For an enqueue or a dequeue, *timestamp-refresh phase* refer to its execution of line 19-20 in `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) or line 72-73 in `propagate`#sub(`d`) (@ltqueue-dequeue-propagate).]
 
 #definition[For an enqueue $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of:
-  - Line 25-26 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) if $n$ is a leaf node.
-  - Line 30-31 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.
+  - Line 21-22 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) if $n$ is a leaf node.
+  - Line 26-27 of `propagate`#sub(`e`) (@ltqueue-enqueue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.
 ]
 
 #definition[For a dequeue $op$, and a node $n in p a t h(op)$, *node-$n$-refresh phase* refer to its execution of:
-  - Line 78-79 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) if $n$ is a leaf node.
-  - Line 83-84 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.
+  - Line 74-75 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) if $n$ is a leaf node.
+  - Line 79-80 of `propagate`#sub(`d`) (@ltqueue-dequeue-propagate) to refresh $n$'s rank if $n$ is a non-leaf node.
 ]
 
 #definition[`refreshTimestamp`#sub(`e`) (@ltqueue-enqueue-refresh-timestamp) is said to start its *CAS-sequence* if it finishes line 30. `refreshTimestamp`#sub(`e`) is said to end its *CAS-sequence* if it finishes line 35 or line 37.]
@@ -313,8 +313,8 @@ We use CAS instructions on:
 - Line 53 of `refreshNode`#sub(`e`) (@ltqueue-enqueue-refresh-node).
 - Line 61 of `refreshLeaf`#sub(`e`) (@ltqueue-enqueue-refresh-leaf).
 - Line 89 and line 91 of `refreshTimestamp`#sub(`d`) (@ltqueue-dequeue-refresh-timestamp).
-- Line 111 of `refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node).
-- Line 119 of `refreshLeaf`#sub(`e`) (@ltqueue-dequeue-refresh-leaf).
+- Line 117 of `refreshNode`#sub(`d`) (@ltqueue-dequeue-refresh-node).
+- Line 115 of `refreshLeaf`#sub(`e`) (@ltqueue-dequeue-refresh-leaf).
 
 Notice that at these locations, we increase the associated version tags of the CAS-ed values. These version tags are 32-bit in size, therefore, practically, ABA problem can't virtually occur. It's safe to assume that there's no ABA problem in dLTQueue.
 
