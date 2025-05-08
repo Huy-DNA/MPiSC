@@ -72,7 +72,7 @@ In our description, we assume that each process in our program is assigned a uni
 
 == Distributed one-sided-communication primitives in our distributed algorithm specification
 
-Although we use MPI-3 RMA to implement these algorithms, the algorithm specifications themselves are not inherently tied to MPI-3 RMA interfaces. For clarity and convenience in specification, we define the following distributed primitives used in our pseudocode.
+Although we use MPI-3 RMA to implement these algorithms, the algorithm specifications themselves are not inherently tied to the MPI-3 RMA interface. For clarity and convenience in specification, we define the following distributed primitives used in our pseudocode.
 
 #pseudocode-list(line-numbering: none)[
   + *`remote<T>`*
