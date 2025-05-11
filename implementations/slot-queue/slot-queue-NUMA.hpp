@@ -28,9 +28,6 @@ private:
   MPI_Win _start_counter_win;
   std::atomic<uint64_t> *_start_counter_ptr;
 
-  MPI_Win _end_counter_win;
-  std::atomic<uint64_t> *_end_counter_ptr;
-
   MPI_Win _self_remote_counter_win;
   std::atomic<uint64_t> *_self_remote_counter_ptr;
 
@@ -102,30 +99,22 @@ public:
                             sizeof(std::atomic<uint64_t>), this->_info,
                             this->_sm_comm, &this->_start_counter_ptr,
                             &this->_start_counter_win);
-    MPI_Win_allocate_shared(sizeof(std::atomic<uint64_t>),
-                            sizeof(std::atomic<uint64_t>), this->_info,
-                            this->_sm_comm, &this->_end_counter_ptr,
-                            &this->_end_counter_win);
 
     MPI_Win_allocate(0, sizeof(timestamp_t), this->_info, comm,
                      &this->_min_timestamp_ptr, &this->_min_timestamp_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_min_timestamp_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_self_remote_counter_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_start_counter_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_end_counter_win);
     *this->_self_remote_counter_ptr = 0;
-    *this->_start_counter_ptr = MAX_TIMESTAMP;
-    *this->_end_counter_ptr = MAX_TIMESTAMP;
+    *this->_start_counter_ptr = 0;
 
     MPI_Win_flush_all(this->_min_timestamp_win);
     MPI_Win_flush_all(this->_self_remote_counter_win);
     MPI_Win_flush_all(this->_start_counter_win);
-    MPI_Win_flush_all(this->_end_counter_win);
     MPI_Barrier(comm);
     MPI_Win_flush_all(this->_min_timestamp_win);
     MPI_Win_flush_all(this->_self_remote_counter_win);
     MPI_Win_flush_all(this->_start_counter_win);
-    MPI_Win_flush_all(this->_end_counter_win);
   }
 
   SlotEnqueuer(const SlotEnqueuer &) = delete;
@@ -135,11 +124,9 @@ public:
     MPI_Win_unlock_all(_min_timestamp_win);
     MPI_Win_unlock_all(_self_remote_counter_win);
     MPI_Win_unlock_all(_start_counter_win);
-    MPI_Win_unlock_all(_end_counter_win);
     MPI_Win_free(&this->_min_timestamp_win);
     MPI_Win_free(&this->_self_remote_counter_win);
     MPI_Win_free(&this->_start_counter_win);
-    MPI_Win_free(&this->_end_counter_win);
     MPI_Comm_free(&this->_sm_comm);
     MPI_Info_free(&this->_info);
   }
@@ -203,9 +190,6 @@ private:
 
   MPI_Win _start_counter_win;
   std::atomic<uint64_t> *_start_counter_ptr;
-
-  MPI_Win _end_counter_win;
-  std::atomic<uint64_t> *_end_counter_ptr;
 
   MPI_Win _self_remote_counter_win;
   std::atomic<uint64_t> *_self_remote_counter_ptr;
@@ -311,9 +295,6 @@ public:
     MPI_Win_allocate_shared(0, sizeof(std::atomic<uint64_t>), this->_info,
                             this->_sm_comm, &this->_start_counter_ptr,
                             &this->_start_counter_win);
-    MPI_Win_allocate_shared(0, sizeof(std::atomic<uint64_t>), this->_info,
-                            this->_sm_comm, &this->_end_counter_ptr,
-                            &this->_end_counter_win);
 
     MPI_Win_allocate(this->_number_of_enqueuers * sizeof(timestamp_t),
                      sizeof(timestamp_t), this->_info, comm,
@@ -321,7 +302,6 @@ public:
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_min_timestamp_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_self_remote_counter_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_start_counter_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_end_counter_win);
 
     for (int i = 0; i < this->_number_of_enqueuers; ++i) {
       this->_min_timestamp_ptr[i] = MAX_TIMESTAMP;
@@ -331,12 +311,10 @@ public:
     MPI_Win_flush_all(this->_min_timestamp_win);
     MPI_Win_flush_all(this->_self_remote_counter_win);
     MPI_Win_flush_all(this->_start_counter_win);
-    MPI_Win_flush_all(this->_end_counter_win);
     MPI_Barrier(comm);
     MPI_Win_flush_all(this->_min_timestamp_win);
     MPI_Win_flush_all(this->_self_remote_counter_win);
     MPI_Win_flush_all(this->_start_counter_win);
-    MPI_Win_flush_all(this->_end_counter_win);
   }
 
   SlotDequeuer(const SlotDequeuer &) = delete;
@@ -345,11 +323,9 @@ public:
     MPI_Win_unlock_all(_min_timestamp_win);
     MPI_Win_unlock_all(_self_remote_counter_win);
     MPI_Win_unlock_all(_start_counter_win);
-    MPI_Win_unlock_all(_end_counter_win);
     MPI_Win_free(&this->_min_timestamp_win);
     MPI_Win_free(&this->_self_remote_counter_win);
     MPI_Win_free(&this->_start_counter_win);
-    MPI_Win_free(&this->_end_counter_win);
     delete[] this->_min_timestamp_buf;
     MPI_Comm_free(&this->_sm_comm);
     MPI_Info_free(&this->_info);
