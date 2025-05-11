@@ -57,15 +57,17 @@ private:
                              &disp_unit, &self_baseptr);
         timestamp_t counter = self_baseptr->load();
         if (counter == MAX_TIMESTAMP) {
-          std::this_thread::sleep_for(std::chrono::microseconds(1));
-          timestamp_t counter = self_baseptr->load();
-          if (counter == MAX_TIMESTAMP) {
-            break;
+          for (int retries = 0; retries < 20; ++retries) {
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
+            timestamp_t counter = self_baseptr->load();
+            if (counter != MAX_TIMESTAMP) {
+              self_counter = counter;
+              break;
+            }
           }
+        } else {
           self_counter = counter;
-          break;
         }
-        self_counter = counter;
         break;
       }
     }
@@ -124,8 +126,8 @@ private:
   }
 
 public:
-  SlotNUMAEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
-               MPI_Comm comm)
+  SlotNUMAEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank,
+                   MPI_Aint self_rank, MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
         _spsc{capacity, self_rank, dequeuer_rank, comm},
@@ -334,8 +336,8 @@ private:
   }
 
 public:
-  SlotNUMADequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
-               MPI_Comm comm, MPI_Aint batch_size = 10)
+  SlotNUMADequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank,
+                   MPI_Aint self_rank, MPI_Comm comm, MPI_Aint batch_size = 10)
       : _comm{comm}, _self_rank{self_rank},
         _spsc{capacity, self_rank, comm, batch_size},
         _counter{dequeuer_rank, dequeuer_rank, comm} {
