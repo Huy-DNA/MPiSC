@@ -40,12 +40,8 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     double local_dequeues_microseconds = 0;
 
     if (rank == 0) {
-      CALI_MARK_BEGIN("slot-dequeuer-init-1");
       SlotDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
-      CALI_MARK_END("slot-dequeuer-init-1");
-      CALI_MARK_BEGIN("slot-dequeuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
-      CALI_MARK_END("slot-dequeuer-init-2");
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
         int output;
@@ -62,9 +58,7 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      CALI_MARK_BEGIN("slot-enqueuer-init-1");
       SlotEnqueuer<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
-      CALI_MARK_END("slot-enqueuer-init-1");
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
@@ -76,9 +70,7 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
         }
       }
       auto t2 = std::chrono::high_resolution_clock::now();
-      CALI_MARK_BEGIN("slot-enqueuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
-      CALI_MARK_END("slot-enqueuer-init-2");
       auto t3 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue - warm_up_elements;
            ++i) {
@@ -176,12 +168,8 @@ amqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     double local_dequeues_microseconds = 0;
 
     if (rank == 0) {
-      CALI_MARK_BEGIN("am-dequeuer-init-1");
       AMDequeuer<int> queue(number_of_elements, rank, rank, MPI_COMM_WORLD);
-      CALI_MARK_END("am-dequeuer-init-1");
-      CALI_MARK_BEGIN("am-dequeuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
-      CALI_MARK_END("am-dequeuer-init-2");
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
         std::vector<int> output;
@@ -198,9 +186,7 @@ amqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      CALI_MARK_BEGIN("am-enqueuer-init-1");
       AMEnqueuer<int> queue(number_of_elements, 0, rank, MPI_COMM_WORLD);
-      CALI_MARK_END("am-enqueuer-init-1");
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
@@ -212,9 +198,7 @@ amqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
         }
       }
       auto t2 = std::chrono::high_resolution_clock::now();
-      CALI_MARK_BEGIN("am-enqueuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
-      CALI_MARK_END("am-enqueuer-init-2");
       auto t3 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue - warm_up_elements;
            ++i) {
@@ -312,12 +296,8 @@ ltqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     double local_dequeues_microseconds = 0;
 
     if (rank == 0) {
-      CALI_MARK_BEGIN("lt-dequeuer-init-1");
       LTDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
-      CALI_MARK_END("lt-dequeuer-init-1");
-      CALI_MARK_BEGIN("lt-dequeuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
-      CALI_MARK_END("lt-dequeuer-init-2");
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
         int output;
@@ -334,9 +314,7 @@ ltqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      CALI_MARK_BEGIN("lt-enqueuer-init-1");
       LTEnqueuer<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
-      CALI_MARK_END("lt-enqueuer-init-1");
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
@@ -348,9 +326,7 @@ ltqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
         }
       }
       auto t2 = std::chrono::high_resolution_clock::now();
-      CALI_MARK_BEGIN("lt-enqueuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
-      CALI_MARK_END("lt-enqueuer-init-2");
       auto t3 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue - warm_up_elements;
            ++i) {
@@ -448,12 +424,8 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     double local_dequeues_microseconds = 0;
 
     if (rank == 0) {
-      CALI_MARK_BEGIN("fast-dequeuer-init-1");
       FastDequeuer<int> queue(number_of_elements, rank, rank, MPI_COMM_WORLD);
-      CALI_MARK_END("fast-dequeuer-init-1");
-      CALI_MARK_BEGIN("fast-dequeuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
-      CALI_MARK_END("fast-dequeuer-init-2");
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
         int output;
@@ -470,9 +442,7 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      CALI_MARK_BEGIN("fast-enqueuer-init-1");
       FastEnqueuer<int> queue(number_of_elements, 0, rank, MPI_COMM_WORLD);
-      CALI_MARK_END("fast-enqueuer-init-1");
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue; ++i) {
         if (queue.enqueue(i)) {
@@ -487,9 +457,7 @@ fastqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
           std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1)
               .count();
       local_enqueues_microseconds = local_microseconds;
-      CALI_MARK_BEGIN("fast-enqueuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
-      CALI_MARK_END("fast-enqueuer-init-2");
     }
 
     double enqueues = 0;
@@ -570,12 +538,8 @@ ccqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     double local_dequeues_microseconds = 0;
 
     if (rank == 0) {
-      CALI_MARK_BEGIN("cc-dequeuer-init-1");
       CCDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
-      CALI_MARK_END("cc-dequeuer-init-1");
-      CALI_MARK_BEGIN("cc-dequeuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
-      CALI_MARK_END("cc-dequeuer-init-2");
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
         int output;
@@ -592,9 +556,7 @@ ccqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      CALI_MARK_BEGIN("cc-enqueuer-init-1");
       CCEnqueuer<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
-      CALI_MARK_END("cc-enqueuer-init-1");
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
@@ -606,9 +568,7 @@ ccqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
         }
       }
       auto t2 = std::chrono::high_resolution_clock::now();
-      CALI_MARK_BEGIN("cc-enqueuer-init-2");
       MPI_Barrier(MPI_COMM_WORLD);
-      CALI_MARK_END("cc-enqueuer-init-2");
       auto t3 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue - warm_up_elements;
            ++i) {
