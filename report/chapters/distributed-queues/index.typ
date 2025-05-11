@@ -942,7 +942,7 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
   ],
 ) <slotqueue-read-minimum-rank>
 
-`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (line 31). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (line 32-37). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (line 36). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (line 42-47).
+`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (line 31). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (line 32-40). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (line 36). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (line 42-47).
 
 #figure(
   kind: "algorithm",
