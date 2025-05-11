@@ -231,7 +231,7 @@ public:
   }
 };
 
-template <typename T> class SlotDequeuer {
+template <typename T> class SlotNUMADequeuer {
 private:
   typedef uint64_t timestamp_t;
   constexpr static timestamp_t MAX_TIMESTAMP = ~((uint64_t)0);
@@ -334,7 +334,7 @@ private:
   }
 
 public:
-  SlotDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+  SlotNUMADequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
                MPI_Comm comm, MPI_Aint batch_size = 10)
       : _comm{comm}, _self_rank{self_rank},
         _spsc{capacity, self_rank, comm, batch_size},
@@ -390,9 +390,9 @@ public:
     MPI_Win_flush_all(this->_self_start_counter_win);
   }
 
-  SlotDequeuer(const SlotDequeuer &) = delete;
-  SlotDequeuer &operator=(const SlotDequeuer &) = delete;
-  ~SlotDequeuer() {
+  SlotNUMADequeuer(const SlotNUMADequeuer &) = delete;
+  SlotNUMADequeuer &operator=(const SlotNUMADequeuer &) = delete;
+  ~SlotNUMADequeuer() {
     MPI_Win_unlock_all(_min_timestamp_win);
     MPI_Win_unlock_all(_self_remote_counter_win);
     MPI_Win_unlock_all(_start_counter_win);
