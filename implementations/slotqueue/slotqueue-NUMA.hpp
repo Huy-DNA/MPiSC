@@ -68,7 +68,6 @@ private:
         } else {
           self_counter = counter;
         }
-        break;
       }
     }
     if (self_counter == MAX_TIMESTAMP) {
@@ -194,17 +193,16 @@ public:
     CALI_CXX_MARK_FUNCTION;
 #endif
 
+    this->_self_remote_counter_ptr->store(MAX_TIMESTAMP);
     timestamp_t counter = this->_obtain_timestamp();
     data_t value{data, counter};
     bool res = this->_spsc.enqueue(value);
     if (!res) {
-      this->_self_remote_counter_ptr->store(MAX_TIMESTAMP);
       return false;
     }
     if (!this->_refreshEnqueue(counter)) {
       this->_refreshEnqueue(counter);
     }
-    this->_self_remote_counter_ptr->store(MAX_TIMESTAMP);
     return res;
   }
 
