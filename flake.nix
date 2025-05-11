@@ -18,6 +18,7 @@
           nerd-fonts.jetbrains-mono 
           typst
           tinymist
+          times-newer-roman
           neovim
           python312
           python312Packages.numpy
