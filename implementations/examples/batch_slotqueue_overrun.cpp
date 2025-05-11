@@ -1,4 +1,4 @@
-#include "../slot-queue/slot-queue.hpp"
+#include "../slotqueue/slotqueue.hpp"
 #include <cstdio>
 #include <mpi.h>
 

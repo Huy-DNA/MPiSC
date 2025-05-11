@@ -1,4 +1,4 @@
-#include "../slot-queue/slot-queue-NUMA.hpp"
+#include "../slotqueue/slotqueue-NUMA.hpp"
 #include <cstdio>
 #include <mpi.h>
 
