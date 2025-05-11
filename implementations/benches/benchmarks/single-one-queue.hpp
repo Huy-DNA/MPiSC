@@ -3,7 +3,7 @@
 #include "bcl/fastqueue.hpp"
 #include "benches/utils.h"
 #include "ltqueue/ltqueue.hpp"
-#include "slot-queue/slot-queue.hpp"
+#include "slotqueue/slotqueue.hpp"
 #include <chrono>
 #include <mpi.h>
 

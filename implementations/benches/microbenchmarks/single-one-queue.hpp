@@ -6,7 +6,7 @@
 #include "benches/utils.h"
 #include "caliper/cali_macros.h"
 #include "ltqueue/ltqueue.hpp"
-#include "slot-queue/slot-queue.hpp"
+#include "slotqueue/slotqueue.hpp"
 #include <caliper/cali.h>
 #include <chrono>
 #include <mpi.h>
