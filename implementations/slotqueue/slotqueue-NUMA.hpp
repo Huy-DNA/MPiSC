@@ -13,7 +13,7 @@
 #include <thread>
 #include <vector>
 
-template <typename T> class SlotEnqueuer {
+template <typename T> class SlotNUMAEnqueuer {
 private:
   typedef uint64_t timestamp_t;
   constexpr static timestamp_t MAX_TIMESTAMP = ~((uint64_t)0);
@@ -124,7 +124,7 @@ private:
   }
 
 public:
-  SlotEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+  SlotNUMAEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
                MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
@@ -171,10 +171,10 @@ public:
     MPI_Win_flush_all(this->_self_start_counter_win);
   }
 
-  SlotEnqueuer(const SlotEnqueuer &) = delete;
-  SlotEnqueuer &operator=(const SlotEnqueuer &) = delete;
+  SlotNUMAEnqueuer(const SlotNUMAEnqueuer &) = delete;
+  SlotNUMAEnqueuer &operator=(const SlotNUMAEnqueuer &) = delete;
 
-  ~SlotEnqueuer() {
+  ~SlotNUMAEnqueuer() {
     MPI_Win_unlock_all(_min_timestamp_win);
     MPI_Win_unlock_all(_self_remote_counter_win);
     MPI_Win_unlock_all(_start_counter_win);
