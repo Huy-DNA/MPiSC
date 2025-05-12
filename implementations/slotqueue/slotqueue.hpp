@@ -9,7 +9,7 @@
 #include <mpi.h>
 #include <vector>
 
-template <typename T> class SlotEnqueuer {
+template <typename T> class JiffyEnqueuer {
 private:
   typedef uint64_t timestamp_t;
   constexpr static timestamp_t MAX_TIMESTAMP = ~((uint64_t)0);
@@ -68,7 +68,7 @@ private:
   }
 
 public:
-  SlotEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+  JiffyEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
                MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
@@ -87,10 +87,10 @@ public:
     MPI_Win_flush_all(this->_min_timestamp_win);
   }
 
-  SlotEnqueuer(const SlotEnqueuer &) = delete;
-  SlotEnqueuer &operator=(const SlotEnqueuer &) = delete;
+  JiffyEnqueuer(const JiffyEnqueuer &) = delete;
+  JiffyEnqueuer &operator=(const JiffyEnqueuer &) = delete;
 
-  ~SlotEnqueuer() {
+  ~JiffyEnqueuer() {
     MPI_Win_unlock_all(_min_timestamp_win);
     MPI_Win_free(&this->_min_timestamp_win);
     MPI_Info_free(&this->_info);
@@ -138,7 +138,7 @@ public:
   }
 };
 
-template <typename T> class SlotDequeuer {
+template <typename T> class JiffyDequeuer {
 private:
   typedef uint64_t timestamp_t;
   constexpr static timestamp_t MAX_TIMESTAMP = ~((uint64_t)0);
@@ -228,7 +228,7 @@ private:
   }
 
 public:
-  SlotDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+  JiffyDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
                MPI_Comm comm, MPI_Aint batch_size = 10)
       : _comm{comm}, _self_rank{self_rank},
         _spsc{capacity, self_rank, comm, batch_size},
@@ -256,9 +256,9 @@ public:
     MPI_Win_flush_all(this->_min_timestamp_win);
   }
 
-  SlotDequeuer(const SlotDequeuer &) = delete;
-  SlotDequeuer &operator=(const SlotDequeuer &) = delete;
-  ~SlotDequeuer() {
+  JiffyDequeuer(const JiffyDequeuer &) = delete;
+  JiffyDequeuer &operator=(const JiffyDequeuer &) = delete;
+  ~JiffyDequeuer() {
     MPI_Win_unlock_all(_min_timestamp_win);
     MPI_Win_free(&this->_min_timestamp_win);
     delete[] this->_min_timestamp_buf;

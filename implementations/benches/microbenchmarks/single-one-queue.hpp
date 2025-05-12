@@ -167,7 +167,7 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     double local_dequeues_microseconds = 0;
 
     if (rank == 0) {
-      SlotDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
+      JiffyDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
       MPI_Barrier(MPI_COMM_WORLD);
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
@@ -185,7 +185,7 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      SlotEnqueuer<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
+      JiffyEnqueuer<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
