@@ -4,3 +4,6 @@
 [submodule "implementations/benches/Caliper"]
 	path = implementations/benches/Caliper
 	url = https://github.com/LLNL/Caliper.git
+[submodule "implementations/bclx/bclx"]
+	path = implementations/bclx/bclx
+	url = https://github.com/Huy-DNA/bclx.git
