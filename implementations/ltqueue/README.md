@@ -111,8 +111,6 @@ Cons:
 
 ### Pseudo code after removing LL/SC
 
-Disclaimer: This is only an informal sketch. More formal treatment is given in the [accompanying report](./report).
-
 SPSC is kept intact, and due to Prasad Jayanti and Srdjan Petrovic:
 
 ```C
@@ -250,8 +248,6 @@ function refresh(mpsc_t* q, tree_node_t* node)
 ```
 
 ### Linearizability, Wait-freedom, Memory-safety
-
-Refer to the [accompanying report](./report).
 
 ### Porting
 
