@@ -9,7 +9,7 @@ name = "Specialized Project"
 id = "CO4029"
 
 [committee]
-id = 6
+id = "6 - Đồ án chuyên ngành"
 secretary = "Nguyễn Phương Duy"
 
 [[teachers]] 
