@@ -1,27 +1,94 @@
 #pragma once
 
-#include "../lib/bclx/bclx/bclx/bclx.hpp"
+#include "bclx/bclx.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <mpi.h>
 
-template <typename T> class JiffyEnqueuer {
+template <typename T, int SEGMENT_SIZE = 1024> class JiffyEnqueuer {
 private:
+  enum status_t {
+    SET,
+    HANDLED,
+    EMPTY,
+  };
+
+  struct entry_t {
+    T data;
+    status_t is_set;
+  };
+
+  struct segment_t {
+    BCL::GlobalPtr<entry_t[SEGMENT_SIZE]> curr_buffer;
+    BCL::GlobalPtr<segment_t> next;
+    BCL::GlobalPtr<segment_t> prev;
+    int head;
+    int pos_in_queue;
+  };
+
+  BCL::GlobalPtr<int> _tail;
+  BCL::GlobalPtr<segment_t> _head_of_queue;
+  BCL::GlobalPtr<segment_t> _tail_of_queue;
+
 public:
-  JiffyEnqueuer() {}
+  JiffyEnqueuer(int dequeuer_rank) {
+    this->_tail = BCL::broadcast(_tail, dequeuer_rank);
+    this->_head_of_queue = BCL::broadcast(_head_of_queue, dequeuer_rank);
+    this->_tail_of_queue = BCL::broadcast(_tail_of_queue, dequeuer_rank);
+  }
 
   JiffyEnqueuer(const JiffyEnqueuer &) = delete;
   JiffyEnqueuer &operator=(const JiffyEnqueuer &) = delete;
 
   ~JiffyEnqueuer() {}
+
+  bool enqueue(const T &data) {}
 };
 
-template <typename T> class JiffyDequeuer {
+template <typename T, int SEGMENT_SIZE = 1024> class JiffyDequeuer {
 private:
+  enum status_t {
+    SET,
+    HANDLED,
+    EMPTY,
+  };
+
+  struct entry_t {
+    T data;
+    status_t is_set;
+  };
+
+  struct segment_t {
+    BCL::GlobalPtr<entry_t[SEGMENT_SIZE]> curr_buffer;
+    BCL::GlobalPtr<segment_t> next;
+    BCL::GlobalPtr<segment_t> prev;
+    int head;
+    int pos_in_queue;
+  };
+
+  BCL::GlobalPtr<int> _tail;
+  BCL::GlobalPtr<segment_t> _head_of_queue;
+  BCL::GlobalPtr<segment_t> _tail_of_queue;
+
 public:
-  JiffyDequeuer() {}
+  JiffyDequeuer(int self_rank) {
+    this->_tail = BCL::alloc<int>(1);
+    *this->_tail = 0;
+    this->_head_of_queue = nullptr;
+    this->_tail_of_queue = nullptr;
+
+    BCL::broadcast(_tail, self_rank);
+    BCL::broadcast(_head_of_queue, self_rank);
+    BCL::broadcast(_tail_of_queue, self_rank);
+  }
 
   JiffyDequeuer(const JiffyDequeuer &) = delete;
   JiffyDequeuer &operator=(const JiffyDequeuer &) = delete;
-  ~JiffyDequeuer() {}
+  ~JiffyDequeuer() {
+    BCL::dealloc(this->_tail);
+    BCL::dealloc(this->_head_of_queue);
+    BCL::dealloc(this->_tail_of_queue);
+  }
+
+  bool dequeue(T *output) {}
 };
