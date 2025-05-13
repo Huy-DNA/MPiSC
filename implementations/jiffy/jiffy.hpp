@@ -13,13 +13,9 @@ private:
     EMPTY,
   };
 
-  struct entry_t {
-    T data;
-    status_t is_set;
-  };
-
   struct segment_t {
-    BCL::GlobalPtr<entry_t[SEGMENT_SIZE]> curr_buffer;
+    BCL::GlobalPtr<T[SEGMENT_SIZE]> curr_data_buffer;
+    BCL::GlobalPtr<status_t[SEGMENT_SIZE]> curr_status_buffer;
     BCL::GlobalPtr<segment_t> next;
     BCL::GlobalPtr<segment_t> prev;
     int head;
@@ -53,13 +49,9 @@ private:
     EMPTY,
   };
 
-  struct entry_t {
-    T data;
-    status_t is_set;
-  };
-
   struct segment_t {
-    BCL::GlobalPtr<entry_t[SEGMENT_SIZE]> curr_buffer;
+    BCL::GlobalPtr<T[SEGMENT_SIZE]> curr_data_buffer;
+    BCL::GlobalPtr<status_t[SEGMENT_SIZE]> curr_status_buffer;
     BCL::GlobalPtr<segment_t> next;
     BCL::GlobalPtr<segment_t> prev;
     int head;
