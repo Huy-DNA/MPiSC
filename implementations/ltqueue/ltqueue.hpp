@@ -197,11 +197,11 @@ private:
   }
 
 public:
-  LTEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+  LTEnqueuer(MPI_Aint capacity_per_node, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
              MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
-        _spsc{capacity, self_rank, dequeuer_rank, comm} {
+        _spsc{capacity_per_node, self_rank, dequeuer_rank, comm} {
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
@@ -494,10 +494,10 @@ private:
   }
 
 public:
-  LTDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+  LTDequeuer(MPI_Aint capacity_per_node, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
              MPI_Comm comm, MPI_Aint batch_size = 10)
       : _comm{comm}, _self_rank{self_rank},
-        _spsc{capacity, self_rank, comm, batch_size} {
+        _spsc{capacity_per_node, self_rank, comm, batch_size} {
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
