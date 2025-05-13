@@ -10,13 +10,16 @@ find_package(MPI REQUIRED REQUIRED)
 include(ExternalProject)
 ExternalProject_Add(
   caliper_ext
-  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/benches/Caliper
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/benches/Caliper
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/Caliper -DWITH_MPI=true
              -DCMAKE_BUILD_TYPE=Release)
 
 include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks
-  ${MPI_INCLUDE_PATH} ${CMAKE_BINARY_DIR}/Caliper/include)
+  ${MPI_INCLUDE_PATH}
+  ${CMAKE_BINARY_DIR}/Caliper/include
+  ${CMAKE_BINARY_DIR}/lib/bclx/bclx
+  ${CMAKE_BINARY_DIR}/lib/bclx/bcl
+)
 
 add_executable(out ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 add_dependencies(out caliper_ext)

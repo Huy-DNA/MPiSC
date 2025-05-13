@@ -1,10 +1,9 @@
 #pragma once
 
-#include "bcl/fastqueue.hpp"
-#include "benches/utils.h"
-#include "ltqueue/ltqueue.hpp"
-#include "slotqueue/slotqueue-node.hpp"
-#include "slotqueue/slotqueue.hpp"
+#include "../utils.h"
+#include "../../ltqueue/ltqueue.hpp"
+#include "../../slotqueue/slotqueue-node.hpp"
+#include "../../slotqueue/slotqueue.hpp"
 #include <chrono>
 #include <mpi.h>
 
@@ -172,7 +171,7 @@ slotqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
     double workload_microseconds = 0;
 
     if (rank == 0) {
-      JiffyDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
+      SlotDequeuer<int> queue(elements_per_queue, rank, rank, MPI_COMM_WORLD);
       MPI_Barrier(MPI_COMM_WORLD);
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
@@ -192,7 +191,7 @@ slotqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
           workload_microseconds;
       local_dequeues_microseconds = local_microseconds;
     } else {
-      JiffyEnqueuer<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
+      SlotEnqueuer<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {

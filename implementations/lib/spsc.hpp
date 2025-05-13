@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../comm.hpp"
+#include "./comm.hpp"
 #include <algorithm>
 #include <vector>
 

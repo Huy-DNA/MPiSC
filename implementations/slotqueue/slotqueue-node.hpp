@@ -1,10 +1,9 @@
 #pragma once
 
-#include "../comm.hpp"
-#include "../utils/distributed-counters/faa.hpp"
-#include "../utils/spsc.hpp"
+#include "../lib/comm.hpp"
+#include "../lib/distributed-counters/faa.hpp"
+#include "../lib/spsc.hpp"
 #include <atomic>
-#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>

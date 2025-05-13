@@ -1,5 +1,5 @@
 #pragma once
-#include "comm.hpp"
+#include "../comm.hpp"
 #include <algorithm>
 #include <chrono>
 #include <cstdio>

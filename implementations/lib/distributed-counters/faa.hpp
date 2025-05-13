@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../../comm.hpp"
-#include <algorithm>
-#include <iostream>
+#include "../comm.hpp"
 #include <mpi.h>
 
 class FaaCounter {

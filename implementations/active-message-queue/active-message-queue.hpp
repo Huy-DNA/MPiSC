@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../comm.hpp"
+#include "../lib/comm.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>

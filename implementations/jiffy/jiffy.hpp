@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../lib/bclx/bclx/bclx/bclx.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <mpi.h>

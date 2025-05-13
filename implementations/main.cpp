@@ -1,13 +1,15 @@
 #define PROFILE 1
 
-#include "benches/benchmarks/single-one-queue.hpp"
-#include "benches/microbenchmarks/single-one-queue.hpp"
-#include "benches/utils.h"
+#ifdef PROFILE
 #include <caliper/cali.h>
-#include <comm.hpp>
+#endif
+
+#include "./lib/benches/benchmarks/single-one-queue.hpp"
+#include "./lib/benches/microbenchmarks/single-one-queue.hpp"
+#include "./lib/benches/utils.h"
+#include "./lib/comm.hpp"
 #include <cstring>
 #include <iostream>
-#include <ltqueue/ltqueue.hpp>
 #include <mpi.h>
 
 void print_usage(const char *prog_name) {
@@ -69,9 +71,7 @@ int main(int argc, char **argv) {
     slotqueue_single_one_queue_microbenchmark(100000, 5);
     slotqueue_node_single_one_queue_microbenchmark(100000, 5);
     ltqueue_single_one_queue_microbenchmark(100000, 5);
-    fastqueue_single_one_queue_microbenchmark(100000, 5);
     amqueue_single_one_queue_microbenchmark(100000, 5);
-    ccqueue_single_one_queue_microbenchmark(100000, 5);
   }
 
   if (run_bench) {
