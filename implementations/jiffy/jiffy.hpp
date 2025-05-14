@@ -252,15 +252,6 @@ public:
     if (set_index == -1) {
       return false;
     }
-    for (MPI_Aint i = head; i < set_index; ++i) {
-      status_t status;
-      aread_sync(&status, i % this->_capacity, this->_self_rank,
-                 this->_status_win);
-      if (status == SET) {
-        set_index = i;
-        break;
-      }
-    }
     aread_async(output, set_index % this->_capacity, this->_self_rank,
                 this->_data_win);
     status_t handled = HANDLED;
