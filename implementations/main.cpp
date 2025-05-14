@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
     slotqueue_single_one_queue_microbenchmark(100000, 5);
     slotqueue_node_single_one_queue_microbenchmark(100000, 5);
     ltqueue_single_one_queue_microbenchmark(100000, 5);
+    jiffy_single_one_queue_microbenchmark(100000, 5);
     amqueue_single_one_queue_microbenchmark(100000, 5);
   }
 
