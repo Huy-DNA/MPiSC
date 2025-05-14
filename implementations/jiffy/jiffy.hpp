@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../comm.hpp"
+#include "../lib/comm.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <mpi.h>
@@ -114,10 +114,12 @@ public:
       }
       MPI_Aint new_location = location + 1;
       MPI_Aint result;
-      compare_and_swap_sync(&location, &new_location, &result, 0, this->_dequeuer_rank, this->_tail_win);
+      compare_and_swap_sync(&location, &new_location, &result, 0,
+                            this->_dequeuer_rank, this->_tail_win);
       if (result == location) {
         break;
       }
+      location = result;
     }
     write_sync(&data, location % this->_capacity, this->_dequeuer_rank,
                this->_data_win);
@@ -217,6 +219,55 @@ public:
 #ifdef PROFILE
     CALI_CXX_MARK_FUNCTION;
 #endif
-    return false;
+    MPI_Aint head;
+    MPI_Aint tail;
+    aread_async(&head, 0, this->_self_rank, this->_head_win);
+    aread_async(&tail, 0, this->_self_rank, this->_tail_win);
+    flush(this->_self_rank, this->_head_win);
+    flush(this->_self_rank, this->_tail_win);
+    while (true) {
+      if (head >= tail) {
+        break;
+      }
+      status_t status;
+      aread_sync(&status, head % this->_capacity, this->_self_rank,
+                 this->_status_win);
+      if (status == HANDLED) {
+        ++head;
+      } else {
+        break;
+      }
+    }
+    int64_t set_index = -1;
+    awrite_sync(&head, 0, this->_self_rank, this->_head_win);
+    for (MPI_Aint i = head; i < tail; ++i) {
+      status_t status;
+      aread_sync(&status, i % this->_capacity, this->_self_rank,
+                 this->_status_win);
+      if (status == SET) {
+        set_index = i;
+        break;
+      }
+    }
+    if (set_index == -1) {
+      return false;
+    }
+    for (MPI_Aint i = head; i < set_index; ++i) {
+      status_t status;
+      aread_sync(&status, i % this->_capacity, this->_self_rank,
+                 this->_status_win);
+      if (status == SET) {
+        set_index = i;
+        break;
+      }
+    }
+    aread_async(output, set_index % this->_capacity, this->_self_rank,
+                this->_data_win);
+    status_t handled = HANDLED;
+    awrite_async(&handled, set_index % this->_capacity, this->_self_rank,
+                 this->_status_win);
+    flush(this->_self_rank, this->_data_win);
+    flush(this->_self_rank, this->_status_win);
+    return true;
   }
 };
