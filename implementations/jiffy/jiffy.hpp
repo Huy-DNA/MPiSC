@@ -1,344 +1,181 @@
 #pragma once
 
-#include <bcl/bcl.hpp>
-
-#include "bcl/backends/mpi/atomics.hpp"
-#include "bcl/backends/mpi/comm.hpp"
-#include "bcl/core/GlobalPtr.hpp"
-#include "bcl/core/GlobalRef.hpp"
-#include "bcl/core/alloc.hpp"
-#include "bcl/core/comm.hpp"
+#include "../comm.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <mpi.h>
-#include <queue>
 
-template <typename T, int SEGMENT_SIZE = 1024> class JiffyEnqueuer {
+template <typename T> class JiffyEnqueuer {
 private:
   enum status_t {
-    SET,
-    HANDLED,
     EMPTY,
+    HANDLED,
+    SET,
   };
 
-  struct segment_t {
-    BCL::GlobalPtr<T> curr_data_buffer;
-    BCL::GlobalPtr<status_t> curr_status_buffer;
-    BCL::GlobalPtr<BCL::GlobalPtr<segment_t>> next;
-    BCL::GlobalPtr<BCL::GlobalPtr<segment_t>> prev;
-    BCL::GlobalPtr<int> head;
-    int pos_in_queue;
-  };
+  MPI_Comm _comm;
+  const MPI_Aint _self_rank;
+  const MPI_Aint _dequeuer_rank;
 
-  BCL::GlobalPtr<int> _tail;
-  BCL::GlobalPtr<BCL::GlobalPtr<segment_t>> _tail_of_queue;
+  MPI_Info _info;
+
+  MPI_Win _data_win;
+  T *_data_ptr;
+  MPI_Win _status_win;
+  status_t *_status_ptr;
+  MPI_Win _head_win;
+  MPI_Aint *_head_ptr;
+  MPI_Win _tail_win;
+  MPI_Aint *_tail_ptr;
+
+  MPI_Aint _capacity;
 
 public:
-  JiffyEnqueuer(int dequeuer_rank) {
-    this->_tail = BCL::broadcast(_tail, dequeuer_rank);
-    this->_tail_of_queue = BCL::broadcast(_tail_of_queue, dequeuer_rank);
+  JiffyEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+                MPI_Comm comm)
+      : _capacity{capacity}, _comm{comm}, _self_rank{self_rank},
+        _dequeuer_rank{dequeuer_rank} {
+    MPI_Info_create(&this->_info);
+    MPI_Info_set(this->_info, "same_disp_unit", "true");
+    MPI_Info_set(this->_info, "accumulate_ordering", "none");
+
+    MPI_Win_allocate(0, sizeof(T), this->_info, comm, &this->_data_ptr,
+                     &this->_data_win);
+    MPI_Win_allocate(0, sizeof(status_t), this->_info, comm, &this->_status_ptr,
+                     &this->_status_win);
+    MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_head_ptr,
+                     &this->_head_win);
+    MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm, &this->_tail_ptr,
+                     &this->_tail_win);
+
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_data_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_status_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_head_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tail_win);
+
+    MPI_Win_flush_all(this->_data_win);
+    MPI_Win_flush_all(this->_status_win);
+    MPI_Win_flush_all(this->_head_win);
+    MPI_Win_flush_all(this->_tail_win);
+    MPI_Barrier(comm);
+    MPI_Win_flush_all(this->_data_win);
+    MPI_Win_flush_all(this->_status_win);
+    MPI_Win_flush_all(this->_head_win);
+    MPI_Win_flush_all(this->_tail_win);
   }
 
   JiffyEnqueuer(const JiffyEnqueuer &) = delete;
   JiffyEnqueuer &operator=(const JiffyEnqueuer &) = delete;
 
-  ~JiffyEnqueuer() {}
+  ~JiffyEnqueuer() {
+    MPI_Win_unlock_all(this->_data_win);
+    MPI_Win_unlock_all(this->_status_win);
+    MPI_Win_unlock_all(this->_head_win);
+    MPI_Win_unlock_all(this->_tail_win);
+    MPI_Win_free(&this->_data_win);
+    MPI_Win_free(&this->_status_win);
+    MPI_Win_free(&this->_head_win);
+    MPI_Win_free(&this->_tail_win);
+    MPI_Info_free(&this->_info);
+  }
 
   bool enqueue(const T &data) {
-    int location = BCL::fetch_and_op(this->_tail, 1, BCL::plus<int>{});
-    bool is_last_buffer = true;
-    BCL::GlobalPtr<segment_t> temp_tail = BCL::rget(this->_tail_of_queue);
-    int num_elements = SEGMENT_SIZE * BCL::rget(temp_tail).pos_in_queue;
-    while (location >= num_elements) {
-      if (BCL::rget(temp_tail).next == nullptr) {
-        BCL::GlobalPtr<segment_t> new_arr = BCL::alloc<segment_t>(1);
-        new_arr.local()->curr_data_buffer = BCL::alloc<T>(SEGMENT_SIZE);
-        new_arr.local()->curr_status_buffer =
-            BCL::alloc<status_t>(SEGMENT_SIZE);
-        for (int i = 0; i < SEGMENT_SIZE; ++i) {
-          new_arr.local()->curr_status_buffer.local()[i] = EMPTY;
-        }
-        new_arr.local()->next = BCL::alloc<BCL::GlobalPtr<segment_t>>(1);
-        *new_arr.local()->next.local() = nullptr;
-        new_arr.local()->prev = BCL::alloc<BCL::GlobalPtr<segment_t>>(1);
-        *new_arr.local()->prev.local() = temp_tail;
-        new_arr.local()->head = BCL::alloc<int>(1);
-        *new_arr.local()->head.local() = 0;
-        new_arr.local()->pos_in_queue = BCL::rget(temp_tail).pos_in_queue + 1;
-        BCL::GlobalPtr<segment_t> old_next =
-            BCL::rget(BCL::rget(temp_tail).next);
-        if (old_next == nullptr &&
-            BCL::compare_and_swap(BCL::rget(temp_tail).next, old_next,
-                                  new_arr) == old_next) {
-          BCL::compare_and_swap(this->_tail_of_queue, temp_tail, new_arr);
-        } else {
-          BCL::dealloc(new_arr.local()->curr_data_buffer);
-          BCL::dealloc(new_arr);
-        }
-      }
-      temp_tail = *this->_tail_of_queue;
-      num_elements = SEGMENT_SIZE * BCL::rget(temp_tail).pos_in_queue;
-    }
-    int prev_size = SEGMENT_SIZE * BCL::rget(temp_tail).pos_in_queue;
-    while (location < prev_size) {
-      temp_tail = BCL::rget(BCL::rget(temp_tail).prev);
-      prev_size = SEGMENT_SIZE * (BCL::rget(temp_tail).pos_in_queue - 1);
-      is_last_buffer = false;
-    }
-
-    status_t status;
-    BCL::rget(BCL::rget(temp_tail).curr_status_buffer, &status,
-              location - prev_size);
-    if (status == EMPTY) {
-      BCL::rput(&data, BCL::rget(temp_tail).curr_data_buffer,
-                location - prev_size);
-      status_t set = SET;
-      BCL::rput(&set, BCL::rget(temp_tail).curr_status_buffer,
-                location - prev_size);
-      if (location - prev_size == 1 && is_last_buffer) {
-        BCL::GlobalPtr<segment_t> new_arr = BCL::alloc<segment_t>(1);
-        new_arr.local()->curr_data_buffer = BCL::alloc<T>(SEGMENT_SIZE);
-        new_arr.local()->curr_status_buffer =
-            BCL::alloc<status_t>(SEGMENT_SIZE);
-        for (int i = 0; i < SEGMENT_SIZE; ++i) {
-          new_arr.local()->curr_status_buffer.local()[i] = EMPTY;
-        }
-        new_arr.local()->next = BCL::alloc<BCL::GlobalPtr<segment_t>>(1);
-        *new_arr.local()->next.local() = nullptr;
-        new_arr.local()->prev = BCL::alloc<BCL::GlobalPtr<segment_t>>(1);
-        *new_arr.local()->prev.local() = temp_tail;
-        new_arr.local()->head = BCL::alloc<int>(1);
-        *new_arr.local()->head.local() = 0;
-        new_arr.local()->pos_in_queue = BCL::rget(temp_tail).pos_in_queue + 1;
-        BCL::GlobalPtr<segment_t> old_next =
-            BCL::rget(BCL::rget(temp_tail).next);
-        if (old_next == nullptr &&
-            BCL::compare_and_swap(BCL::rget(temp_tail).next, old_next,
-                                  new_arr) == old_next) {
-          BCL::compare_and_swap(this->_tail_of_queue, temp_tail, new_arr);
-        } else {
-          BCL::dealloc(new_arr.local()->curr_data_buffer);
-          BCL::dealloc(new_arr);
-        }
-      }
-    }
-    return true;
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+    return false;
   }
 };
 
-template <typename T, int SEGMENT_SIZE = 1024> class JiffyDequeuer {
+template <typename T, int segment_size = 1024> class JiffyDequeuer {
 private:
   enum status_t {
-    SET,
-    HANDLED,
     EMPTY,
+    HANDLED,
+    SET,
   };
 
-  struct segment_t {
-    BCL::GlobalPtr<T> curr_data_buffer;
-    BCL::GlobalPtr<status_t> curr_status_buffer;
-    BCL::GlobalPtr<BCL::GlobalPtr<segment_t>> next;
-    BCL::GlobalPtr<BCL::GlobalPtr<segment_t>> prev;
-    BCL::GlobalPtr<int> head;
-    int pos_in_queue;
+  struct data_t {
+    T data;
+    status_t status;
   };
 
-  BCL::GlobalPtr<int> _tail;
-  BCL::GlobalPtr<segment_t> _head_of_queue;
-  BCL::GlobalPtr<BCL::GlobalPtr<segment_t>> _tail_of_queue;
-  std::queue<BCL::GlobalPtr<segment_t>> _garbage_list;
+  const MPI_Aint _self_rank;
+  MPI_Comm _comm;
 
-private:
-  bool _fold(BCL::GlobalPtr<segment_t> temp_head_of_queue, int &temp_head,
-             bool &flag_move_to_new_buffer, bool &flag_buffer_all_handle_id) {
-    if (temp_head_of_queue == BCL::rget(this->_tail_of_queue)) {
-      return false;
-    }
-    BCL::GlobalPtr<segment_t> next =
-        BCL::rget(BCL::rget(temp_head_of_queue).next);
-    BCL::GlobalPtr<segment_t> prev =
-        BCL::rget(BCL::rget(temp_head_of_queue).prev);
-    if (next == nullptr) {
-      return false;
-    }
-    BCL::rput(prev, BCL::rget(next).prev);
-    BCL::rput(next, BCL::rget(prev).next);
-    BCL::dealloc(BCL::rget(temp_head_of_queue).curr_data_buffer);
-    BCL::dealloc(BCL::rget(temp_head_of_queue).curr_status_buffer);
-    this->_garbage_list.push(temp_head_of_queue);
-    temp_head_of_queue = next;
-    temp_head = BCL::rget(BCL::rget(temp_head_of_queue).head);
-    flag_buffer_all_handle_id = true;
-    flag_move_to_new_buffer = true;
-    return true;
-  }
+  MPI_Info _info;
 
-  bool _move_to_next_buffer() {
-    if (BCL::rget((BCL::rget(this->_head_of_queue)).head) >= SEGMENT_SIZE) {
-      if (this->_head_of_queue == BCL::rget(this->_tail_of_queue)) {
-        return false;
-      }
-      BCL::GlobalPtr<segment_t> next =
-          BCL::rget(BCL::rget(_head_of_queue).next);
-      if (next == nullptr) {
-        return false;
-      }
-      if (this->_garbage_list.size()) {
-        BCL::GlobalPtr<segment_t> g = this->_garbage_list.front();
-        while (BCL::rget(g).pos_in_queue < BCL::rget(next).pos_in_queue) {
-          this->_garbage_list.pop();
-          BCL::dealloc(g);
-          g = this->_garbage_list.front();
-        }
-      }
-      BCL::dealloc(this->_head_of_queue);
-      this->_head_of_queue = next;
-      return true;
-    }
-    return true;
-  }
+  MPI_Win _data_win;
+  T *_data_ptr;
+  MPI_Win _status_win;
+  status_t *_status_ptr;
+  MPI_Win _head_win;
+  MPI_Aint *_head_ptr;
+  MPI_Win _tail_win;
+  MPI_Aint *_tail_ptr;
 
-  bool _scan(BCL::GlobalPtr<segment_t> temp_head_of_queue, int &temp_head,
-             status_t &status, T &data) {
-    bool flag_move_to_new_buffer = false;
-    bool flag_buffer_all_handled = true;
-    while (status == SET) {
-      temp_head++;
-      if (status != HANDLED) {
-        flag_buffer_all_handled = false;
-      }
-      if (temp_head >= SEGMENT_SIZE) {
-        if (flag_buffer_all_handled && flag_move_to_new_buffer) {
-          bool res =
-              this->_fold(temp_head_of_queue, temp_head,
-                          flag_move_to_new_buffer, flag_buffer_all_handled);
-          if (!res) {
-            return false;
-          }
-        } else {
-          BCL::GlobalPtr<segment_t> next =
-              BCL::rget(BCL::rget(temp_head_of_queue).next);
-          if (next == nullptr) {
-            return false;
-          }
-          temp_head_of_queue = next;
-          temp_head = BCL::rget(BCL::rget(temp_head_of_queue).head);
-          flag_buffer_all_handled = true;
-          flag_move_to_new_buffer = true;
-        }
-      }
-    }
-    return true;
-  }
-
-  void _rescan(BCL::GlobalPtr<segment_t> head_of_queue,
-               BCL::GlobalPtr<segment_t> temp_head_of_queue, int &temp_head,
-               status_t &status, T &data) {
-    BCL::GlobalPtr<segment_t> scan_head_of_queue = head_of_queue;
-    for (int scan_head = BCL::rget(BCL::rget(scan_head_of_queue).head);
-         (scan_head_of_queue != temp_head_of_queue ||
-          scan_head <= (temp_head - 1));
-         scan_head++) {
-      if (scan_head >= SEGMENT_SIZE) {
-        scan_head_of_queue = BCL::rget(BCL::rget(scan_head_of_queue).next);
-        scan_head = BCL::rget(BCL::rget(scan_head_of_queue).head);
-      }
-      status_t scan_status;
-      T scan_data;
-      BCL::rget(BCL::rget(head_of_queue).curr_status_buffer, &scan_status,
-                scan_head);
-      BCL::rget(BCL::rget(head_of_queue).curr_data_buffer, &scan_data,
-                scan_head);
-      if (scan_status == SET) {
-        temp_head = scan_head;
-        temp_head_of_queue = scan_head_of_queue;
-        status = scan_status;
-        data = scan_data;
-        scan_head_of_queue = head_of_queue;
-        scan_head = BCL::rget(BCL::rget(scan_head_of_queue).head);
-      }
-    }
-  }
+  MPI_Aint _capacity;
 
 public:
-  JiffyDequeuer(int self_rank) {
-    this->_tail = BCL::alloc<int>(1);
-    *this->_tail = 0;
+  JiffyDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+                MPI_Comm comm, MPI_Aint batch_size = 10)
+      : _capacity{capacity}, _comm{comm}, _self_rank{self_rank} {
+    int size;
+    MPI_Comm_size(comm, &size);
 
-    this->_head_of_queue = BCL::alloc<segment_t>(1);
+    MPI_Info_create(&this->_info);
+    MPI_Info_set(this->_info, "same_disp_unit", "true");
+    MPI_Info_set(this->_info, "accumulate_ordering", "none");
 
-    this->_tail_of_queue = BCL::alloc<BCL::GlobalPtr<segment_t>>(1);
-    *this->_tail_of_queue = BCL::alloc<segment_t>(1);
+    MPI_Win_allocate(capacity * sizeof(T), sizeof(T), this->_info, comm,
+                     &this->_data_ptr, &this->_data_win);
+    MPI_Win_allocate(capacity * sizeof(status_t), sizeof(status_t), this->_info,
+                     comm, &this->_status_ptr, &this->_status_win);
+    MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
+                     &this->_head_ptr, &this->_head_win);
+    MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
+                     &this->_tail_ptr, &this->_tail_win);
 
-    BCL::broadcast(_tail, self_rank);
-    BCL::broadcast(_head_of_queue, self_rank);
-    BCL::broadcast(_tail_of_queue, self_rank);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_data_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_status_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_head_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tail_win);
+
+    for (int i = 0; i < capacity; ++i) {
+      this->_status_ptr[i] = EMPTY;
+    }
+    *this->_head_ptr = 0;
+    *this->_tail_ptr = 0;
+
+    MPI_Win_flush_all(this->_data_win);
+    MPI_Win_flush_all(this->_status_win);
+    MPI_Win_flush_all(this->_head_win);
+    MPI_Win_flush_all(this->_tail_win);
+    MPI_Barrier(comm);
+    MPI_Win_flush_all(this->_data_win);
+    MPI_Win_flush_all(this->_status_win);
+    MPI_Win_flush_all(this->_head_win);
+    MPI_Win_flush_all(this->_tail_win);
   }
 
   JiffyDequeuer(const JiffyDequeuer &) = delete;
   JiffyDequeuer &operator=(const JiffyDequeuer &) = delete;
   ~JiffyDequeuer() {
-    // Just leak memory...
+    MPI_Win_unlock_all(this->_data_win);
+    MPI_Win_unlock_all(this->_status_win);
+    MPI_Win_unlock_all(this->_head_win);
+    MPI_Win_unlock_all(this->_tail_win);
+    MPI_Win_free(&this->_data_win);
+    MPI_Win_free(&this->_status_win);
+    MPI_Win_free(&this->_head_win);
+    MPI_Win_free(&this->_tail_win);
+    MPI_Info_free(&this->_info);
   }
 
   bool dequeue(T *output) {
-    status_t status;
-    T data;
-    segment_t head_of_queue = *this->_head_of_queue;
-    BCL::rget(head_of_queue.curr_status_buffer, &status,
-              BCL::rget(head_of_queue.head));
-    BCL::rget(head_of_queue.curr_data_buffer, &data,
-              BCL::rget(head_of_queue.head));
-    while (status == HANDLED) {
-      BCL::fetch_and_op(head_of_queue.head, 1, BCL::plus<int>{});
-      bool res = this->_move_to_next_buffer();
-      if (!res) {
-        return false;
-      }
-      BCL::rget(head_of_queue.curr_status_buffer, &status,
-                BCL::rget(head_of_queue.head));
-      BCL::rget(head_of_queue.curr_data_buffer, &data,
-                BCL::rget(head_of_queue.head));
-    }
-
-    if ((this->_head_of_queue == BCL::rget(this->_tail_of_queue)) &&
-        BCL::rget(BCL::rget(this->_head_of_queue).head) ==
-            *this->_tail % SEGMENT_SIZE) {
-      return false;
-    }
-
-    if (status == SET) {
-      BCL::fetch_and_op(head_of_queue.head, 1, BCL::plus<int>{});
-      this->_move_to_next_buffer();
-      *output = data;
-      return true;
-    }
-
-    if (status == EMPTY) {
-      BCL::GlobalPtr<segment_t> temp_head_of_queue = this->_head_of_queue;
-      int temp_head = BCL::rget(BCL::rget(this->_head_of_queue).head);
-      BCL::rget(BCL::rget(temp_head_of_queue).curr_status_buffer, &status,
-                temp_head);
-      BCL::rget(BCL::rget(temp_head_of_queue).curr_data_buffer, &data,
-                temp_head);
-      bool res = this->_scan(temp_head_of_queue, temp_head, status, data);
-      if (!res) {
-        return false;
-      }
-      this->_rescan(this->_head_of_queue, temp_head_of_queue, temp_head, status,
-                    data);
-      *output = data;
-      status_t handled = HANDLED;
-      BCL::rput(&handled, BCL::rget(temp_head_of_queue).curr_status_buffer,
-                temp_head);
-      if (temp_head_of_queue == this->_head_of_queue &&
-          temp_head == BCL::rget(BCL::rget(this->_head_of_queue).head)) {
-        BCL::fetch_and_op(head_of_queue.head, 1, BCL::plus<int>{});
-        this->_move_to_next_buffer();
-      }
-      return true;
-    }
-
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
     return false;
   }
 };
