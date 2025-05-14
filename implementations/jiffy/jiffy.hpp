@@ -90,6 +90,8 @@ public:
       aread_sync(&head, 0, this->_dequeuer_rank, this->_head_win);
       if (location - head >= this->_capacity) {
         continue;
+      } else {
+        break;
       }
     }
     write_sync(&data, location % this->_capacity, this->_dequeuer_rank,
