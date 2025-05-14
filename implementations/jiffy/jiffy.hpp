@@ -79,15 +79,56 @@ public:
     MPI_Info_free(&this->_info);
   }
 
+  bool partial_enqueue(const T &data) {
+#ifdef PROFILE
+    CALI_CXX_MARK_FUNCTION;
+#endif
+    MPI_Aint location;
+    fetch_and_add_sync(&location, 1, 0, this->_dequeuer_rank, this->_tail_win);
+    while (true) {
+      MPI_Aint head;
+      aread_sync(&head, 0, this->_dequeuer_rank, this->_head_win);
+      if (location - head >= this->_capacity) {
+        continue;
+      }
+    }
+    write_sync(&data, location % this->_capacity, this->_dequeuer_rank,
+               this->_data_win);
+    status_t set = SET;
+    awrite_sync(&set, location % this->_capacity, this->_dequeuer_rank,
+                this->_status_win);
+    return true;
+  }
+
   bool enqueue(const T &data) {
 #ifdef PROFILE
     CALI_CXX_MARK_FUNCTION;
 #endif
-    return false;
+    MPI_Aint location;
+    aread_sync(&location, 0, this->_dequeuer_rank, this->_tail_win);
+    while (true) {
+      MPI_Aint head;
+      aread_sync(&head, 0, this->_dequeuer_rank, this->_head_win);
+      if (location - head >= this->_capacity) {
+        return false;
+      }
+      MPI_Aint new_location = location + 1;
+      MPI_Aint result;
+      compare_and_swap_sync(&location, &new_location, &result, 0, this->_dequeuer_rank, this->_tail_win);
+      if (result == location) {
+        break;
+      }
+    }
+    write_sync(&data, location % this->_capacity, this->_dequeuer_rank,
+               this->_data_win);
+    status_t set = SET;
+    awrite_sync(&set, location % this->_capacity, this->_dequeuer_rank,
+                this->_status_win);
+    return true;
   }
 };
 
-template <typename T, int segment_size = 1024> class JiffyDequeuer {
+template <typename T> class JiffyDequeuer {
 private:
   enum status_t {
     EMPTY,
