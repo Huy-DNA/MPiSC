@@ -17,7 +17,8 @@ ExternalProject_Add(
 include_directories(
   ${MPI_INCLUDE_PATH}
   ${CMAKE_BINARY_DIR}/Caliper/include
-  ${CMAKE_BINARY_DIR}/lib/bcl
+  ${CMAKE_BINARY_DIR}/lib/bclx/bclx
+  ${CMAKE_BINARY_DIR}/lib/bclx/bcl
 )
 
 add_executable(out ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)

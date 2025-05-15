@@ -2,8 +2,6 @@
 
 Link: [paper](/references/Jiffy/README.md)
 
-This version is bounded, and enqueue is a partial function.
+I personally found that existing solutions to distributed dynamic memory allocator unsatisfactory for general use cases, specifically in the realm of MPI. Need more investigation.
 
-We use a circular array hosted on the dequeuer for simplicity.
-
-Remark: I personally found that existing solutions to distributed dynamic memory allocator unsatisfactory for general use cases, specifically in the realm of MPI. Need more investigation.
+The naive version is buggy while the non-naive version is bounded.
