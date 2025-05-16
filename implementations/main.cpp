@@ -8,6 +8,7 @@
 #include "./lib/benches/microbenchmarks/single-one-queue.hpp"
 #include "./lib/benches/utils.h"
 #include "./lib/comm.hpp"
+#include "bcl/backends/mpi/backend.hpp"
 #include <cstring>
 #include <iostream>
 #include <mpi.h>
@@ -23,7 +24,7 @@ void print_usage(const char *prog_name) {
 }
 
 int main(int argc, char **argv) {
-  MPI_Init(&argc, &argv);
+  BCL::init();
 
   bool run_rmo = true;
   bool run_micro = true;
@@ -71,7 +72,7 @@ int main(int argc, char **argv) {
     slotqueue_single_one_queue_microbenchmark(100000, 5);
     slotqueue_node_single_one_queue_microbenchmark(100000, 5);
     ltqueue_single_one_queue_microbenchmark(100000, 5);
-    jiffy_single_one_queue_microbenchmark(100000, 5);
+    naive_jiffy_single_one_queue_microbenchmark(100000, 5);
     amqueue_single_one_queue_microbenchmark(100000, 5);
   }
 
@@ -80,6 +81,6 @@ int main(int argc, char **argv) {
     ltqueue_single_one_queue_benchmark(100000, 5);
   }
 
-  MPI_Finalize();
+  BCL::finalize();
   return 0;
 }
