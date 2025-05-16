@@ -191,10 +191,6 @@ public:
   }
 
   bool dequeue(T *output) {
-    status_t status = bclx::aget_sync(
-        bclx::aget_sync(this->_head_of_queue).curr_status_buffer +
-        bclx::aget_sync(bclx::aget_sync(_head_of_queue).head));
-
     while (true) {
       bclx::gptr<segment_t> temp_tail = bclx::aget_sync(this->_tail_of_queue);
       unsigned int prev_size =
@@ -326,7 +322,7 @@ public:
 
               bclx::aput_sync(prev, bclx::aget_sync(next).prev);
               bclx::aput_sync(next, bclx::aget_sync(prev).next);
-             //  BCL::dealloc(temp_head_of_queue);
+              //  BCL::dealloc(temp_head_of_queue);
 
               temp_head_of_queue = next;
               temp_head =
