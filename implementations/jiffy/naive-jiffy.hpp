@@ -326,7 +326,7 @@ public:
 
               bclx::aput_sync(prev, bclx::aget_sync(next).prev);
               bclx::aput_sync(next, bclx::aget_sync(prev).next);
-              BCL::dealloc(temp_head_of_queue);
+             //  BCL::dealloc(temp_head_of_queue);
 
               temp_head_of_queue = next;
               temp_head =
@@ -372,7 +372,7 @@ public:
         if (next == nullptr) {
           return false;
         }
-        BCL::dealloc(this->_head_of_queue);
+        // BCL::dealloc(this->_head_of_queue);
         this->_head_of_queue = next;
       }
     }
