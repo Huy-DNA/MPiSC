@@ -221,6 +221,10 @@ public:
         bool flag_move_to_new_buffer = false;
         bool flag_buffer_all_handled = true;
         while (status == EMPTY) {
+          // patching code... don't know if it's correct
+          if (temp_head >= bclx::aget_sync(this->_tail)) {
+            return false;
+          }
           if (temp_head < SEGMENT_SIZE) {
             status_t t_status = bclx::aget_sync(
                 bclx::aget_sync(this->_head_of_queue).curr_status_buffer +
