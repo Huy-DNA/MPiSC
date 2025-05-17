@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <mpi.h>
 
-template <typename T, int SEGMENT_SIZE = 32> class NaiveJiffyEnqueuer {
+template <typename T, int SEGMENT_SIZE = 1024 * 32> class NaiveJiffyEnqueuer {
 private:
   enum status_t {
     SET,
@@ -130,7 +130,7 @@ public:
 };
 
 // Warning: A little buggy when dequeuing from empty queue
-template <typename T, int SEGMENT_SIZE = 32> class NaiveJiffyDequeuer {
+template <typename T, int SEGMENT_SIZE = 1024 * 32> class NaiveJiffyDequeuer {
 private:
   enum status_t {
     SET,
