@@ -238,20 +238,20 @@ The procedures of the dequeuer are given as follows.
     booktabs: true,
     numbered-title: [`bool spsc_dequeue(data_t* output)`],
   )[
-    + `new_first = First_buf + 1`
-    + *if* `(new_first > Last_buf)                                            `
-      + `aread_sync(Last, &Last_buf)`
-      + *if* `(new_first > Last_buf)`
-        + *return* `false`
-    + `aread_sync(Data, First_buf % Capacity, output)`
-    + `awrite_sync(First, &new_first)`
-    + `First_buf = new_first`
-    + *return* `true`
+    + #line-label(<line-spsc-dequeue-new-first>) `new_first = First_buf + 1`
+    + #line-label(<line-spsc-dequeue-empty-once>) *if* `(new_first > Last_buf)                                            `
+      + #line-label(<line-spsc-dequeue-sync-last>) `aread_sync(Last, &Last_buf)`
+      + #line-label(<line-spsc-dequeue-empty-twice>) *if* `(new_first > Last_buf)`
+        + #line-label(<line-spsc-dequeue-empty>) *return* `false`
+    + #line-label(<line-spsc-dequeue-read>) `aread_sync(Data, First_buf % Capacity, output)`
+    + #line-label(<line-spsc-dequeue-swing-first>) `awrite_sync(First, &new_first)`
+    + #line-label(<line-spsc-dequeue-sync-cache>) `First_buf = new_first`
+    + #line-label(<line-spsc-dequeue-success>) *return* `true`
 
   ],
 ) <spsc-dequeue>
 
-`spsc_dequeue` first computes the new `First` value (line 15). If the queue is empty as indicating by the difference the new `First` value and `Last-buf` (line 16), there can still be the possibility that some elements have been enqueued but `Last-buf` hasn't been synced with `Last` yet, therefore, we first refresh the value of `Last-buf` by fetching from `Last` (line 17). If the queue is still empty (line 18), we signal failure (line 19). Otherwise, we proceed to read the top value at `First_buf % Capacity` (line 20) into `output`, increment `First` (line 21) - effectively dequeue the element, update the value of `First_buf` (line 22) and signal success (line 23).
+`spsc_dequeue` first computes the new `First` value (@line-spsc-dequeue-new-first). If the queue is empty as indicating by the difference the new `First` value and `Last-buf` (@line-spsc-dequeue-empty-once), there can still be the possibility that some elements have been enqueued but `Last-buf` hasn't been synced with `Last` yet, therefore, we first refresh the value of `Last-buf` by fetching from `Last` (@line-spsc-dequeue-sync-last). If the queue is still empty (@line-spsc-dequeue-empty-twice), we signal failure (@line-spsc-dequeue-empty). Otherwise, we proceed to read the top value at `First_buf % Capacity` (@line-spsc-dequeue-read) into `output`, increment `First` (@line-spsc-dequeue-swing-first) - effectively dequeue the element, update the value of `First_buf` (@line-spsc-dequeue-sync-cache) and signal success (@line-spsc-dequeue-success).
 
 #figure(
   kind: "algorithm",
