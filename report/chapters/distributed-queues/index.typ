@@ -194,19 +194,19 @@ The procedures of the enqueuer are given as follows.
     booktabs: true,
     numbered-title: [`bool spsc_enqueue(data_t v)`],
   )[
-    + `new_last = Last_buf + 1`
-    + *if* `(new_last - First_buf > Capacity)                                            `
-      + `aread_sync(First, &First_buf)`
-      + *if* `(new_last - First_buf > Capacity)`
-        + *return* `false`
-    + `awrite_sync(Data, Last_buf % Capacity, &v)`
-    + `awrite_sync(Last, &new_last)`
-    + `Last_buf = new_last`
-    + *return* `true`
+    + #line-label(<line-spsc-enqueue-new-last>) `new_last = Last_buf + 1`
+    + #line-label(<line-spsc-enqueue-diff-cache-once>) *if* `(new_last - First_buf > Capacity)                                            `
+      + #line-label(<line-spsc-enqueue-resync-cache>) `aread_sync(First, &First_buf)`
+      + #line-label(<line-spsc-enqueue-diff-cache-twice>) *if* `(new_last - First_buf > Capacity)`
+        + #line-label(<line-spsc-enqueue-full>) *return* `false`
+    + #line-label(<line-spsc-enqueue-write>) `awrite_sync(Data, Last_buf % Capacity, &v)`
+    + #line-label(<line-spsc-enqueue-increment-last>) `awrite_sync(Last, &new_last)`
+    + #line-label(<line-spsc-enqueue-update-cache>) `Last_buf = new_last`
+    + #line-label(<line-spsc-enqueue-success>) *return* `true`
   ],
 ) <spsc-enqueue>
 
-`spsc_enqueue` first computes the new `Last` value (line 1). If the queue is full as indicating by the difference the new `Last` value and `First-buf` (line 2), there can still be the possibility that some elements have been dequeued but `First-buf` hasn't been synced with `First` yet, therefore, we first refresh the value of `First-buf` by fetching from `First` (line 3). If the queue is still full (line 4), we signal failure (line 5). Otherwise, we proceed to write the enqueued value to the entry at `Last_buf % Capacity` (line 6), increment `Last` (line 7), update the value of `Last_buf` (line 8) and signal success (line 9).
+`spsc_enqueue` first computes the new `Last` value (@line-spsc-enqueue-new-last). If the queue is full as indicating by the difference the new `Last` value and `First_buf` (@line-spsc-enqueue-diff-cache-once), there can still be the possibility that some elements have been dequeued but `First_buf` hasn't been synced with `First` yet, therefore, we first refresh the value of `First_buf` by fetching from `First` (@line-spsc-enqueue-resync-cache). If the queue is still full (@line-spsc-enqueue-diff-cache-twice), we signal failure (@line-spsc-enqueue-full). Otherwise, we proceed to write the enqueued value to the entry at `Last_buf % Capacity` (@line-spsc-enqueue-write), increment `Last` (@line-spsc-enqueue-increment-last), update the value of `Last_buf` (@line-spsc-enqueue-update-cache) and signal success (@line-spsc-enqueue-success).
 
 #figure(
   kind: "algorithm",
