@@ -216,17 +216,17 @@ The procedures of the enqueuer are given as follows.
     booktabs: true,
     numbered-title: [`bool spsc_readFront`#sub(`e`)`(data_t* output)`],
   )[
-    + *if* `(First_buf >= Last_buf)                                           `
-      + *return* `false`
-    + `aread_sync(First, &First_buf)`
-    + *if* `(First_buf >= Last_buf)                                           `
-      + *return* `false`
-    + `aread_sync(Data, First_buf % Capacity, output)`
-    + *return* `true`
+    + #line-label(<line-spsc-e-readFront-diff-cache-once>) *if* `(First_buf >= Last_buf)                                           `
+      + #line-label(<line-spsc-e-readFront-empty-once>) *return* `false`
+    + #line-label(<line-spsc-e-readFront-sync-first>) `aread_sync(First, &First_buf)`
+    + #line-label(<line-spsc-e-readFront-diff-cache-twice>) *if* `(First_buf >= Last_buf)                                           `
+      + #line-label(<line-spsc-e-readFront-empty-twice>) *return* `false`
+    + #line-label(<line-spsc-e-readFront-read>) `aread_sync(Data, First_buf % Capacity, output)`
+    + #line-label(<line-spsc-e-readFront-success>) *return* `true`
   ],
 ) <spsc-enqueue-readFront>
 
-`spsc_readFront`#sub(`e`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 10). Note that if this check fails, we signal failure immediately (line 11) without refetching either `First` or `Last`. This suffices because `Last` cannot be out-of-sync with `Last_buf` as we're the enqueuer and `First` can only increase since the last refresh of `First_buf`, therefore, if we refresh `First` and `Last`, the condition on line 10 would return `false` anyways. If the SPSC is not empty, we refresh `First` and re-perform the empty check (line 12-14). If the SPSC is again not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 15) and signal success (line 16).
+`spsc_readFront`#sub(`e`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (@line-spsc-e-readFront-diff-cache-once). Note that if this check fails, we signal failure immediately (@line-spsc-e-readFront-empty-once) without refetching either `First` or `Last`. This suffices because `Last` cannot be out-of-sync with `Last_buf` as we're the enqueuer and `First` can only increase since the last refresh of `First_buf`, therefore, if we refresh `First` and `Last`, the condition on @line-spsc-e-readFront-diff-cache-once would return `false` anyways. If the SPSC is not empty, we refresh `First` and re-perform the empty check (line @line-spsc-e-readFront-diff-cache-twice - @line-spsc-e-readFront-empty-twice). If the SPSC is again not empty, we read the queue entry at `First_buf % Capacity` into `output` (@line-spsc-e-readFront-read) and signal success (@line-spsc-e-readFront-success).
 
 The procedures of the dequeuer are given as follows.
 
