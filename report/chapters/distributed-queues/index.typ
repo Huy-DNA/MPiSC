@@ -234,7 +234,7 @@ The procedures of the dequeuer are given as follows.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 14,
+    line-numbering: i => i + 16,
     booktabs: true,
     numbered-title: [`bool spsc_dequeue(data_t* output)`],
   )[
@@ -257,7 +257,7 @@ The procedures of the dequeuer are given as follows.
   kind: "algorithm",
   supplement: [Procedure],
   pseudocode-list(
-    line-numbering: i => i + 23,
+    line-numbering: i => i + 25,
     booktabs: true,
     numbered-title: [`bool spsc_readFront`#sub(`d`)`(data_t* output)`],
   )[
