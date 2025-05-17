@@ -196,7 +196,7 @@ The procedures of the enqueuer are given as follows.
   )[
     + #line-label(<line-spsc-enqueue-new-last>) `new_last = Last_buf + 1`
     + #line-label(<line-spsc-enqueue-diff-cache-once>) *if* `(new_last - First_buf > Capacity)                                            `
-      + #line-label(<line-spsc-enqueue-resync-cache>) `aread_sync(First, &First_buf)`
+      + #line-label(<line-spsc-enqueue-resync-first>) `aread_sync(First, &First_buf)`
       + #line-label(<line-spsc-enqueue-diff-cache-twice>) *if* `(new_last - First_buf > Capacity)`
         + #line-label(<line-spsc-enqueue-full>) *return* `false`
     + #line-label(<line-spsc-enqueue-write>) `awrite_sync(Data, Last_buf % Capacity, &v)`
@@ -206,7 +206,7 @@ The procedures of the enqueuer are given as follows.
   ],
 ) <spsc-enqueue>
 
-`spsc_enqueue` first computes the new `Last` value (@line-spsc-enqueue-new-last). If the queue is full as indicating by the difference the new `Last` value and `First_buf` (@line-spsc-enqueue-diff-cache-once), there can still be the possibility that some elements have been dequeued but `First_buf` hasn't been synced with `First` yet, therefore, we first refresh the value of `First_buf` by fetching from `First` (@line-spsc-enqueue-resync-cache). If the queue is still full (@line-spsc-enqueue-diff-cache-twice), we signal failure (@line-spsc-enqueue-full). Otherwise, we proceed to write the enqueued value to the entry at `Last_buf % Capacity` (@line-spsc-enqueue-write), increment `Last` (@line-spsc-enqueue-increment-last), update the value of `Last_buf` (@line-spsc-enqueue-update-cache) and signal success (@line-spsc-enqueue-success).
+`spsc_enqueue` first computes the new `Last` value (@line-spsc-enqueue-new-last). If the queue is full as indicating by the difference the new `Last` value and `First_buf` (@line-spsc-enqueue-diff-cache-once), there can still be the possibility that some elements have been dequeued but `First_buf` hasn't been synced with `First` yet, therefore, we first refresh the value of `First_buf` by fetching from `First` (@line-spsc-enqueue-resync-first). If the queue is still full (@line-spsc-enqueue-diff-cache-twice), we signal failure (@line-spsc-enqueue-full). Otherwise, we proceed to write the enqueued value to the entry at `Last_buf % Capacity` (@line-spsc-enqueue-write), increment `Last` (@line-spsc-enqueue-increment-last), update the value of `Last_buf` (@line-spsc-enqueue-update-cache) and signal success (@line-spsc-enqueue-success).
 
 #figure(
   kind: "algorithm",
@@ -218,7 +218,7 @@ The procedures of the enqueuer are given as follows.
   )[
     + #line-label(<line-spsc-e-readFront-diff-cache-once>) *if* `(First_buf >= Last_buf)                                           `
       + #line-label(<line-spsc-e-readFront-empty-once>) *return* `false`
-    + #line-label(<line-spsc-e-readFront-sync-first>) `aread_sync(First, &First_buf)`
+    + #line-label(<line-spsc-e-readFront-resync-first>) `aread_sync(First, &First_buf)`
     + #line-label(<line-spsc-e-readFront-diff-cache-twice>) *if* `(First_buf >= Last_buf)                                           `
       + #line-label(<line-spsc-e-readFront-empty-twice>) *return* `false`
     + #line-label(<line-spsc-e-readFront-read>) `aread_sync(Data, First_buf % Capacity, output)`
@@ -240,18 +240,18 @@ The procedures of the dequeuer are given as follows.
   )[
     + #line-label(<line-spsc-dequeue-new-first>) `new_first = First_buf + 1`
     + #line-label(<line-spsc-dequeue-empty-once>) *if* `(new_first > Last_buf)                                            `
-      + #line-label(<line-spsc-dequeue-sync-last>) `aread_sync(Last, &Last_buf)`
+      + #line-label(<line-spsc-dequeue-resync-last>) `aread_sync(Last, &Last_buf)`
       + #line-label(<line-spsc-dequeue-empty-twice>) *if* `(new_first > Last_buf)`
         + #line-label(<line-spsc-dequeue-empty>) *return* `false`
     + #line-label(<line-spsc-dequeue-read>) `aread_sync(Data, First_buf % Capacity, output)`
     + #line-label(<line-spsc-dequeue-swing-first>) `awrite_sync(First, &new_first)`
-    + #line-label(<line-spsc-dequeue-sync-cache>) `First_buf = new_first`
+    + #line-label(<line-spsc-dequeue-update-cache>) `First_buf = new_first`
     + #line-label(<line-spsc-dequeue-success>) *return* `true`
 
   ],
 ) <spsc-dequeue>
 
-`spsc_dequeue` first computes the new `First` value (@line-spsc-dequeue-new-first). If the queue is empty as indicating by the difference the new `First` value and `Last-buf` (@line-spsc-dequeue-empty-once), there can still be the possibility that some elements have been enqueued but `Last-buf` hasn't been synced with `Last` yet, therefore, we first refresh the value of `Last-buf` by fetching from `Last` (@line-spsc-dequeue-sync-last). If the queue is still empty (@line-spsc-dequeue-empty-twice), we signal failure (@line-spsc-dequeue-empty). Otherwise, we proceed to read the top value at `First_buf % Capacity` (@line-spsc-dequeue-read) into `output`, increment `First` (@line-spsc-dequeue-swing-first) - effectively dequeue the element, update the value of `First_buf` (@line-spsc-dequeue-sync-cache) and signal success (@line-spsc-dequeue-success).
+`spsc_dequeue` first computes the new `First` value (@line-spsc-dequeue-new-first). If the queue is empty as indicating by the difference the new `First` value and `Last-buf` (@line-spsc-dequeue-empty-once), there can still be the possibility that some elements have been enqueued but `Last-buf` hasn't been synced with `Last` yet, therefore, we first refresh the value of `Last-buf` by fetching from `Last` (@line-spsc-dequeue-resync-last). If the queue is still empty (@line-spsc-dequeue-empty-twice), we signal failure (@line-spsc-dequeue-empty). Otherwise, we proceed to read the top value at `First_buf % Capacity` (@line-spsc-dequeue-read) into `output`, increment `First` (@line-spsc-dequeue-swing-first) - effectively dequeue the element, update the value of `First_buf` (@line-spsc-dequeue-update-cache) and signal success (@line-spsc-dequeue-success).
 
 #figure(
   kind: "algorithm",
@@ -262,16 +262,15 @@ The procedures of the dequeuer are given as follows.
     numbered-title: [`bool spsc_readFront`#sub(`d`)`(data_t* output)`],
   )[
     + #line-label(<line-spsc-d-readFront-diff-cache-once>) *if* `(First_buf >= Last_buf)                                               `
-      + #line-label(<line-spsc-d-readFront-sync-last>) `aread_sync(Last, &Last_buf)`
+      + #line-label(<line-spsc-d-readFront-resync-last>) `aread_sync(Last, &Last_buf)`
       + #line-label(<line-spsc-d-readFront-diff-cache-twice>) *if* `(First_buf >= Last_buf)`
         + #line-label(<line-spsc-d-readFront-empty>) *return* `false`
     + #line-label(<line-spsc-d-readFront-read>) `aread_sync(Data, First_buf % Capacity, output)`
     + #line-label(<line-spsc-d-readFront-success>) *return* `true`
-
   ],
 ) <spsc-dequeue-readFront>
 
-`spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (@line-spsc-d-readFront-diff-cache-once). If this check fails, we refresh `Last_buf` (@line-spsc-d-readFront-sync-last) and recheck (@line-spsc-d-readFront-diff-cache-twice). If the recheck fails, signal failure (@line-spsc-d-readFront-empty). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (@line-spsc-d-readFront-read) and signal success (@line-spsc-d-readFront-success).
+`spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (@line-spsc-d-readFront-diff-cache-once). If this check fails, we refresh `Last_buf` (@line-spsc-d-readFront-resync-last) and recheck (@line-spsc-d-readFront-diff-cache-twice). If the recheck fails, signal failure (@line-spsc-d-readFront-empty). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (@line-spsc-d-readFront-read) and signal success (@line-spsc-d-readFront-success).
 
 == dLTQueue - Straightforward LTQueue adapted for distributed environment <dLTQueue>
 
