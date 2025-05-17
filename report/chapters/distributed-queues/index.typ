@@ -261,17 +261,17 @@ The procedures of the dequeuer are given as follows.
     booktabs: true,
     numbered-title: [`bool spsc_readFront`#sub(`d`)`(data_t* output)`],
   )[
-    + *if* `(First_buf >= Last_buf)                                               `
-      + `aread_sync(Last, &Last_buf)`
-      + *if* `(First_buf >= Last_buf)`
-        + *return* `false`
-    + `aread_sync(Data, First_buf % Capacity, output)`
-    + *return* `true`
+    + #line-label(<line-spsc-d-readFront-diff-cache-once>) *if* `(First_buf >= Last_buf)                                               `
+      + #line-label(<line-spsc-d-readFront-sync-last>) `aread_sync(Last, &Last_buf)`
+      + #line-label(<line-spsc-d-readFront-diff-cache-twice>) *if* `(First_buf >= Last_buf)`
+        + #line-label(<line-spsc-d-readFront-empty>) *return* `false`
+    + #line-label(<line-spsc-d-readFront-read>) `aread_sync(Data, First_buf % Capacity, output)`
+    + #line-label(<line-spsc-d-readFront-success>) *return* `true`
 
   ],
 ) <spsc-dequeue-readFront>
 
-`spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (line 24). If this check fails, we refresh `Last_buf` (line 25) and recheck (line 26). If the recheck fails, signal failure (line 27). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (line 28) and signal success (line 29).
+`spsc_readFront`#sub(`d`) first checks if the SPSC is empty based on the difference between `First_buf` and `Last_buf` (@line-spsc-d-readFront-diff-cache-once). If this check fails, we refresh `Last_buf` (@line-spsc-d-readFront-sync-last) and recheck (@line-spsc-d-readFront-diff-cache-twice). If the recheck fails, signal failure (@line-spsc-d-readFront-empty). If the SPSC is not empty, we read the queue entry at `First_buf % Capacity` into `output` (@line-spsc-d-readFront-read) and signal success (@line-spsc-d-readFront-success).
 
 == dLTQueue - Straightforward LTQueue adapted for distributed environment <dLTQueue>
 
