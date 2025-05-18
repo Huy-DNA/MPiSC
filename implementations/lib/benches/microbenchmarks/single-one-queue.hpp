@@ -42,7 +42,7 @@ inline void naive_jiffy_single_one_queue_microbenchmark(
     double local_dequeues_microseconds = 0;
 
     if (rank == 0) {
-      NaiveJiffyDequeuer<int> queue(rank);
+      NaiveJiffyDequeuer<int> queue(size >= 10 ? 9 : 0, rank);
       MPI_Barrier(MPI_COMM_WORLD);
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
@@ -60,7 +60,7 @@ inline void naive_jiffy_single_one_queue_microbenchmark(
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      NaiveJiffyEnqueuer<int> queue(0);
+      NaiveJiffyEnqueuer<int> queue(size >= 10 ? 9 : 0, rank, 0);
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
