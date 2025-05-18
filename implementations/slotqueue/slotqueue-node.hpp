@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <mpi.h>
 #include <mpi_proto.h>
-#include <thread>
+#include <unistd.h>
 #include <vector>
 
 template <typename T> class SlotNodeEnqueuer {
@@ -56,8 +56,8 @@ private:
                              &disp_unit, &self_baseptr);
         timestamp_t counter = self_baseptr->load();
         if (counter == MAX_TIMESTAMP) {
-          for (int retries = 0; retries < 20; ++retries) {
-            std::this_thread::sleep_for(std::chrono::microseconds(100));
+          for (int retries = 0; retries < 100; ++retries) {
+            sleep(20);
             timestamp_t counter = self_baseptr->load();
             if (counter != MAX_TIMESTAMP) {
               self_counter = counter;
