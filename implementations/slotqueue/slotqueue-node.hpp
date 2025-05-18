@@ -2,6 +2,7 @@
 
 #include "../lib/comm.hpp"
 #include "../lib/distributed-counters/faa.hpp"
+#include "../lib/sleep.hpp"
 #include "../lib/spsc.hpp"
 #include <atomic>
 #include <cstdint>
@@ -9,7 +10,6 @@
 #include <cstdlib>
 #include <mpi.h>
 #include <mpi_proto.h>
-#include <unistd.h>
 #include <vector>
 
 template <typename T> class SlotNodeEnqueuer {
