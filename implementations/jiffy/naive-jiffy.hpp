@@ -156,8 +156,6 @@ public:
     this->_tail = BCL::alloc<int>(1);
     *this->_tail = 0;
 
-    this->_head_of_queue = BCL::alloc<segment_t>(1);
-
     this->_tail_of_queue = BCL::alloc<bclx::gptr<segment_t>>(1);
     *this->_tail_of_queue = BCL::alloc<segment_t>(1);
     this->_tail_of_queue.local()->local()->curr_data_buffer =
