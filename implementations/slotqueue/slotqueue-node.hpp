@@ -56,8 +56,8 @@ private:
                              &disp_unit, &self_baseptr);
         timestamp_t counter = self_baseptr->load();
         if (counter == MAX_TIMESTAMP) {
-          for (int retries = 0; retries < 100; ++retries) {
-            sleep(20);
+          for (int retries = 0; retries < 300; ++retries) {
+            spin(10);
             timestamp_t counter = self_baseptr->load();
             if (counter != MAX_TIMESTAMP) {
               self_counter = counter;
@@ -73,6 +73,7 @@ private:
       self_counter = this->_counter.get_and_increment();
     }
     this->_self_remote_counter_ptr->store(self_counter);
+    spin(100); // Post-spin
     return self_counter;
   }
 
