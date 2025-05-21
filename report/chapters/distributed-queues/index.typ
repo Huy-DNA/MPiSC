@@ -850,15 +850,15 @@ The enqueuer operations are given as follows.
     booktabs: true,
     numbered-title: [`bool enqueue(data_t v)`],
   )[
-    + `timestamp = fetch_and_add_sync(Counter)                                     `
-    + *if* `(!spsc_enqueue(&Spsc, (v, timestamp)))` *return* `false`
-    + *if* `(!refreshEnqueue(timestamp))`
-      + `refreshEnqueue(timestamp)`
-    + *return* `true`
+    + #line-label(<line-slotqueue-enqueue-obtain-timestamp>) `timestamp = fetch_and_add_sync(Counter)                                     `
+    + #line-label(<line-slotqueue-enqueue-spsc>) *if* `(!spsc_enqueue(&Spsc, (v, timestamp)))` *return* `false`
+    + #line-label(<line-slotqueue-enqueue-refresh>) *if* `(!refreshEnqueue(timestamp))`
+      + #line-label(<line-slotqueue-enqueue-retry>) `refreshEnqueue(timestamp)`
+    + #line-label(<line-slotqueue-enqueue-success>) *return* `true`
   ],
 ) <slotqueue-enqueue>
 
-To enqueue a value, `enqueue` first obtains a timestamp by FAA-ing the distributed counter (line 3). It then tries to enqueue the value tagged with the timestamp (line 4). At line 5-6, the enqueuer tries to refresh its slot's timestamp.
+To enqueue a value, `enqueue` first obtains a timestamp by FAA-ing the distributed counter (@line-slotqueue-enqueue-obtain-timestamp). It then tries to enqueue the value tagged with the timestamp (@line-slotqueue-enqueue-spsc). At @line-slotqueue-enqueue-refresh - @line-slotqueue-enqueue-retry, the enqueuer tries to refresh its slot's timestamp.
 
 #figure(
   kind: "algorithm",
@@ -868,25 +868,25 @@ To enqueue a value, `enqueue` first obtains a timestamp by FAA-ing the distribut
     booktabs: true,
     numbered-title: [`bool refreshEnqueue(timestamp_t ts)`],
   )[
-    + `enqueuer_order = enqueueOrder(Self_rank)                                     `
-    + `front = (data_t {}, timestamp_t {})`
-    + `success = spsc_readFront(Spsc, &front)`
-    + `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
-    + *if* `(new_timestamp != ts)`
-      + *return* `true`
-    + `old_timestamp = timestamp_t {}`
-    + `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
-    + `success = spsc_readFront(Spsc, &front)`
-    + `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
-    + *if* `(new_timestamp != ts)`
-      + *return* `true`
-    + *return* `compare_and_swap_sync(Slots, enqueuer_order,
+    + #line-label(<line-slotqueue-refresh-enqueue-order>) `enqueuer_order = enqueueOrder(Self_rank)                                     `
+    + #line-label(<line-slotqueue-refresh-enqueue-init-front>) `front = (data_t {}, timestamp_t {})`
+    + #line-label(<line-slotqueue-refresh-enqueue-read-front>) `success = spsc_readFront(Spsc, &front)`
+    + #line-label(<line-slotqueue-refresh-enqueue-calc-timestamp>) `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
+    + #line-label(<line-slotqueue-refresh-enqueue-check-1>) *if* `(new_timestamp != ts)`
+      + #line-label(<line-slotqueue-refresh-enqueue-early-success>) *return* `true`
+    + #line-label(<line-slotqueue-refresh-enqueue-init-old-timestamp>) `old_timestamp = timestamp_t {}`
+    + #line-label(<line-slotqueue-refresh-enqueue-read-slot>) `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
+    + #line-label(<line-slotqueue-refresh-enqueue-read-front-2>) `success = spsc_readFront(Spsc, &front)`
+    + #line-label(<line-slotqueue-refresh-enqueue-calc-timestamp-2>) `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
+    + #line-label(<line-slotqueue-refresh-enqueue-check-2>) *if* `(new_timestamp != ts)`
+      + #line-label(<line-slotqueue-refresh-enqueue-mid-success>) *return* `true`
+    + #line-label(<line-slotqueue-refresh-enqueue-cas>) *return* `compare_and_swap_sync(Slots, enqueuer_order,
     old_timestamp,
     new_timestamp)`
   ],
 ) <slotqueue-refresh-enqueue>
 
-`refreshEnqueue`'s responsibility is to refresh the timestamp stores in the enqueuer's slot to potentially notify the dequeuer of its newly-enqueued element. It first reads the current front element (line 10). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, the front element's timestamp (line 11). If it finds that the front element's timestamp is different from the timestamp `ts` it returns `true` immediately (line 9-13). Otherwise, it reads its slot's old timestamp (line 14) and re-reads the current front element in the SPSC (line 16) to update the new timstamp. Note that similar to line 13, `refreshEnqueue` immediately succeeds if the new timestamp is different from the timestamp `ts` of the element it enqueues (line 19). Otherwise, it tries to CAS its slot's timestamp with the new timestamp (line 20).
+`refreshEnqueue`'s responsibility is to refresh the timestamp stores in the enqueuer's slot to potentially notify the dequeuer of its newly-enqueued element. It first reads the current front element (@line-slotqueue-refresh-enqueue-read-front). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, the front element's timestamp (@line-slotqueue-refresh-enqueue-calc-timestamp). If it finds that the front element's timestamp is different from the timestamp `ts` it returns `true` immediately (@line-slotqueue-refresh-enqueue-check-1 - @line-slotqueue-refresh-enqueue-early-success). Otherwise, it reads its slot's old timestamp (@line-slotqueue-refresh-enqueue-read-slot) and re-reads the current front element in the SPSC (@line-slotqueue-refresh-enqueue-read-front-2) to update the new timstamp. Note that similar to line 13, `refreshEnqueue` immediately succeeds if the new timestamp is different from the timestamp `ts` of the element it enqueues (@line-slotqueue-refresh-enqueue-mid-success). Otherwise, it tries to CAS its slot's timestamp with the new timestamp (@line-slotqueue-refresh-enqueue-cas).
 
 The dequeuer operations are given as follows.
 
@@ -898,20 +898,20 @@ The dequeuer operations are given as follows.
     booktabs: true,
     numbered-title: [`bool dequeue(data_t* output)`],
   )[
-    + `rank = readMinimumRank()                                                    `
-    + *if* `(rank == DUMMY_RANK)`
-      + *return* `false`
-    + `output_with_timestamp = (data_t {}, timestamp_t {})`
-    + *if* `(!spsc_dequeue(Spsc, &output_with_timestamp))`
-      + *return* `false`
-    + `*output = output_with_timestamp.data`
-    + *if* `(!refreshDequeue(rank))`
-      + `refreshDequeue(rank)`
-    + *return* `true`
+    + #line-label(<line-slotqueue-dequeue-read-rank>) `rank = readMinimumRank()                                                    `
+    + #line-label(<line-slotqueue-dequeue-check-empty>) *if* `(rank == DUMMY_RANK)`
+      + #line-label(<line-slotqueue-dequeue-fail>) *return* `false`
+    + #line-label(<line-slotqueue-dequeue-init-output>) `output_with_timestamp = (data_t {}, timestamp_t {})`
+    + #line-label(<line-slotqueue-dequeue-spsc>) *if* `(!spsc_dequeue(Spsc, &output_with_timestamp))`
+      + #line-label(<line-slotqueue-dequeue-spsc-fail>) *return* `false`
+    + #line-label(<line-slotqueue-dequeue-extract-data>) `*output = output_with_timestamp.data`
+    + #line-label(<line-slotqueue-dequeue-refresh>) *if* `(!refreshDequeue(rank))`
+      + #line-label(<line-slotqueue-dequeue-retry>) `refreshDequeue(rank)`
+    + #line-label(<line-slotqueue-dequeue-success>) *return* `true`
   ],
 ) <slotqueue-dequeue>
 
-To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot currently stores the minimum timestamp (line 21). If the obtained rank is `DUMMY_RANK`, failure is signaled (line 22-23). Otherwise, it tries to dequeue the SPSC of the corresponding enqueuer (line 25). It then tries to refresh the enqueuer's slot's timestamp to potentially notify the enqueuer of the dequeue (line 28-29). It then signals success (line 30).
+To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot currently stores the minimum timestamp (@line-slotqueue-dequeue-read-rank). If the obtained rank is `DUMMY_RANK`, failure is signaled (@line-slotqueue-dequeue-check-empty - @line-slotqueue-dequeue-fail). Otherwise, it tries to dequeue the SPSC of the corresponding enqueuer (@line-slotqueue-dequeue-spsc). It then tries to refresh the enqueuer's slot's timestamp to potentially notify the enqueuer of the dequeue (@line-slotqueue-dequeue-refresh - @line-slotqueue-dequeue-retry). It then signals success (@line-slotqueue-dequeue-success).
 
 #figure(
   kind: "algorithm",
@@ -921,27 +921,27 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
     booktabs: true,
     numbered-title: [`uint64_t readMinimumRank()`],
   )[
-    + `buffered_slots = timestamp_t[Enqueuer_count] {}                       `
-    + *for* `index` *in* `0..Enqueuer_count`
-      + `aread_async(Slots, index, &bufferred_slots[index])`
-    + `flush(Slots)`
-    + *if* every entry in `bufferred_slots` is `MAX_TIMESTAMP`
-      + *return* `DUMMY_RANK`
-    + *let* `rank` be the index of the first slot that contains the minimum timestamp among `bufferred_slots`
-    + *for* `index` *in* `0..rank`
-      + `aread_async(Slots, index, &bufferred_slots[index])`
-    + `flush(Slots)`
-    + `min_timestamp = MAX_TIMESTAMP`
-    + *for* `index` *in* `0..rank`
-      + `timestamp = buffered_slots[index]`
-      + *if* `(min_timestamp < timestamp)`
-        + `min_rank = enqueuerRank(index)`
-        + `min_timestamp = timestamp`
-    + *return* `min_rank`
+    + #line-label(<line-slotqueue-read-min-rank-init-buffer>) `buffered_slots = timestamp_t[Enqueuer_count] {}                       `
+    + #line-label(<line-slotqueue-read-min-rank-scan1-loop>) *for* `index` *in* `0..Enqueuer_count`
+      + #line-label(<line-slotqueue-read-min-rank-scan1-read>) `aread_async(Slots, index, &bufferred_slots[index])`
+    + #line-label(<line-slotqueue-read-min-rank-scan1-flush>) `flush(Slots)`
+    + #line-label(<line-slotqueue-read-min-rank-check-empty>) *if* every entry in `bufferred_slots` is `MAX_TIMESTAMP`
+      + #line-label(<line-slotqueue-read-min-rank-return-empty>) *return* `DUMMY_RANK`
+    + #line-label(<line-slotqueue-read-min-rank-find-min>) *let* `rank` be the index of the first slot that contains the minimum timestamp among `bufferred_slots`
+    + #line-label(<line-slotqueue-read-min-rank-scan2-loop>) *for* `index` *in* `0..rank`
+      + #line-label(<line-slotqueue-read-min-rank-scan2-read>) `aread_async(Slots, index, &bufferred_slots[index])`
+    + #line-label(<line-slotqueue-read-min-rank-scan2-flush>) `flush(Slots)`
+    + #line-label(<line-slotqueue-read-min-rank-init-min>) `min_timestamp = MAX_TIMESTAMP`
+    + #line-label(<line-slotqueue-read-min-rank-check-loop>) *for* `index` *in* `0..rank`
+      + #line-label(<line-slotqueue-read-min-rank-get-timestamp>) `timestamp = buffered_slots[index]`
+      + #line-label(<line-slotqueue-read-min-rank-compare>) *if* `(min_timestamp < timestamp)`
+        + #line-label(<line-slotqueue-read-min-rank-update-rank>) `min_rank = enqueuerRank(index)`
+        + #line-label(<line-slotqueue-read-min-rank-update-timestamp>) `min_timestamp = timestamp`
+    + #line-label(<line-slotqueue-read-min-rank-return>) *return* `min_rank`
   ],
 ) <slotqueue-read-minimum-rank>
 
-`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (line 31). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (line 32-40). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (line 36). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (line 42-47).
+`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (@line-slotqueue-read-min-rank-init-buffer). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (@line-slotqueue-read-min-rank-scan1-loop - @line-slotqueue-read-min-rank-scan2-flush). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (@line-slotqueue-read-min-rank-return-empty). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (@line-slotqueue-read-min-rank-check-loop - @line-slotqueue-read-min-rank-return).
 
 #figure(
   kind: "algorithm",
@@ -951,16 +951,16 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
     booktabs: true,
     numbered-title: [`refreshDequeue(rank: int)` *returns* `bool`],
   )[
-    + `enqueuer_order = enqueuerOrder(rank)                                `
-    + `old_timestamp = timestamp_t {}`
-    + `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
-    + `front = (data_t {}, timestamp_t {})`
-    + `success = spsc_readFront(Spscs[enqueuer_order], &front)`
-    + `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
-    + *return* `compare_and_swap_sync(Slots, enqueuer_order,
+    + #line-label(<line-slotqueue-refresh-dequeue-get-order>) `enqueuer_order = enqueuerOrder(rank)                                `
+    + #line-label(<line-slotqueue-refresh-dequeue-init-timestamp>) `old_timestamp = timestamp_t {}`
+    + #line-label(<line-slotqueue-refresh-dequeue-read-slot>) `aread_sync(&Slots, enqueuer_order, &old_timestamp)`
+    + #line-label(<line-slotqueue-refresh-dequeue-init-front>) `front = (data_t {}, timestamp_t {})`
+    + #line-label(<line-slotqueue-refresh-dequeue-read-front>) `success = spsc_readFront(Spscs[enqueuer_order], &front)`
+    + #line-label(<line-slotqueue-refresh-dequeue-calc-timestamp>) `new_timestamp = success ? front.timestamp : MAX_TIMESTAMP`
+    + #line-label(<line-slotqueue-refresh-dequeue-cas>) *return* `compare_and_swap_sync(Slots, enqueuer_order,
     old_timestamp,
     new_timestamp)`
   ],
 ) <slotqueue-refresh-dequeue>
 
-`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (line 50) and the front element (line 52). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, it's the front element's timestamp (line 53). It finally tries to CAS the slot with the new timestamp (line 54).
+`refreshDequeue`'s responsibility is to refresh the timestamp of the just-dequeued enqueuer to notify the enqueuer of the dequeue. It first reads the old timestamp of the slot (@line-slotqueue-refresh-dequeue-read-slot) and the front element (@line-slotqueue-refresh-dequeue-read-front). If the SPSC is empty, the new timestamp is set to `MAX_TIMESTAMP`, otherwise, it's the front element's timestamp (@line-slotqueue-refresh-dequeue-calc-timestamp). It finally tries to CAS the slot with the new timestamp (@line-slotqueue-refresh-dequeue-cas).
