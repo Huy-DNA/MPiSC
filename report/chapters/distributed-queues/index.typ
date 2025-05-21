@@ -358,7 +358,7 @@ Similar to the fact that each process in our program is assigned a rank, each en
     booktabs: true,
     numbered-title: [`uint32_t enqueuerOrder(uint32_t enqueuer_rank)`],
   )[
-    + *return* `enqueuer_rank > Dequeuer_rank ? enqueuer_rank - 1 : enqueuer_rank`
+    + #line-label(<line-ltqueue-enqueuer-order>) *return* `enqueuer_rank > Dequeuer_rank ? enqueuer_rank - 1 : enqueuer_rank`
   ],
 ) <ltqueue-enqueuer-order>
 
@@ -422,7 +422,7 @@ We first present the tree-structure utility procedures that are shared by both t
     booktabs: true,
     numbered-title: [`uint32_t parent(uint32_t index)`],
   )[
-    + *return* `(index - 1) / 2                                                   `
+    + #line-label(<line-ltqueue-parent>) *return* `(index - 1) / 2                                                   `
   ],
 ) <ltqueue-parent>
 
@@ -475,19 +475,19 @@ The followings are the enqueuer procedures.
     booktabs: true,
     numbered-title: [`bool enqueue(data_t value)`],
   )[
-    + `timestamp = fetch_and_add_sync(Counter, 1)                                        `
-    + *if* `(!spsc_enqueue(&Spsc, (value, timestamp)))`
-      + *return* `false`
+    + #line-label(<line-ltqueue-enqueue-obtain-timestamp>) `timestamp = fetch_and_add_sync(Counter, 1)                                        `
+    + #line-label(<line-ltqueue-enqueue-insert>) *if* `(!spsc_enqueue(&Spsc, (value, timestamp)))`
+      + #line-label(<line-ltqueue-enqueue-failure>) *return* `false`
     // + `front = (data_t {}, timestamp_t {})`
     // + `is_empty = !spsc_readFront(Spsc, &front)`
     // + *if* `(!is_empty && front.timestamp.value != timestamp)`
     //  + *return* `true`
-    + `propagate`#sub(`e`)`()`
-    + *return* `true`
+    + #line-label(<line-ltqueue-enqueue-propagate>) `propagate`#sub(`e`)`()`
+    + #line-label(<line-ltqueue-enqueue-success>) *return* `true`
   ],
 ) <ltqueue-enqueue>
 
-To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed counter `Counter` (line 14). Then, we enqueue the data tagged with the timestamp into the local SPSC (line 15). Then, `enqueue` propagates the changes by invoking `propagate`#sub(`e`)`()` (line 17) and returns `true`.
+To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed counter `Counter` (@line-ltqueue-enqueue-obtain-timestamp). Then, we enqueue the data tagged with the timestamp into the local SPSC (@line-ltqueue-enqueue-insert). Then, `enqueue` propagates the changes by invoking `propagate`#sub(`e`)`()` (@line-ltqueue-enqueue-propagate) and returns `true`.
 
 #figure(
   kind: "algorithm",
@@ -497,20 +497,20 @@ To enqueue a value, `enqueue` first obtains a count by `FAA` the distributed cou
     booktabs: true,
     numbered-title: [`void propagate`#sub(`e`)`()`],
   )[
-    + *if* `(!refreshTimestamp`#sub(`e`)`())                                                `
-      + `refreshTimestamp`#sub(`e`)`()`
-    + *if* `(!refreshLeaf`#sub(`e`)`())`
-      + `refreshLeaf`#sub(`e`)`()`
-    + `current_node_index = leafNodeIndex(Self_rank)`
-    + *repeat*
-      + `current_node_index = parent(current_node_index)`
-      + *if* `(!refresh`#sub(`e`)`(current_node_index))`
-        + `refresh`#sub(`e`)`(current_node_index)`
-    + *until* `current_node_index == 0`
+    + #line-label(<line-ltqueue-e-propagate-refresh-ts-once>) *if* `(!refreshTimestamp`#sub(`e`)`())                                                `
+      + #line-label(<line-ltqueue-e-propagate-refresh-ts-twice>) `refreshTimestamp`#sub(`e`)`()`
+    + #line-label(<line-ltqueue-e-propagate-refresh-leaf-once>) *if* `(!refreshLeaf`#sub(`e`)`())`
+      + #line-label(<line-ltqueue-e-propagate-refresh-leaf-twice>) `refreshLeaf`#sub(`e`)`()`
+    + #line-label(<line-ltqueue-e-propagate-start-node>) `current_node_index = leafNodeIndex(Self_rank)`
+    + #line-label(<line-ltqueue-e-propagate-start-repeat>) *repeat*
+      + #line-label(<line-ltqueue-e-propagate-update-current-node>) `current_node_index = parent(current_node_index)`
+      + #line-label(<line-ltqueue-e-propagate-refresh-current-node-once>) *if* `(!refresh`#sub(`e`)`(current_node_index))`
+        + #line-label(<line-ltqueue-e-propagate-refresh-current-node-twice>) `refresh`#sub(`e`)`(current_node_index)`
+    + #line-label(<line-ltqueue-e-propagate-end-repeat>) *until* `current_node_index == 0`
   ],
 ) <ltqueue-enqueue-propagate>
 
-The `propagate`#sub(`e`) procedure is responsible for propagating SPSC updates up to the root node as a way to notify other processes of the newly enqueued item. It is split into 3 phases: Refreshing of `Min_timestamp` in the enqueuer node (line 19-20), refreshing of the enqueuer's leaf node (line 21-22), refreshing of internal nodes (line 24-28). On line 21-28, we refresh every tree node that lies between the enqueuer node and the root node.
+The `propagate`#sub(`e`) procedure is responsible for propagating SPSC updates up to the root node as a way to notify other processes of the newly enqueued item. It is split into 3 phases: Refreshing of `Min_timestamp` in the enqueuer node (line @line-ltqueue-e-propagate-refresh-ts-once - @line-ltqueue-e-propagate-refresh-ts-twice), refreshing of the enqueuer's leaf node (line @line-ltqueue-e-propagate-refresh-leaf-once - @line-ltqueue-e-propagate-refresh-leaf-twice), refreshing of internal nodes (line @line-ltqueue-e-propagate-start-repeat - @line-ltqueue-e-propagate-end-repeat). On line @line-ltqueue-e-propagate-refresh-leaf-once - @line-ltqueue-e-propagate-end-repeat, we refresh every tree node that lies between the enqueuer node and the root node.
 
 #figure(
   kind: "algorithm",
@@ -520,23 +520,23 @@ The `propagate`#sub(`e`) procedure is responsible for propagating SPSC updates u
     booktabs: true,
     numbered-title: [`bool refreshTimestamp`#sub(`e`)`()`],
   )[
-    + `min_timestamp = timestamp_t {}`
-    + `aread_sync(Min_timestamp, &min_timestamp)`
-    + `{old-timestamp, old-version} = min_timestamp                                 `
-    + `front = (data_t {}, timestamp_t {})`
-    + `is_empty = !spsc_readFront(Spsc, &front)`
-    + *if* `(is_empty)`
-      + *return* `compare_and_swap_sync(Min_timestamp,
+    + #line-label(<line-ltqueue-e-refresh-timestamp-init-min-timestamp>) `min_timestamp = timestamp_t {}`
+    + #line-label(<line-ltqueue-e-refresh-timestamp-read-min-timestamp>) `aread_sync(Min_timestamp, &min_timestamp)`
+    + #line-label(<line-ltqueue-e-refresh-timestamp-extract-min-timestamp>) `{old-timestamp, old-version} = min_timestamp                                 `
+    + #line-label(<line-ltqueue-e-refresh-timestamp-init-front>) `front = (data_t {}, timestamp_t {})`
+    + #line-label(<line-ltqueue-e-refresh-timestamp-read-front>) `is_empty = !spsc_readFront(Spsc, &front)`
+    + #line-label(<line-ltqueue-e-refresh-timestamp-empty-check>) *if* `(is_empty)`
+      + #line-label(<line-ltqueue-e-refresh-timestamp-CAS-empty>) *return* `compare_and_swap_sync(Min_timestamp,
 timestamp_t {old-timestamp, old-version},
 timestamp_t {MAX_TIMESTAMP, old-version + 1})`
-    + *else*
-      + *return* `compare_and_swap_sync(Min_timestamp,
+    + #line-label(<line-ltqueue-e-refresh-timestamp-not-empty-check>) *else*
+      + #line-label(<line-ltqueue-e-refresh-timestamp-CAS-not-empty>) *return* `compare_and_swap_sync(Min_timestamp,
 timestamp_t {old-timestamp, old-version},
 timestamp_t {front.timestamp, old-version + 1})`
   ],
 ) <ltqueue-enqueue-refresh-timestamp>
 
-The `refreshTimestamp`#sub(`e`) procedure is responsible for updating the `Min_timestamp` of the enqueuer node. It simply looks at the front of the local SPSC (line 32) and CAS `Min_timestamp` accordingly (line 34-37).
+The `refreshTimestamp`#sub(`e`) procedure is responsible for updating the `Min_timestamp` of the enqueuer node. It simply looks at the front of the local SPSC (@line-ltqueue-e-refresh-timestamp-read-front) and CAS `Min_timestamp` accordingly (@line-ltqueue-e-refresh-timestamp-empty-check - @line-ltqueue-e-refresh-timestamp-CAS-not-empty).
 
 #figure(
   kind: "algorithm",
@@ -546,9 +546,9 @@ The `refreshTimestamp`#sub(`e`) procedure is responsible for updating the `Min_t
     booktabs: true,
     numbered-title: [`bool refreshNode`#sub(`e`)`(uint32_t current_node_index)`],
   )[
-    + `current_node = node_t {}                                                      `
-    + `aread_sync(Nodes, current_node_index, &current_node)`
-    + `{old-rank, old-version} = current_node.rank`
+    + #line-label(<line-ltqueue-e-refresh-node-init-current>) `current_node = node_t {}                                                      `
+    + #line-label(<line-ltqueue-e-refresh-node-read-current-node>) `aread_sync(Nodes, current_node_index, &current_node)`
+    + #line-label(<line-ltqueue-e-refresh-node-extract-rank>) `{old-rank, old-version} = current_node.rank`
     + `min_rank = DUMMY_RANK`
     + `min_timestamp = MAX_TIMESTAMP`
     + *for* `child_node_index` in `children(current_node)`
