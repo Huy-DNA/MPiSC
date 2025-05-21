@@ -803,7 +803,7 @@ Both `CAS`es target some slot in the `Slots` array.
 #theorem[A `refreshEnqueue` (@slotqueue-refresh-enqueue) can only change a slot to a value other than `MAX_TIMESTAMP`.] <slotqueue-refresh-enqueue-CAS-to-non-MAX-theorem>
 
 #proof[
-  For `refreshEnqueue` to change the slot's value, the condition on line 18 must be `false`. Then, `new_timestamp` must equal to `ts`, which is not `MAX_TIMESTAMP`. It's obvious that the `CAS` on line 20 changes the slot to a value other than `MAX_TIMESTAMP`.
+  For `refreshEnqueue` to change the slot's value, the condition on @line-slotqueue-refresh-enqueue-check-2 must be `false`. Then, `new_timestamp` must equal to `ts`, which is not `MAX_TIMESTAMP`. It's obvious that the `CAS` on @line-slotqueue-refresh-enqueue-cas changes the slot to a value other than `MAX_TIMESTAMP`.
 ]
 
 #theorem(
