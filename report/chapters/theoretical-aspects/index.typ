@@ -237,13 +237,14 @@ A summary of the theoretical performance of our simple SPSC is provided in @theo
   ),
 ) <theo-perf-spsc>
 
-For `spsc_enqueue`, we consider the procedure @spsc-enqueue. In the usual case, the remote operation on line 3 is skipped and so only 2 remote puts are performed on line 6 and line 7. The `Data` array on line 6 is hosted on the enqueuer, so this is actually a local operation, while the control variable is hosted on the dequeuer, so line 7 is truly a remote operation. Therefore, theoretically, it's one remote operation plus a local one.
+For `spsc_enqueue`, we consider the procedure @spsc-enqueue. In the usual case, the remote operation on @line-spsc-enqueue-resync-first is skipped and so only 2 remote puts are performed on @line-spsc-enqueue-write and @line-spsc-enqueue-increment-last. The Data array on @line-spsc-enqueue-write is hosted on the enqueuer, so this is actually a local operation, while the control variable is hosted on the dequeuer, so @line-spsc-enqueue-increment-last is truly a remote operation. Therefore, theoretically, it's one remote operation plus a local one.
 
-For `spsc_dequeue`, we consider the procedure @spsc-dequeue. Similarly, in the usual case, the remote operation on line 17 is skipped and only the 2 lines 20-21 are executed always. Here, it's the other way around, the access to the `Data` array on line 20 is a truly remote operation while the access to the `First` control variable is a local one. Therefore, theoretically, it's one remote operation plus a local one.
+For `spsc_dequeue`, we consider the procedure @spsc-dequeue. Similarly, in the usual case, the remote operation on @line-spsc-dequeue-resync-last is skipped and only the 2 lines @line-spsc-dequeue-read and @line-spsc-dequeue-swing-first are executed always. Here, it's the other way around, the access to the `Data` array on @line-spsc-dequeue-read is a truly remote operation while the access to the First control variable is a local one. Therefore, theoretically, it's one remote operation plus a local one.
 
-For `spsc_readFront`#sub(`e`), we consider the procedure @spsc-enqueue-readFront. The operation on line 12 is a truly remote operation, as the `First` control variable is hosted on the dequeuer. The operation on line 15 is a remote operation, as the `Data` array is hosted on the enqueuer. This means, theoretically, it also takes one remote operation plus a local one.
+For `spsc_readFront`#sub(`e`), we consider the procedure @spsc-enqueue-readFront. The operation on @line-spsc-e-readFront-resync-first is a truly remote operation, as the `First` control variable is hosted on the dequeuer. The operation on @line-spsc-e-readFront-read is a remote operation, as the `Data` array is hosted on the enqueuer. This means, theoretically, it also takes one remote operation plus a local one.
 
-For `spsc_readFront`#sub(`d`), we consider the procedure @spsc-dequeue-readFront. Only the operation on line 28 is executed always, which results in a truly remote operation as the `Data` array is hosted on the enqueuer. Therefore, it only takes one remote operation.
+For `spsc_readFront`#sub(`d`), we consider the procedure @spsc-dequeue-readFront. Only the operation on @line-spsc-d-readFront-read is executed always, which results in a truly remote operation as the Data array is hosted on the enqueuer. Therefore, it only takes one remote operation.
+
 
 == Theoretical proofs of dLTQueue
 
