@@ -743,15 +743,15 @@ Each enqueuer hosts an SPSC that can only accessed by itself and the dequeuer. T
 
 We apply some domain knowledge of Slotqueue algorithm to the definitions introduced in @ABA-safety.
 
-#definition[A *CAS-sequence* on a slot `s` of an enqueue that affects `s` is the sequence of instructions from line 15 to line 20 of its `refreshEnqueue` (@slotqueue-refresh-enqueue).]
+#definition[A *CAS-sequence* on a slot `s` of an enqueue that affects `s` is the sequence of instructions from @line-slotqueue-refresh-enqueue-read-slot to @line-slotqueue-refresh-enqueue-cas of its `refreshEnqueue` (@slotqueue-refresh-enqueue).]
 
-#definition[A *slot-modification instruction* on a slot `s` of an enqueue that affects `s` is line 20 of `refreshEnqueue` (@slotqueue-refresh-enqueue).]
+#definition[A *slot-modification instruction* on a slot `s` of an enqueue that affects `s` is @line-slotqueue-refresh-enqueue-cas of `refreshEnqueue` (@slotqueue-refresh-enqueue).]
 
-#definition[A *CAS-sequence* on a slot `s` of a dequeue that affects `s` is the sequence of instructions from line 50 to line 54 of its `refreshDequeue` (@slotqueue-refresh-dequeue).]
+#definition[A *CAS-sequence* on a slot `s` of a dequeue that affects `s` is the sequence of instructions from @line-slotqueue-refresh-dequeue-read-slot to @line-slotqueue-refresh-dequeue-cas of its `refreshDequeue` (@slotqueue-refresh-dequeue).]
 
-#definition[A *slot-modification instruction* on a slot `s` of a dequeue that affects `s` is line 54 of `refreshDequeue` (@slotqueue-refresh-dequeue).]
+#definition[A *slot-modification instruction* on a slot `s` of a dequeue that affects `s` is @line-slotqueue-refresh-dequeue-cas of `refreshDequeue` (@slotqueue-refresh-dequeue).]
 
-#definition[A *CAS-sequence* of a dequeue/enqueue is said to *observe a slot value of $s_0$* if it loads $s_0$ at line 15 of `refreshEnqueue` or line 50 of `refreshDequeue`.]
+#definition[A *CAS-sequence* of a dequeue/enqueue is said to *observe a slot value of $s_0$* if it loads $s_0$ at @line-slotqueue-refresh-enqueue-read-slot of `refreshEnqueue` or @line-slotqueue-refresh-dequeue-read-slot of `refreshDequeue`.]
 
 The followings are some other definitions that will be used throughout our proof.
 
@@ -761,11 +761,11 @@ The followings are some other definitions that will be used throughout our proof
 
 #definition[For an enqueuer with rank $r$, the minimum timestamp among the elements between `First` and `Last` in its local SPSC at time $t$ is denoted as $m i n \- s p s c \- t s(r, t)$.]
 
-#definition[For an enqueue, *slot-refresh phase* refer to its execution of line 5-6 of @slotqueue-enqueue.]
+#definition[For an enqueue, *slot-refresh phase* refer to its execution of @line-slotqueue-enqueue-refresh - @line-slotqueue-enqueue-retry of @slotqueue-enqueue.]
 
-#definition[For a dequeue, *slot-refresh phase* refer to its execution of line 28-29 of @slotqueue-dequeue.]
+#definition[For a dequeue, *slot-refresh phase* refer to its execution of @line-slotqueue-dequeue-refresh - @line-slotqueue-dequeue-retry of @slotqueue-dequeue.]
 
-#definition[For a dequeue, *slot-scan phase* refer to its execution of line 31-47 of @slotqueue-read-minimum-rank.]
+#definition[For a dequeue, *slot-scan phase* refer to its execution of @line-slotqueue-read-min-rank-init-buffer - @line-slotqueue-read-min-rank-return of @slotqueue-read-minimum-rank.]
 
 === Correctness
 
@@ -778,8 +778,8 @@ Noticeably, we use no scheme to avoid ABA problem in Slotqueue. In actuality, AB
 We will prove that Slotqueue is ABA-safe, as introduced in @ABA-safety.
 
 Notice that we only use `CAS`es on:
-- Line 20 of `refreshEnqueue` (@slotqueue-refresh-enqueue), which is part of an enqueue.
-- Line 54 of `refreshDequeue` (@slotqueue-refresh-dequeue), which is part of a dequeue.
+- @line-slotqueue-refresh-enqueue-cas of `refreshEnqueue` (@slotqueue-refresh-enqueue), which is part of an enqueue.
+- @line-slotqueue-refresh-dequeue-cas of `refreshDequeue` (@slotqueue-refresh-dequeue), which is part of a dequeue.
 
 Both `CAS`es target some slot in the `Slots` array.
 
@@ -1107,7 +1107,6 @@ A summary of the theoretical performance of Slotqueue is provided in @theo-perf-
   ),
 ) <theo-perf-slotqueue>
 
-For `enqueue`, we consider @slotqueue-enqueue. Line 3 causes 1 truly remote operation, as the distributed counter is hosted on the dequeuer. Line 4, as discussed in the theoretical performance of SPSC, causes $R + L$ operations. In the worst case, two `refreshEnqueue` calls are executed. We then consider each `refreshEnqueue` call. Line 10 causes $R + L$ operations. Most of the time, line 14-20 are not executed. Therefore, the two `refreshEnqueue` calls cause at most $2R$ operations. So in total, $4R + 3L$ operations are required.
+For `enqueue`, we consider @slotqueue-enqueue. @line-slotqueue-enqueue-obtain-timestamp causes 1 truly remote operation, as the distributed counter is hosted on the dequeuer. @line-slotqueue-enqueue-spsc, as discussed in the theoretical performance of SPSC, causes $R + L$ operations. In the worst case, two `refreshEnqueue` calls are executed. We then consider each `refreshEnqueue` call. @line-slotqueue-refresh-enqueue-read-front causes $R + L$ operations. Most of the time, @line-slotqueue-refresh-enqueue-read-slot - @line-slotqueue-refresh-enqueue-cas are not executed. Therefore, the two `refreshEnqueue` calls cause at most $2R$ operations. So in total, $4R + 3L$ operations are required.
 
-For `dequeue`, we consider @slotqueue-dequeue. Line 21 causes most of the remote operations: The double scan of the `Slots` array causes about $2n L$ operations. We consider the truly remote operations. Line 25 causes $R + L$ operation. The double retry on line 28-29 each causes $L$ operations (line 50) and $R$ operations. So in total, $3R + 2n L$ operations are required.
-
+For `dequeue`, we consider @slotqueue-dequeue. @line-slotqueue-dequeue-read-rank causes most of the remote operations: The double scan of the `Slots` array causes about $2n L$ operations. We consider the truly remote operations. @line-slotqueue-dequeue-spsc causes $R + L$ operation. The double retry on @line-slotqueue-dequeue-refresh - @line-slotqueue-dequeue-retry each causes $L$ operations (@line-slotqueue-refresh-dequeue-read-slot) and $R$ operations. So in total, $3R + 2n L$ operations are required.
