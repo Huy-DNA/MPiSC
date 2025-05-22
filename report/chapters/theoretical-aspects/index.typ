@@ -166,9 +166,9 @@ We prove that our simple distributed SPSC is linearizable.
 #proof[
   We claim that the following are the linearization points of our SPSC's methods:
   - The linearization point of an `spsc_enqueue` call (@spsc-enqueue) that returns `false` is @line-spsc-enqueue-resync-first.
-  - The linearization point of an `spsc_enqueue` call (@spsc-enqueue) that returns `true` is @line-spsc-enqueue-new-last.
+  - The linearization point of an `spsc_enqueue` call (@spsc-enqueue) that returns `true` is @line-spsc-enqueue-increment-last.
   - The linearization point of an `spsc_dequeue` call (@spsc-dequeue) that returns `false` is @line-spsc-dequeue-resync-last.
-  - The linearization point of an `spsc_dequeue` call (@spsc-dequeue) that returns `true` is @line-spsc-dequeue-update-cache.
+  - The linearization point of an `spsc_dequeue` call (@spsc-dequeue) that returns `true` is @line-spsc-dequeue-swing-first.
   - The linearization point of `spsc_readFront`#sub(`e`) call (@spsc-enqueue-readFront) that returns `false` is @line-spsc-e-readFront-empty-once or @line-spsc-e-readFront-resync-first if @line-spsc-e-readFront-empty-once is passed.
   - The linearization point of `spsc_readFront`#sub(`e`) call (@spsc-enqueue-readFront) that returns `true` is @line-spsc-e-readFront-resync-first.
   - The linearization point of `spsc_readFront`#sub(`d`) call (@spsc-dequeue-readFront) that returns `false` is @line-spsc-d-readFront-resync-last.
