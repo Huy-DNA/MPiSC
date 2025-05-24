@@ -12,8 +12,6 @@ This section provides an overview of the metrics we're interested in our algorit
 
 Throughput is number of operations finished in a unit of time. Its unit is often given as $"ops"\/"s"$ (operations per second), $"ops"\/"ms"$ (operations per milliseconds) or $"ops"\/"us"$ (operations per microsecond). Intuitively, throughput is closest to our notion of "performance": The higher the throughput, the more tasks are done in a unit of time and thus, the higher the performance. The implication is that our ultimate goal is to optimize the throughput metric of our algorithms.
 
-Nevertheless, as we will see, it's easier to reason about the latency than the throughput of an algorithm. Additionally, latency has quite an interesting correlation with throughput. Consequently, this makes latency a potentially better metric to optimize for.
-
 === Latency
 
 Latency is the time it takes for a single task to complete. Its unit is often given as $"s"\/"op"$ (seconds per operation), $"ms"\/"op"$ (milliseconds per operation) or $"us"\/"op"$ (microseconds per operation).

@@ -639,7 +639,7 @@ We immediately obtain the following result.
   We will extend $->$#sub($H'$) to a strict total order $=>$#sub($H'$) on $H'$ as follows:
   - If $X ->$#sub($H'$)$Y$ then $X =>$#sub($H'$)$Y$. $(1)$
   - If a dequeue $d$ matches $e$ then $e =>$#sub($H'$)$d$. $(2)$
-  - If a dequeue $d_0$ matches $e_0$ and another dequeue matches $e_1$ such that $d_0 =>$#sub($H'$)$d_1$ then $e_0 =>$#sub($H'$)$e_1$. $(3)$
+  - If a dequeue $d_0$ matches $e_0$ and another dequeue $d_1$ matches $e_1$ such that $d_0 =>$#sub($H'$)$d_1$ then $e_0 =>$#sub($H'$)$e_1$. $(3)$
   - If a dequeue $d$ overlaps with an enqueue $e$ but does not match $e$, $d =>$#sub($H'$)$e$. $(4)$
 
   We will prove that $=>$#sub($H'$) is a strict total order on $H'$. That is, for every pair of different method calls $X$ and $Y$, either exactly one of these is true $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ and for any $X$, $X arrow.double.not$#sub($H'$)$X$.
@@ -1029,7 +1029,7 @@ Notice that Slotqueue pushes the memory reclamation problem to the underlying SP
   We will extend $->$#sub($H'$) to a strict total order $=>$#sub($H'$) on $H'$ as follows:
   - If $X ->$#sub($H'$)$Y$ then $X =>$#sub($H'$)$Y$. $(1)$
   - If a dequeue $d$ matches $e$ then $e =>$#sub($H'$)$d$. $(2)$
-  - If a dequeue $d_0$ matches $e_0$ and another dequeue matches $e_1$ such that $d_0 =>$#sub($H'$)$d_1$ then $e_0 =>$#sub($H'$)$e_1$. $(3)$
+  - If a dequeue $d_0$ matches $e_0$ and another dequeue $d_1$ matches $e_1$ such that $d_0 =>$#sub($H'$)$d_1$ then $e_0 =>$#sub($H'$)$e_1$. $(3)$
   - If a dequeue $d$ overlaps with an enqueue $e$ but does not match $e$, $d =>$#sub($H'$)$e$. $(4)$
 
   We will prove that $=>$#sub($H'$) is a strict total order on $H'$. That is, for every pair of different method calls $X$ and $Y$, either exactly one of these is true $X =>$#sub($H'$)$Y$ or $Y =>$#sub($H'$)$X$ and for any $X$, $X arrow.double.not$#sub($H'$)$X$.
