@@ -73,7 +73,6 @@ private:
       self_counter = this->_counter.get_and_increment();
     }
     this->_self_remote_counter_ptr->store(self_counter);
-    spin(100); // Post-spin
     return self_counter;
   }
 
