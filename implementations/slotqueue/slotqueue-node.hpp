@@ -37,6 +37,7 @@ private:
   std::atomic<uint64_t> *_self_remote_counter_ptr;
 
   timestamp_t _obtain_timestamp() {
+    this->_self_remote_counter_ptr->store(MAX_TIMESTAMP);
     MPI_Aint size = 1;
     int disp_unit = sizeof(std::atomic<uint64_t>);
     std::atomic<uint64_t> *shared_start_baseptr;
@@ -192,7 +193,6 @@ public:
     CALI_CXX_MARK_FUNCTION;
 #endif
 
-    this->_self_remote_counter_ptr->store(MAX_TIMESTAMP);
     timestamp_t counter = this->_obtain_timestamp();
     data_t value{data, counter};
     bool res = this->_spsc.enqueue(value);
