@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../lib/comm.hpp"
+#include "../lib/distributed-counters/faa.hpp"
 #include "../lib/spsc.hpp"
 #include <cstdint>
 #include <cstdio>
@@ -32,8 +33,7 @@ private:
   const MPI_Aint _enqueuer_order;
   const MPI_Aint _dequeuer_rank;
 
-  MPI_Win _counter_win;
-  MPI_Aint *_counter_ptr;
+  FaaCounter _counter;
 
   MPI_Win _min_timestamp_win;
   timestamp_t *_min_timestamp_ptr;
@@ -201,27 +201,23 @@ public:
              MPI_Aint self_rank, MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
-        _spsc{capacity_per_node, self_rank, dequeuer_rank, comm} {
+        _spsc{capacity_per_node, self_rank, dequeuer_rank, comm},
+        _counter{dequeuer_rank, comm} {
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
 
-    MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm,
-                     &this->_counter_ptr, &this->_counter_win);
     MPI_Win_allocate(0, sizeof(timestamp_t), this->_info, comm,
                      &this->_min_timestamp_ptr, &this->_min_timestamp_win);
     MPI_Win_allocate(0, sizeof(tree_node_t), this->_info, comm,
                      &this->_tree_ptr, &this->_tree_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_min_timestamp_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_counter_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tree_win);
 
     MPI_Win_flush_all(this->_min_timestamp_win);
-    MPI_Win_flush_all(this->_counter_win);
     MPI_Win_flush_all(this->_tree_win);
     MPI_Barrier(comm);
     MPI_Win_flush_all(this->_min_timestamp_win);
-    MPI_Win_flush_all(this->_counter_win);
     MPI_Win_flush_all(this->_tree_win);
   }
 
@@ -230,11 +226,9 @@ public:
 
   ~LTEnqueuer() {
     MPI_Win_unlock_all(this->_min_timestamp_win);
-    MPI_Win_unlock_all(this->_counter_win);
     MPI_Win_unlock_all(this->_tree_win);
     MPI_Win_free(&this->_tree_win);
     MPI_Win_free(&this->_min_timestamp_win);
-    MPI_Win_free(&this->_counter_win);
     MPI_Info_free(&this->_info);
   }
 
@@ -243,9 +237,7 @@ public:
     CALI_CXX_MARK_FUNCTION;
 #endif
 
-    uint32_t timestamp;
-    fetch_and_add_sync(&timestamp, 1, 0, this->_dequeuer_rank,
-                       this->_counter_win);
+    uint32_t timestamp = this->_counter.get_and_increment();
     if (!this->_spsc.enqueue({data, timestamp})) {
       return false;
     }
@@ -276,9 +268,7 @@ public:
     if (data.size() == 0) {
       return true;
     }
-    uint32_t timestamp;
-    fetch_and_add_sync(&timestamp, 1, 0, this->_dequeuer_rank,
-                       this->_counter_win);
+    uint32_t timestamp = this->_counter.get_and_increment();
     std::vector<data_t> timestamped_data;
     for (const T &datum : data) {
       timestamped_data.push_back(data_t{datum, timestamp});
@@ -329,8 +319,7 @@ private:
   const MPI_Aint _self_rank;
   MPI_Comm _comm;
 
-  MPI_Win _counter_win;
-  MPI_Aint *_counter_ptr;
+  FaaCounter _counter;
 
   MPI_Win _min_timestamp_win;
   timestamp_t *_min_timestamp_ptr;
@@ -497,13 +486,12 @@ public:
   LTDequeuer(MPI_Aint capacity_per_node, MPI_Aint dequeuer_rank,
              MPI_Aint self_rank, MPI_Comm comm, MPI_Aint batch_size = 10)
       : _comm{comm}, _self_rank{self_rank},
-        _spsc{capacity_per_node, self_rank, comm, batch_size} {
+        _spsc{capacity_per_node, self_rank, comm, batch_size},
+        _counter{dequeuer_rank, comm} {
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
 
-    MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
-                     &this->_counter_ptr, &this->_counter_win);
     MPI_Win_allocate(sizeof(timestamp_t) * (_get_number_of_enqueuers() + 1),
                      sizeof(timestamp_t), this->_info, comm,
                      &this->_min_timestamp_ptr, &this->_min_timestamp_win);
@@ -511,10 +499,7 @@ public:
                      sizeof(tree_node_t), this->_info, comm, &this->_tree_ptr,
                      &this->_tree_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_min_timestamp_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_counter_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_tree_win);
-
-    *this->_counter_ptr = 0;
 
     for (int i = 0; i < this->_get_tree_size(); ++i) {
       this->_tree_ptr[i] = {DUMMY_RANK, 0};
@@ -527,22 +512,18 @@ public:
     }
 
     MPI_Win_flush_all(this->_min_timestamp_win);
-    MPI_Win_flush_all(this->_counter_win);
     MPI_Win_flush_all(this->_tree_win);
     MPI_Barrier(comm);
     MPI_Win_flush_all(this->_min_timestamp_win);
-    MPI_Win_flush_all(this->_counter_win);
     MPI_Win_flush_all(this->_tree_win);
   }
   LTDequeuer(const LTDequeuer &) = delete;
   LTDequeuer &operator=(const LTDequeuer &) = delete;
   ~LTDequeuer() {
     MPI_Win_unlock_all(this->_min_timestamp_win);
-    MPI_Win_unlock_all(this->_counter_win);
     MPI_Win_unlock_all(this->_tree_win);
     MPI_Win_free(&this->_tree_win);
     MPI_Win_free(&this->_min_timestamp_win);
-    MPI_Win_free(&this->_counter_win);
     MPI_Info_free(&this->_info);
   }
 
