@@ -12,7 +12,7 @@ private:
   MPI_Aint _host;
 
 public:
-  FaaCounter(MPI_Aint skipped_rank, MPI_Aint host, MPI_Comm comm) {
+  FaaCounter(MPI_Aint host, MPI_Comm comm) {
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
