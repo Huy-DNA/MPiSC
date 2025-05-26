@@ -2,7 +2,7 @@
 
 #include "../lib/comm.hpp"
 #include "../lib/distributed-counters/cs_faa.hpp"
-#include "../lib/spsc.hpp"
+#include "../lib/spsc/bounded_spsc.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
