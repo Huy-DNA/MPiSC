@@ -3,8 +3,6 @@
 #include "../comm.hpp"
 
 #include <bclx/bclx.hpp>
-#include <iostream>
-#include <ostream>
 
 #include "bcl/backends/mpi/backend.hpp"
 #include "bcl/backends/mpi/comm.hpp"
@@ -78,21 +76,21 @@ public:
     new_node.local()->next = BCL::alloc<bclx::gptr<node_t>>(1);
     *new_node.local()->next.local() = nullptr;
 
-    bclx::gptr<node_t> tmp = *this->_last.local();
+    bclx::gptr<node_t> tmp = bclx::aget_sync(this->_last);
     tmp.local()->value = data;
     *tmp.local()->next.local() = new_node;
 
-    *this->_last.local() = new_node;
+    bclx::aput_sync(new_node, this->_last);
     return true;
   }
 
   bool read_front(data_t *output) {
-    bclx::gptr<node_t> tmp = *_first.local();
-    if (tmp == *_last.local())
+    bclx::gptr<node_t> tmp = bclx::aget_sync(this->_first);
+    if (tmp == bclx::aget_sync(_last))
       return false;
-    *this->_announce.local() = tmp;
-    if (tmp != *_first.local()) {
-      *output = *_help.local();
+    bclx::aput_sync(tmp, this->_announce);
+    if (tmp != bclx::aget_sync(this->_first)) {
+      *output = bclx::aget_sync(this->_help);
     } else {
       *output = tmp.local()->value;
     }
