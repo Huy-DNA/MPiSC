@@ -34,35 +34,23 @@ public:
     dummy_node.local()->next = BCL::alloc<bclx::gptr<node_t>>(1);
     *dummy_node.local()->next.local() = nullptr;
 
-    this->_first = BCL::alloc<bclx::gptr<node_t>>(1);
-    *this->_first.local() = dummy_node;
-
-    this->_last = BCL::alloc<bclx::gptr<node_t>>(1);
-    *this->_last.local() = dummy_node;
-
-    this->_free_later = BCL::alloc<bclx::gptr<node_t>>(1);
-    *this->_free_later.local() = BCL::alloc<node_t>(1);
-
-    this->_announce = BCL::alloc<bclx::gptr<node_t>>(1);
-    *this->_announce.local() = nullptr;
-
-    this->_help = BCL::alloc<data_t>(1);
-
     for (int i = 0; i < BCL::nprocs(); ++i) {
       if (i == BCL::my_rank) {
-        BCL::broadcast(this->_first, i);
-        BCL::broadcast(this->_last, i);
-        BCL::broadcast(this->_free_later, i);
-        BCL::broadcast(this->_announce, i);
-        BCL::broadcast(this->_help, i);
+        BCL::broadcast(dummy_node, i);
+        BCL::broadcast(this->_first, 0);
+        BCL::broadcast(this->_last, 0);
+        BCL::broadcast(this->_free_later, 0);
+        BCL::broadcast(this->_announce, 0);
+        BCL::broadcast(this->_help, 0);
       } else {
         bclx::gptr<bclx::gptr<node_t>> tmp_1;
         bclx::gptr<node_t> tmp_2;
-        BCL::broadcast(tmp_1, i);
-        BCL::broadcast(tmp_1, i);
-        BCL::broadcast(tmp_1, i);
-        BCL::broadcast(tmp_1, i);
         BCL::broadcast(tmp_2, i);
+        BCL::broadcast(tmp_1, 0);
+        BCL::broadcast(tmp_1, 0);
+        BCL::broadcast(tmp_1, 0);
+        BCL::broadcast(tmp_1, 0);
+        BCL::broadcast(tmp_2, 0);
       }
     }
   }
@@ -122,11 +110,28 @@ public:
     this->_help = new bclx::gptr<data_t>[BCL::nprocs()];
 
     for (int i = 0; i < BCL::nprocs(); ++i) {
-      this->_first[i] = BCL::broadcast(this->_first[i], i);
-      this->_last[i] = BCL::broadcast(this->_last[i], i);
-      this->_free_later[i] = BCL::broadcast(this->_free_later[i], i);
-      this->_announce[i] = BCL::broadcast(this->_announce[i], i);
-      this->_help[i] = BCL::broadcast(this->_help[i], i);
+      bclx::gptr<node_t> dummy_node;
+      BCL::broadcast(dummy_node, i);
+
+      this->_first[i] = BCL::alloc<bclx::gptr<node_t>>(1);
+      *this->_first[i].local() = dummy_node;
+
+      this->_last[i] = BCL::alloc<bclx::gptr<node_t>>(1);
+      *this->_last[i].local() = dummy_node;
+
+      this->_free_later[i] = BCL::alloc<bclx::gptr<node_t>>(1);
+      *this->_free_later[i].local() = BCL::alloc<node_t>(1);
+
+      this->_announce[i] = BCL::alloc<bclx::gptr<node_t>>(1);
+      *this->_announce[i].local() = nullptr;
+
+      this->_help[i] = BCL::alloc<data_t>(1);
+
+      this->_first[i] = BCL::broadcast(this->_first[i], 0);
+      this->_last[i] = BCL::broadcast(this->_last[i], 0);
+      this->_free_later[i] = BCL::broadcast(this->_free_later[i], 0);
+      this->_announce[i] = BCL::broadcast(this->_announce[i], 0);
+      this->_help[i] = BCL::broadcast(this->_help[i], 0);
     }
   }
 
