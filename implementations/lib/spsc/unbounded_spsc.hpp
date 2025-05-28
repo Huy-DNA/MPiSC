@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../comm.hpp"
-
 #include <bclx/bclx.hpp>
 
 #include "bcl/backends/mpi/backend.hpp"
@@ -34,11 +32,14 @@ public:
     dummy_node.local()->next = BCL::alloc<bclx::gptr<node_t>>(1);
     *dummy_node.local()->next.local() = nullptr;
 
+    this->_last = BCL::alloc<bclx::gptr<node_t>>(1);
+    *this->_last.local() = dummy_node;
+
     for (int i = 0; i < BCL::nprocs(); ++i) {
       if (i == BCL::my_rank) {
         BCL::broadcast(dummy_node, i);
         BCL::broadcast(this->_first, 0);
-        BCL::broadcast(this->_last, 0);
+        BCL::broadcast(this->_last, i);
         BCL::broadcast(this->_free_later, 0);
         BCL::broadcast(this->_announce, 0);
         BCL::broadcast(this->_help, 0);
@@ -47,7 +48,7 @@ public:
         bclx::gptr<node_t> tmp_2;
         BCL::broadcast(tmp_2, i);
         BCL::broadcast(tmp_1, 0);
-        BCL::broadcast(tmp_1, 0);
+        BCL::broadcast(tmp_1, i);
         BCL::broadcast(tmp_1, 0);
         BCL::broadcast(tmp_1, 0);
         BCL::broadcast(tmp_2, 0);
@@ -96,6 +97,7 @@ template <typename data_t> class UnboundedSpscDequeuer {
 
   bclx::gptr<bclx::gptr<node_t>> *_first;
   bclx::gptr<bclx::gptr<node_t>> *_last;
+  bclx::gptr<node_t> *_last_cached;
   bclx::gptr<bclx::gptr<node_t>> *_announce;
   bclx::gptr<bclx::gptr<node_t>> *_free_later;
   bclx::gptr<data_t> *_help;
@@ -105,6 +107,7 @@ public:
       : _self_rank{self_rank} {
     this->_first = new bclx::gptr<bclx::gptr<node_t>>[BCL::nprocs()];
     this->_last = new bclx::gptr<bclx::gptr<node_t>>[BCL::nprocs()];
+    this->_last_cached = new bclx::gptr<node_t>[BCL::nprocs()];
     this->_announce = new bclx::gptr<bclx::gptr<node_t>>[BCL::nprocs()];
     this->_free_later = new bclx::gptr<bclx::gptr<node_t>>[BCL::nprocs()];
     this->_help = new bclx::gptr<data_t>[BCL::nprocs()];
@@ -116,9 +119,6 @@ public:
       this->_first[i] = BCL::alloc<bclx::gptr<node_t>>(1);
       *this->_first[i].local() = dummy_node;
 
-      this->_last[i] = BCL::alloc<bclx::gptr<node_t>>(1);
-      *this->_last[i].local() = dummy_node;
-
       this->_free_later[i] = BCL::alloc<bclx::gptr<node_t>>(1);
       *this->_free_later[i].local() = BCL::alloc<node_t>(1);
 
@@ -128,7 +128,8 @@ public:
       this->_help[i] = BCL::alloc<data_t>(1);
 
       this->_first[i] = BCL::broadcast(this->_first[i], 0);
-      this->_last[i] = BCL::broadcast(this->_last[i], 0);
+      this->_last[i] = BCL::broadcast(this->_last[i], i);
+      this->_last_cached[i] = dummy_node;
       this->_free_later[i] = BCL::broadcast(this->_free_later[i], 0);
       this->_announce[i] = BCL::broadcast(this->_announce[i], 0);
       this->_help[i] = BCL::broadcast(this->_help[i], 0);
@@ -141,8 +142,12 @@ public:
 
   bool dequeue(data_t *output, int enqueuer_rank) {
     bclx::gptr<node_t> tmp = bclx::aget_sync(this->_first[enqueuer_rank]);
-    if (tmp == bclx::aget_sync(this->_last[enqueuer_rank])) {
-      return false;
+    if (tmp == this->_last_cached[enqueuer_rank]) {
+      this->_last_cached[enqueuer_rank] =
+          bclx::aget_sync(this->_last[enqueuer_rank]);
+      if (tmp == this->_last_cached[enqueuer_rank]) {
+        return false;
+      }
     }
     node_t tmp_node = bclx::aget_sync(tmp);
     *output = tmp_node.value;
@@ -162,8 +167,12 @@ public:
 
   bool read_front(data_t *output, int enqueuer_rank) {
     bclx::gptr<node_t> tmp = bclx::aget_sync(this->_first[enqueuer_rank]);
-    if (tmp == bclx::aget_sync(this->_last[enqueuer_rank])) {
-      return false;
+    if (tmp == this->_last_cached[enqueuer_rank]) {
+      this->_last_cached[enqueuer_rank] =
+          bclx::aget_sync(this->_last[enqueuer_rank]);
+      if (tmp == this->_last_cached[enqueuer_rank]) {
+        return false;
+      }
     }
     node_t tmp_node = bclx::aget_sync(tmp);
     *output = tmp_node.value;
