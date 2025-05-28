@@ -9,8 +9,8 @@
     in {
       devShell = pkgs.mkShell {
         packages = with pkgs; [
-          # mpi
-          mpich
+          mpi
+          # mpich
           cmake
           gnumake
           gcc
