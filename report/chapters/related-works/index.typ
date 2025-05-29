@@ -156,12 +156,12 @@ Out of the 4 investigated MPSC queue algorithms, we quickly eliminate DQueue and
 
 This section summarizes to the best of our knowledge existing MPSC queue algorithms, which is reflected in @dmpsc-related-works.
 
-The only paper we have found so far that either mentions directly or indirectly the design of an MPSC queue is @amqueue. @amqueue introduces a hosted blocking bounded distributed MPSC queue called active-message queue (AMQueue) that bares resemblance to WRLQueue in @wrlqueue.
+The only paper we have found so far that either mentions directly or indirectly the design of an MPSC queue is @amqueue. @amqueue introduces a hosted blocking (the original paper claims that it's lock-free) bounded distributed MPSC queue called active-message queue (AMQueue) that bares resemblance to WRLQueue in @wrlqueue.
 
 #figure(
   kind: "table",
   supplement: "Table",
-  caption: [Characteristic summary of existing distributed MPSC queues. #linebreak() $R$ stands for remote operations and $L$ stands for local operations #linebreak().],
+  caption: [Characteristic summary of existing distributed MPSC queues. #linebreak() $R$ stands for remote operations and $L$ stands for local operations. #linebreak() (\*) @amqueue claims that it's lock-free.],
   table(
     columns: (1fr, 2fr),
     table.header(
@@ -169,7 +169,7 @@ The only paper we have found so far that either mentions directly or indirectly 
       [*Active-message queue (AMQueue) @amqueue*],
     ),
 
-    [Progress guarantee of #linebreak() dequeue], [Blocking],
+    [Progress guarantee of #linebreak() dequeue], [Blocking (\*)],
     [Progress guarantee of #linebreak() enqueue], [Wait-free],
     [ABA solution], [No compare-and-swap usage],
     [Safe memory reclamation], [Custom scheme],
