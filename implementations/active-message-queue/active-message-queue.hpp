@@ -5,7 +5,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <mpi.h>
-#include <mpi_proto.h>
 #include <vector>
 
 template <typename T> class AMEnqueuer {
