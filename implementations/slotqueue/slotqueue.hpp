@@ -21,7 +21,6 @@ private:
 
   MPI_Comm _comm;
   const MPI_Aint _self_rank;
-  const MPI_Aint _enqueuer_order;
   const MPI_Aint _dequeuer_rank;
 
   FaaCounter _counter;
@@ -50,7 +49,7 @@ private:
     }
 
     timestamp_t old_timestamp;
-    fetch_and_add_sync(&old_timestamp, 0, this->_enqueuer_order,
+    fetch_and_add_sync(&old_timestamp, 0, this->_self_rank,
                        this->_dequeuer_rank, this->_min_timestamp_win);
     if (!this->_spsc.read_front(&front)) {
       new_timestamp = MAX_TIMESTAMP;
@@ -62,7 +61,7 @@ private:
     }
     timestamp_t result;
     compare_and_swap_sync(&old_timestamp, &new_timestamp, &result,
-                          this->_enqueuer_order, this->_dequeuer_rank,
+                          this->_self_rank, this->_dequeuer_rank,
                           this->_min_timestamp_win);
     return result == old_timestamp;
   }
@@ -71,7 +70,6 @@ public:
   SlotEnqueuer(MPI_Aint capacity_per_node, MPI_Aint dequeuer_rank,
                MPI_Aint self_rank, MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
-        _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
         _spsc{capacity_per_node, self_rank, dequeuer_rank, comm},
         _counter{dequeuer_rank, comm} {
     MPI_Info_create(&this->_info);
@@ -151,7 +149,7 @@ private:
 
   const MPI_Aint _self_rank;
   MPI_Comm _comm;
-  MPI_Aint _number_of_enqueuers;
+  MPI_Aint _size;
 
   FaaCounter _counter;
 
@@ -167,37 +165,37 @@ private:
     CALI_CXX_MARK_FUNCTION;
 #endif
 
-    MPI_Aint order = DUMMY_RANK;
+    MPI_Aint rank = DUMMY_RANK;
     timestamp_t min_timestamp = MAX_TIMESTAMP;
 
-    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
+    for (int i = 0; i < this->_size; ++i) {
       aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
                   this->_min_timestamp_win);
     }
     flush(this->_self_rank, this->_min_timestamp_win);
-    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
+    for (int i = 0; i < this->_size; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
-        order = i;
+        rank = i;
         min_timestamp = timestamp;
       }
     }
-    if (order == DUMMY_RANK) {
+    if (rank == DUMMY_RANK) {
       return DUMMY_RANK;
     }
-    for (int i = 0; i < order; ++i) {
+    for (int i = 0; i < rank; ++i) {
       aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
                   this->_min_timestamp_win);
     }
     flush(this->_self_rank, this->_min_timestamp_win);
-    for (int i = 0; i < order; ++i) {
+    for (int i = 0; i < rank; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
-        order = i;
+        rank = i;
         min_timestamp = timestamp;
       }
     }
-    return order >= this->_self_rank ? order + 1 : order;
+    return rank;
   }
 
   bool _refreshDequeue(MPI_Aint rank) {
@@ -205,9 +203,8 @@ private:
     CALI_CXX_MARK_FUNCTION;
 #endif
 
-    MPI_Aint enqueuer_order = this->_get_enqueuer_order(rank);
     timestamp_t old_timestamp;
-    fetch_and_add_sync(&old_timestamp, 0, enqueuer_order, this->_self_rank,
+    fetch_and_add_sync(&old_timestamp, 0, rank, this->_self_rank,
                        this->_min_timestamp_win);
     data_t front;
     timestamp_t new_timestamp;
@@ -217,14 +214,9 @@ private:
       new_timestamp = front.timestamp;
     }
     timestamp_t result;
-    compare_and_swap_sync(&old_timestamp, &new_timestamp, &result,
-                          enqueuer_order, this->_self_rank,
-                          this->_min_timestamp_win);
+    compare_and_swap_sync(&old_timestamp, &new_timestamp, &result, rank,
+                          this->_self_rank, this->_min_timestamp_win);
     return result == old_timestamp;
-  }
-
-  int _get_enqueuer_order(MPI_Aint rank) const {
-    return rank > this->_self_rank ? rank - 1 : rank;
   }
 
 public:
@@ -235,21 +227,21 @@ public:
         _counter{dequeuer_rank, comm} {
     int size;
     MPI_Comm_size(comm, &size);
-    this->_number_of_enqueuers = size - 1;
+    this->_size = size;
 
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
 
-    MPI_Win_allocate(this->_number_of_enqueuers * sizeof(timestamp_t),
-                     sizeof(timestamp_t), this->_info, comm,
-                     &this->_min_timestamp_ptr, &this->_min_timestamp_win);
+    MPI_Win_allocate(this->_size * sizeof(timestamp_t), sizeof(timestamp_t),
+                     this->_info, comm, &this->_min_timestamp_ptr,
+                     &this->_min_timestamp_win);
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_min_timestamp_win);
 
-    for (int i = 0; i < this->_number_of_enqueuers; ++i) {
+    for (int i = 0; i < this->_size; ++i) {
       this->_min_timestamp_ptr[i] = MAX_TIMESTAMP;
     }
-    this->_min_timestamp_buf = new timestamp_t[this->_number_of_enqueuers];
+    this->_min_timestamp_buf = new timestamp_t[this->_size];
 
     MPI_Win_flush_all(this->_min_timestamp_win);
     MPI_Barrier(comm);
