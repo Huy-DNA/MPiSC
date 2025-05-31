@@ -923,14 +923,12 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
   )[
     + #line-label(<line-slotqueue-read-min-rank-init-buffer>) `buffered_slots = timestamp_t[Enqueuer_count] {}                       `
     + #line-label(<line-slotqueue-read-min-rank-scan1-loop>) *for* `index` *in* `0..Enqueuer_count`
-      + #line-label(<line-slotqueue-read-min-rank-scan1-read>) `aread_async(Slots, index, &bufferred_slots[index])`
-    + #line-label(<line-slotqueue-read-min-rank-scan1-flush>) `flush(Slots)`
+      + #line-label(<line-slotqueue-read-min-rank-scan1-read>) `aread_sync(Slots, index, &bufferred_slots[index])`
     + #line-label(<line-slotqueue-read-min-rank-check-empty>) *if* every entry in `bufferred_slots` is `MAX_TIMESTAMP`
       + #line-label(<line-slotqueue-read-min-rank-return-empty>) *return* `DUMMY_RANK`
     + #line-label(<line-slotqueue-read-min-rank-find-min>) *let* `rank` be the index of the first slot that contains the minimum timestamp among `bufferred_slots`
     + #line-label(<line-slotqueue-read-min-rank-scan2-loop>) *for* `index` *in* `0..rank`
-      + #line-label(<line-slotqueue-read-min-rank-scan2-read>) `aread_async(Slots, index, &bufferred_slots[index])`
-    + #line-label(<line-slotqueue-read-min-rank-scan2-flush>) `flush(Slots)`
+      + #line-label(<line-slotqueue-read-min-rank-scan2-read>) `aread_sync(Slots, index, &bufferred_slots[index])`
     + #line-label(<line-slotqueue-read-min-rank-init-min>) `min_timestamp = MAX_TIMESTAMP`
     + #line-label(<line-slotqueue-read-min-rank-check-loop>) *for* `index` *in* `0..rank`
       + #line-label(<line-slotqueue-read-min-rank-get-timestamp>) `timestamp = buffered_slots[index]`
@@ -941,7 +939,7 @@ To dequeue a value, `dequeue` first reads the rank of the enqueuer whose slot cu
   ],
 ) <slotqueue-read-minimum-rank>
 
-`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (@line-slotqueue-read-min-rank-init-buffer). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (@line-slotqueue-read-min-rank-scan1-loop - @line-slotqueue-read-min-rank-scan2-flush). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (@line-slotqueue-read-min-rank-return-empty). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (@line-slotqueue-read-min-rank-check-loop - @line-slotqueue-read-min-rank-return).
+`readMinimumRank`'s main responsibility is to return the rank of the enqueuer from which we can safely dequeue next. It first creates a local buffer to store the value read from `Slots` (@line-slotqueue-read-min-rank-init-buffer). It then performs 2 scans of `Slots` and read every entry into `buffered_slots` (@line-slotqueue-read-min-rank-scan1-loop - @line-slotqueue-read-min-rank-scan2-read). If the first scan finds only `MAX_TIMESTAMP`s, `DUMMY_RANK` is returned (@line-slotqueue-read-min-rank-return-empty). From there, based on `bufferred_slots`, it returns the rank of the enqueuer whose bufferred slot stores the minimum timestamp (@line-slotqueue-read-min-rank-check-loop - @line-slotqueue-read-min-rank-return).
 
 #figure(
   kind: "algorithm",
