@@ -30,7 +30,6 @@ private:
 
   MPI_Comm _comm;
   const MPI_Aint _self_rank;
-  const MPI_Aint _enqueuer_order;
   const MPI_Aint _dequeuer_rank;
 
   FaaCounter _counter;
@@ -44,14 +43,14 @@ private:
 
   SpscEnqueuer<data_t> _spsc;
 
-  int _get_number_of_enqueuers() const {
+  int _get_number_of_processes() const {
     int number_processes;
     MPI_Comm_size(this->_comm, &number_processes);
 
-    return number_processes - 1;
+    return number_processes;
   }
 
-  int _get_tree_size() const { return 2 * this->_get_number_of_enqueuers(); }
+  int _get_tree_size() const { return 2 * this->_get_number_of_processes(); }
 
   int _get_parent_index(int index) const {
     if (index == 0) {
@@ -61,7 +60,7 @@ private:
   }
 
   int _get_self_index() const {
-    return this->_get_number_of_enqueuers() + this->_enqueuer_order;
+    return this->_get_number_of_processes() + this->_self_rank;
   }
 
   std::vector<int> _get_children_indexes(int index) const {
@@ -200,7 +199,6 @@ public:
   LTEnqueuer(MPI_Aint capacity_per_node, MPI_Aint dequeuer_rank,
              MPI_Aint self_rank, MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
-        _enqueuer_order{self_rank > dequeuer_rank ? self_rank - 1 : self_rank},
         _spsc{capacity_per_node, self_rank, dequeuer_rank, comm},
         _counter{dequeuer_rank, comm} {
     MPI_Info_create(&this->_info);
@@ -330,14 +328,14 @@ private:
 
   SpscDequeuer<data_t> _spsc;
 
-  int _get_number_of_enqueuers() const {
+  int _get_number_of_processes() const {
     int number_processes;
     MPI_Comm_size(this->_comm, &number_processes);
 
-    return number_processes - 1;
+    return number_processes;
   }
 
-  int _get_tree_size() const { return 2 * this->_get_number_of_enqueuers(); }
+  int _get_tree_size() const { return 2 * this->_get_number_of_processes(); }
 
   int _get_parent_index(int index) const {
     if (index == 0) {
@@ -347,8 +345,7 @@ private:
   }
 
   int _get_enqueuer_index(int rank) const {
-    return this->_get_number_of_enqueuers() +
-           (rank > this->_self_rank ? rank - 1 : rank);
+    return this->_get_number_of_processes() + rank;
   }
 
   std::vector<int> _get_children_indexes(int index) const {
@@ -492,7 +489,7 @@ public:
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
 
-    MPI_Win_allocate(sizeof(timestamp_t) * (_get_number_of_enqueuers() + 1),
+    MPI_Win_allocate(sizeof(timestamp_t) * (_get_number_of_processes() + 1),
                      sizeof(timestamp_t), this->_info, comm,
                      &this->_min_timestamp_ptr, &this->_min_timestamp_win);
     MPI_Win_allocate(this->_get_tree_size() * sizeof(tree_node_t),
@@ -506,7 +503,7 @@ public:
     }
 
     const timestamp_t start_timestamp = {MAX_TIMESTAMP, 0};
-    for (int i = 0; i < this->_get_number_of_enqueuers(); ++i) {
+    for (int i = 0; i < this->_get_number_of_processes(); ++i) {
       awrite_async(&start_timestamp, i, this->_self_rank,
                    this->_min_timestamp_win);
     }
