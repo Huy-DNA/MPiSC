@@ -10,7 +10,6 @@
 #include "bclx/core/comm.hpp"
 #include "bclx/core/definition.hpp"
 
-// Warning: Self-enqueue is buggy
 template <typename data_t> class UnboundedSpsc {
   int _self_rank;
   const MPI_Aint _dequeuer_rank;
@@ -53,6 +52,7 @@ public:
 
           this->_e_last = BCL::alloc<bclx::gptr<node_t>>(1);
           *this->_e_last.local() = dummy_node;
+          this->_d_last[i] = this->_e_last;
         }
         BCL::broadcast(dummy_node, i);
 
@@ -73,6 +73,13 @@ public:
         this->_d_free_later[i] = BCL::broadcast(this->_d_free_later[i], 0);
         this->_d_announce[i] = BCL::broadcast(this->_d_announce[i], 0);
         this->_d_help[i] = BCL::broadcast(this->_d_help[i], 0);
+        if (i == dequeuer_rank) {
+          this->_e_first = this->_d_first[i];
+          this->_e_last = this->_d_last[i];
+          this->_e_announce = this->_d_announce[i];
+          this->_e_free_later = this->_d_free_later[i];
+          this->_e_help = this->_d_help[i];
+        }
       }
     } else {
       bclx::gptr<node_t> dummy_node = BCL::alloc<node_t>(1);
