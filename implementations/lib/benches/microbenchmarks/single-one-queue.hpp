@@ -12,10 +12,33 @@
 #include "../../slotqueue/slotqueue-node.hpp"
 #include "../../slotqueue/slotqueue-unbounded.hpp"
 #include "../../slotqueue/slotqueue.hpp"
-#include "../utils.h"
 #include <chrono>
 #include <mpi.h>
 #include <vector>
+
+inline static void report_single_one_queue(
+    const std::string &title, unsigned long long number_of_elements,
+    int iterations, double microseconds, double dequeues,
+    double successful_dequeues, double dequeue_microseconds, double enqueues,
+    double successful_enqueues, double enqueue_microseconds,
+    double enqueue_latency_microseconds) {
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  if (rank == 0) {
+    printf("---- %s ----\n", title.c_str());
+    printf("Dequeue latency: %g us\n",
+           dequeue_microseconds / successful_dequeues);
+    printf("Dequeue throughput: %g 10^5ops/s\n",
+           successful_dequeues / dequeue_microseconds * 10);
+    printf("Enqueue latency: %g us\n",
+           enqueue_latency_microseconds / successful_enqueues);
+    printf("Enqueue throughput: %g 10^5ops/s\n",
+           successful_enqueues / enqueue_microseconds * 10);
+    printf("Total throughput: %g 10^5ops/s\n",
+           (successful_enqueues + successful_dequeues) / microseconds * 10);
+  }
+}
 
 inline void naive_jiffy_single_one_queue_microbenchmark(
     unsigned long long number_of_elements, int iterations = 10) {
@@ -138,10 +161,11 @@ inline void naive_jiffy_single_one_queue_microbenchmark(
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
-  report("Naive Jiffy", number_of_elements, iterations, total_microseconds,
-         total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
-         total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
-         total_enqueues_latency_microseconds);
+  report_single_one_queue(
+      "Naive Jiffy", number_of_elements, iterations, total_microseconds,
+      total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
+      total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+      total_enqueues_latency_microseconds);
 }
 
 inline void slotqueue_node_single_one_queue_microbenchmark(
@@ -265,10 +289,11 @@ inline void slotqueue_node_single_one_queue_microbenchmark(
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
-  report("Slotqueue Node", number_of_elements, iterations, total_microseconds,
-         total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
-         total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
-         total_enqueues_latency_microseconds);
+  report_single_one_queue(
+      "Slotqueue Node", number_of_elements, iterations, total_microseconds,
+      total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
+      total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+      total_enqueues_latency_microseconds);
 }
 
 inline void unbounded_slotqueue_single_one_queue_microbenchmark(
@@ -392,10 +417,11 @@ inline void unbounded_slotqueue_single_one_queue_microbenchmark(
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
-  report("Slotqueue Unbounded", number_of_elements, iterations,
-         total_microseconds, total_dequeues, total_successful_dequeues,
-         total_dequeues_microseconds, total_enqueues, total_successful_enqueues,
-         total_enqueues_microseconds, total_enqueues_latency_microseconds);
+  report_single_one_queue(
+      "Slotqueue Unbounded", number_of_elements, iterations, total_microseconds,
+      total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
+      total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+      total_enqueues_latency_microseconds);
 }
 
 inline void
@@ -520,10 +546,11 @@ slotqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
-  report("Slotqueue", number_of_elements, iterations, total_microseconds,
-         total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
-         total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
-         total_enqueues_latency_microseconds);
+  report_single_one_queue(
+      "Slotqueue", number_of_elements, iterations, total_microseconds,
+      total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
+      total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+      total_enqueues_latency_microseconds);
 }
 
 inline void
@@ -648,10 +675,11 @@ amqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
-  report("AMQueue", number_of_elements, iterations, total_microseconds,
-         total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
-         total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
-         total_enqueues_latency_microseconds);
+  report_single_one_queue(
+      "AMQueue", number_of_elements, iterations, total_microseconds,
+      total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
+      total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+      total_enqueues_latency_microseconds);
 }
 
 inline void unbounded_ltqueue_single_one_queue_microbenchmark(
@@ -775,10 +803,11 @@ inline void unbounded_ltqueue_single_one_queue_microbenchmark(
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
-  report("LTQueue Unbounded", number_of_elements, iterations,
-         total_microseconds, total_dequeues, total_successful_dequeues,
-         total_dequeues_microseconds, total_enqueues, total_successful_enqueues,
-         total_enqueues_microseconds, total_enqueues_latency_microseconds);
+  report_single_one_queue(
+      "LTQueue Unbounded", number_of_elements, iterations, total_microseconds,
+      total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
+      total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+      total_enqueues_latency_microseconds);
 }
 
 inline void
@@ -903,10 +932,11 @@ ltqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
-  report("LTQueue", number_of_elements, iterations, total_microseconds,
-         total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
-         total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
-         total_enqueues_latency_microseconds);
+  report_single_one_queue(
+      "LTQueue", number_of_elements, iterations, total_microseconds,
+      total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
+      total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+      total_enqueues_latency_microseconds);
 }
 
 inline void ltqueue_node_single_one_queue_microbenchmark(
@@ -1030,8 +1060,9 @@ inline void ltqueue_node_single_one_queue_microbenchmark(
     total_dequeues_microseconds += dequeues_microseconds;
   }
 
-  report("LTQueue Node", number_of_elements, iterations, total_microseconds,
-         total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
-         total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
-         total_enqueues_latency_microseconds);
+  report_single_one_queue(
+      "LTQueue Node", number_of_elements, iterations, total_microseconds,
+      total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
+      total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
+      total_enqueues_latency_microseconds);
 }

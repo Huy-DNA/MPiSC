@@ -1,3 +1,4 @@
+#include "lib/benches/apps/isx.hpp"
 #define PROFILE 1
 
 #ifdef PROFILE
@@ -28,18 +29,26 @@ int main(int argc, char **argv) {
   bool run_rmo = true;
   bool run_micro = true;
   bool run_bench = true;
+  bool run_isx = true;
 
   // Check command line arguments
   if (argc > 1) {
     if (std::strcmp(argv[1], "rmo") == 0) {
       run_micro = false;
       run_bench = false;
+      run_isx = false;
     } else if (std::strcmp(argv[1], "micro") == 0) {
       run_rmo = false;
       run_bench = false;
+      run_isx = false;
     } else if (std::strcmp(argv[1], "bench") == 0) {
       run_rmo = false;
       run_micro = false;
+      run_isx = false;
+    } else if (std::strcmp(argv[1], "isx") == 0) {
+      run_rmo = false;
+      run_micro = false;
+      run_bench = false;
     } else if (std::strcmp(argv[1], "all") == 0) {
       // Default: run everything
     } else if (std::strcmp(argv[1], "help") == 0) {
@@ -76,6 +85,10 @@ int main(int argc, char **argv) {
     ltqueue_single_one_queue_microbenchmark(100000, 5);
     naive_jiffy_single_one_queue_microbenchmark(100000, 5);
     amqueue_single_one_queue_microbenchmark(100000, 5);
+  }
+
+  if (run_isx) {
+    slotqueue_isx_sort(100000, 5);
   }
 
   if (run_bench) {
