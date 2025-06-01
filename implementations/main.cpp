@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
       if (rank == 0) {
         print_usage(argv[0]);
       }
-      MPI_Finalize();
+      BCL::finalize();
       return 0;
     } else {
       int rank;
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
         std::cout << "Unknown option: " << argv[1] << "\n";
         print_usage(argv[0]);
       }
-      MPI_Finalize();
+      BCL::finalize();
       return 1;
     }
   }
