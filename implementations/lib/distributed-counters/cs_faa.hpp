@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../comm.hpp"
 #include "../sleep.hpp"
 #include "faa.hpp"
 #include <atomic>
@@ -11,23 +10,23 @@ class CsFaaCounter {
 private:
   constexpr static uint64_t MAX_COUNT = ~((uint64_t)0);
 
-  MPI_Aint *_counter_ptr;
+  MPI_Aint *_counter_ptr = nullptr;
   MPI_Win _counter_win;
 
-  MPI_Info _info;
+  MPI_Info _info = MPI_INFO_NULL;
   MPI_Aint _host;
 
-  MPI_Comm _sm_comm;
+  MPI_Comm _sm_comm = MPI_COMM_NULL;
   int _sm_size;
 
-  MPI_Win _start_counter_win;
-  std::atomic<uint64_t> *_start_counter_ptr;
+  MPI_Win _start_counter_win = MPI_WIN_NULL;
+  std::atomic<uint64_t> *_start_counter_ptr = nullptr;
 
-  MPI_Win _self_start_counter_win;
-  std::atomic<uint64_t> *_self_start_counter_ptr;
+  MPI_Win _self_start_counter_win = MPI_WIN_NULL;
+  std::atomic<uint64_t> *_self_start_counter_ptr = nullptr;
 
-  MPI_Win _self_remote_counter_win;
-  std::atomic<uint64_t> *_self_remote_counter_ptr;
+  MPI_Win _self_remote_counter_win = MPI_WIN_NULL;
+  std::atomic<uint64_t> *_self_remote_counter_ptr = nullptr;
 
   FaaCounter _base_counter;
 
@@ -68,17 +67,53 @@ public:
     MPI_Win_flush_all(this->_start_counter_win);
     MPI_Win_flush_all(this->_self_start_counter_win);
   }
+
   CsFaaCounter(const CsFaaCounter &) = delete;
   CsFaaCounter &operator=(const CsFaaCounter &) = delete;
+
+  CsFaaCounter(CsFaaCounter &&other) noexcept
+      : _counter_ptr(other._counter_ptr), _counter_win(other._counter_win),
+        _info(other._info), _host(other._host), _sm_comm(other._sm_comm),
+        _sm_size(other._sm_size), _start_counter_win(other._start_counter_win),
+        _start_counter_ptr(other._start_counter_ptr),
+        _self_start_counter_win(other._self_start_counter_win),
+        _self_start_counter_ptr(other._self_start_counter_ptr),
+        _self_remote_counter_win(other._self_remote_counter_win),
+        _self_remote_counter_ptr(other._self_remote_counter_ptr),
+        _base_counter(std::move(other._base_counter)) {
+    other._counter_ptr = nullptr;
+    other._counter_win = MPI_WIN_NULL;
+    other._info = MPI_INFO_NULL;
+    other._host = 0;
+    other._sm_comm = MPI_COMM_NULL;
+    other._sm_size = 0;
+    other._start_counter_win = MPI_WIN_NULL;
+    other._start_counter_ptr = nullptr;
+    other._self_start_counter_win = MPI_WIN_NULL;
+    other._self_start_counter_ptr = nullptr;
+    other._self_remote_counter_win = MPI_WIN_NULL;
+    other._self_remote_counter_ptr = nullptr;
+  }
+
   ~CsFaaCounter() {
-    MPI_Win_unlock_all(_self_remote_counter_win);
-    MPI_Win_unlock_all(_start_counter_win);
-    MPI_Win_unlock_all(_self_start_counter_win);
-    MPI_Win_free(&this->_self_remote_counter_win);
-    MPI_Win_free(&this->_start_counter_win);
-    MPI_Win_free(&this->_self_start_counter_win);
-    MPI_Comm_free(&this->_sm_comm);
-    MPI_Info_free(&this->_info);
+    if (_self_remote_counter_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_self_remote_counter_win);
+      MPI_Win_free(&this->_self_remote_counter_win);
+    }
+    if (_start_counter_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_start_counter_win);
+      MPI_Win_free(&this->_start_counter_win);
+    }
+    if (_self_start_counter_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_self_start_counter_win);
+      MPI_Win_free(&this->_self_start_counter_win);
+    }
+    if (_sm_comm != MPI_COMM_NULL) {
+      MPI_Comm_free(&this->_sm_comm);
+    }
+    if (_info != MPI_INFO_NULL) {
+      MPI_Info_free(&this->_info);
+    }
   }
 
   inline MPI_Aint get_and_increment() {
