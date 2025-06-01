@@ -11,25 +11,25 @@ template <typename data_t> class Spsc {
 
   const MPI_Aint _capacity;
 
-  MPI_Win _data_win;
-  data_t *_data_ptr;
+  MPI_Win _data_win = MPI_WIN_NULL;
+  data_t *_data_ptr = nullptr;
 
-  MPI_Win _first_win;
-  MPI_Aint *_first_ptr;
+  MPI_Win _first_win = MPI_WIN_NULL;
+  MPI_Aint *_first_ptr = nullptr;
   std::vector<MPI_Aint> _first_buf;
 
-  MPI_Win _last_win;
-  MPI_Aint *_last_ptr;
-  MPI_Win _enqueuer_local_last_win;
-  MPI_Aint *_enqueuer_local_last_ptr;
+  MPI_Win _last_win = MPI_WIN_NULL;
+  MPI_Aint *_last_ptr = nullptr;
+  MPI_Win _enqueuer_local_last_win = MPI_WIN_NULL;
+  MPI_Aint *_enqueuer_local_last_ptr = nullptr;
   std::vector<MPI_Aint> _last_buf;
 
-  MPI_Info _info;
+  MPI_Info _info = MPI_INFO_NULL;
 
   int _comm_size;
   MPI_Aint _batch_size;
-  data_t **_cached_data;
-  MPI_Aint *_cached_size;
+  data_t **_cached_data = nullptr;
+  MPI_Aint *_cached_size = nullptr;
 
 public:
   Spsc(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Comm comm,
@@ -100,18 +100,53 @@ public:
     MPI_Win_flush_all(this->_enqueuer_local_last_win);
   }
 
-  ~Spsc() {
-    MPI_Win_unlock_all(_first_win);
-    MPI_Win_unlock_all(_last_win);
-    MPI_Win_unlock_all(_enqueuer_local_last_win);
-    MPI_Win_unlock_all(_data_win);
-    MPI_Win_free(&this->_data_win);
-    MPI_Win_free(&this->_first_win);
-    MPI_Win_free(&this->_last_win);
-    MPI_Win_free(&this->_enqueuer_local_last_win);
-    MPI_Info_free(&this->_info);
+  Spsc(Spsc &&other) noexcept
+      : _self_rank(other._self_rank), _dequeuer_rank(other._dequeuer_rank),
+        _capacity(other._capacity), _data_win(other._data_win),
+        _data_ptr(other._data_ptr), _first_win(other._first_win),
+        _first_ptr(other._first_ptr), _first_buf(std::move(other._first_buf)),
+        _last_win(other._last_win), _last_ptr(other._last_ptr),
+        _enqueuer_local_last_win(other._enqueuer_local_last_win),
+        _enqueuer_local_last_ptr(other._enqueuer_local_last_ptr),
+        _last_buf(std::move(other._last_buf)), _info(other._info),
+        _comm_size(other._comm_size), _batch_size(other._batch_size),
+        _cached_data(other._cached_data), _cached_size(other._cached_size) {
 
-    if (this->_self_rank == this->_dequeuer_rank) {
+    other._data_win = MPI_WIN_NULL;
+    other._data_ptr = nullptr;
+    other._first_win = MPI_WIN_NULL;
+    other._first_ptr = nullptr;
+    other._last_win = MPI_WIN_NULL;
+    other._last_ptr = nullptr;
+    other._enqueuer_local_last_win = MPI_WIN_NULL;
+    other._enqueuer_local_last_ptr = nullptr;
+    other._info = MPI_INFO_NULL;
+    other._cached_data = nullptr;
+    other._cached_size = nullptr;
+  }
+
+  Spsc(const Spsc &) = delete;
+  Spsc &operator=(const Spsc &) = delete;
+  Spsc &operator=(Spsc &&) = delete;
+
+  ~Spsc() {
+    if (_data_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_first_win);
+      MPI_Win_unlock_all(_last_win);
+      MPI_Win_unlock_all(_enqueuer_local_last_win);
+      MPI_Win_unlock_all(_data_win);
+      MPI_Win_free(&this->_data_win);
+      MPI_Win_free(&this->_first_win);
+      MPI_Win_free(&this->_last_win);
+      MPI_Win_free(&this->_enqueuer_local_last_win);
+    }
+
+    if (_info != MPI_INFO_NULL) {
+      MPI_Info_free(&this->_info);
+    }
+
+    if (this->_self_rank == this->_dequeuer_rank &&
+        this->_cached_data != nullptr) {
       for (int i = 0; i < this->_comm_size; ++i) {
         free(this->_cached_data[i]);
       }
