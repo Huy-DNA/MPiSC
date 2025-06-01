@@ -168,10 +168,29 @@ public:
   SlotNodeQueue(const SlotNodeQueue &) = delete;
   SlotNodeQueue &operator=(const SlotNodeQueue &) = delete;
 
+  SlotNodeQueue(SlotNodeQueue &&other) noexcept
+      : _comm(other._comm), _size(other._size), _self_rank(other._self_rank),
+        _dequeuer_rank(other._dequeuer_rank),
+        _counter(std::move(other._counter)),
+        _min_timestamp_win(other._min_timestamp_win),
+        _min_timestamp_ptr(other._min_timestamp_ptr),
+        _min_timestamp_buf(other._min_timestamp_buf), _info(other._info),
+        _spsc(std::move(other._spsc)) {
+    other._comm = MPI_COMM_NULL;
+    other._min_timestamp_win = MPI_WIN_NULL;
+    other._min_timestamp_ptr = nullptr;
+    other._min_timestamp_buf = nullptr;
+    other._info = MPI_INFO_NULL;
+  }
+
   ~SlotNodeQueue() {
-    MPI_Win_unlock_all(_min_timestamp_win);
-    MPI_Win_free(&this->_min_timestamp_win);
-    MPI_Info_free(&this->_info);
+    if (this->_min_timestamp_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_min_timestamp_win);
+      MPI_Win_free(&this->_min_timestamp_win);
+    }
+    if (this->_info != MPI_INFO_NULL) {
+      MPI_Info_free(&this->_info);
+    }
     if (this->_self_rank == this->_dequeuer_rank) {
       delete[] this->_min_timestamp_buf;
     }
