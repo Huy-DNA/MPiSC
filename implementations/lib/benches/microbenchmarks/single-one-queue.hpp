@@ -702,7 +702,7 @@ amqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      AMEnqueuer<int> queue(number_of_elements, 0, rank, MPI_COMM_WORLD);
+      AMQueue<int> queue(number_of_elements, 0, rank, MPI_COMM_WORLD);
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
@@ -957,7 +957,7 @@ ltqueue_single_one_queue_microbenchmark(unsigned long long number_of_elements,
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      LTQueue<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
+      UnboundedLTQueue<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {

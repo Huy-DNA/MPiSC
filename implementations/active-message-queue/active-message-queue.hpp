@@ -2,12 +2,11 @@
 
 #include "../lib/comm.hpp"
 #include <cstdint>
-#include <cstdio>
 #include <cstdlib>
 #include <mpi.h>
 #include <vector>
 
-template <typename T> class AMEnqueuer {
+template <typename T> class AMQueue {
 private:
   MPI_Comm _comm;
   const MPI_Aint _self_rank;
@@ -29,6 +28,8 @@ private:
   MPI_Win _writer_count_1_win;
   int64_t *_writer_count_1_ptr;
 
+  bool _prev_queue_num; // Dequeuer-specific
+
   MPI_Win _offset_0_win;
   MPI_Aint *_offset_0_ptr;
 
@@ -38,35 +39,65 @@ private:
   MPI_Info _info;
 
 public:
-  AMEnqueuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
-             MPI_Comm comm)
+  AMQueue(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
+          MPI_Comm comm)
       : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
         _capacity{capacity} {
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
 
-    MPI_Win_allocate(0, sizeof(T), this->_info, comm, &this->_data_0_ptr,
-                     &this->_data_0_win);
-    MPI_Win_allocate(0, sizeof(T), this->_info, comm, &this->_data_1_ptr,
-                     &this->_data_1_win);
-    MPI_Win_allocate(0, sizeof(int64_t), this->_info, comm,
-                     &this->_writer_count_0_ptr, &this->_writer_count_0_win);
-    MPI_Win_allocate(0, sizeof(int64_t), this->_info, comm,
-                     &this->_writer_count_1_ptr, &this->_writer_count_1_win);
-    MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm,
-                     &this->_offset_0_ptr, &this->_offset_0_win);
-    MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm,
-                     &this->_offset_1_ptr, &this->_offset_1_win);
-    MPI_Win_allocate(0, sizeof(bool), this->_info, comm, &this->_queue_num_ptr,
-                     &this->_queue_num_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _writer_count_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _writer_count_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _offset_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _offset_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _queue_num_win);
+    if (this->_self_rank == this->_dequeuer_rank) {
+      MPI_Win_allocate(capacity * sizeof(T), sizeof(T), this->_info, comm,
+                       &this->_data_0_ptr, &this->_data_0_win);
+      MPI_Win_allocate(capacity * sizeof(T), sizeof(T), this->_info, comm,
+                       &this->_data_1_ptr, &this->_data_1_win);
+      MPI_Win_allocate(sizeof(int64_t), sizeof(MPI_Aint), this->_info, comm,
+                       &this->_writer_count_0_ptr, &this->_writer_count_0_win);
+      MPI_Win_allocate(sizeof(int64_t), sizeof(MPI_Aint), this->_info, comm,
+                       &this->_writer_count_1_ptr, &this->_writer_count_1_win);
+      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
+                       &this->_offset_0_ptr, &this->_offset_0_win);
+      MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
+                       &this->_offset_1_ptr, &this->_offset_1_win);
+      MPI_Win_allocate(sizeof(bool), sizeof(bool), this->_info, comm,
+                       &this->_queue_num_ptr, &this->_queue_num_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _writer_count_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _writer_count_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _offset_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _offset_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _queue_num_win);
+      this->_prev_queue_num = false;
+      *this->_writer_count_0_ptr = 0;
+      *this->_writer_count_1_ptr = 0;
+      *this->_offset_0_ptr = 0;
+      *this->_offset_1_ptr = 0;
+      *this->_queue_num_ptr = false;
+    } else {
+      MPI_Win_allocate(0, sizeof(T), this->_info, comm, &this->_data_0_ptr,
+                       &this->_data_0_win);
+      MPI_Win_allocate(0, sizeof(T), this->_info, comm, &this->_data_1_ptr,
+                       &this->_data_1_win);
+      MPI_Win_allocate(0, sizeof(int64_t), this->_info, comm,
+                       &this->_writer_count_0_ptr, &this->_writer_count_0_win);
+      MPI_Win_allocate(0, sizeof(int64_t), this->_info, comm,
+                       &this->_writer_count_1_ptr, &this->_writer_count_1_win);
+      MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm,
+                       &this->_offset_0_ptr, &this->_offset_0_win);
+      MPI_Win_allocate(0, sizeof(MPI_Aint), this->_info, comm,
+                       &this->_offset_1_ptr, &this->_offset_1_win);
+      MPI_Win_allocate(0, sizeof(bool), this->_info, comm,
+                       &this->_queue_num_ptr, &this->_queue_num_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _writer_count_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _writer_count_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _offset_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _offset_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, _queue_num_win);
+    }
 
     MPI_Win_flush_all(this->_data_0_win);
     MPI_Win_flush_all(this->_data_1_win);
@@ -85,10 +116,10 @@ public:
     MPI_Win_flush_all(this->_queue_num_win);
   }
 
-  AMEnqueuer(const AMEnqueuer &) = delete;
-  AMEnqueuer &operator=(const AMEnqueuer &) = delete;
+  AMQueue(const AMQueue &) = delete;
+  AMQueue &operator=(const AMQueue &) = delete;
 
-  ~AMEnqueuer() {
+  ~AMQueue() {
     MPI_Info_free(&this->_info);
     MPI_Win_unlock_all(_data_0_win);
     MPI_Win_unlock_all(_data_1_win);
@@ -149,110 +180,6 @@ public:
                        queue_num ? this->_writer_count_1_win
                                  : this->_writer_count_0_win);
     return true;
-  }
-};
-
-template <typename T> class AMDequeuer {
-private:
-  MPI_Comm _comm;
-  const MPI_Aint _self_rank;
-
-  MPI_Win _data_0_win;
-  T *_data_0_ptr;
-
-  MPI_Win _data_1_win;
-  T *_data_1_ptr;
-
-  MPI_Win _queue_num_win;
-  bool *_queue_num_ptr;
-  bool _prev_queue_num;
-
-  MPI_Win _writer_count_0_win;
-  int64_t *_writer_count_0_ptr;
-
-  MPI_Win _writer_count_1_win;
-  int64_t *_writer_count_1_ptr;
-
-  MPI_Win _offset_0_win;
-  MPI_Aint *_offset_0_ptr;
-
-  MPI_Win _offset_1_win;
-  MPI_Aint *_offset_1_ptr;
-
-  const MPI_Aint _capacity;
-  MPI_Info _info;
-
-public:
-  AMDequeuer(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
-             MPI_Comm comm)
-      : _comm{comm}, _self_rank{self_rank}, _capacity{capacity} {
-    MPI_Info_create(&this->_info);
-    MPI_Info_set(this->_info, "same_disp_unit", "true");
-    MPI_Info_set(this->_info, "accumulate_ordering", "none");
-
-    MPI_Win_allocate(capacity * sizeof(T), sizeof(T), this->_info, comm,
-                     &this->_data_0_ptr, &this->_data_0_win);
-    MPI_Win_allocate(capacity * sizeof(T), sizeof(T), this->_info, comm,
-                     &this->_data_1_ptr, &this->_data_1_win);
-    MPI_Win_allocate(sizeof(int64_t), sizeof(MPI_Aint), this->_info, comm,
-                     &this->_writer_count_0_ptr, &this->_writer_count_0_win);
-    MPI_Win_allocate(sizeof(int64_t), sizeof(MPI_Aint), this->_info, comm,
-                     &this->_writer_count_1_ptr, &this->_writer_count_1_win);
-    MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
-                     &this->_offset_0_ptr, &this->_offset_0_win);
-    MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
-                     &this->_offset_1_ptr, &this->_offset_1_win);
-    MPI_Win_allocate(sizeof(bool), sizeof(bool), this->_info, comm,
-                     &this->_queue_num_ptr, &this->_queue_num_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _data_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _writer_count_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _writer_count_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _offset_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _offset_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, _queue_num_win);
-    this->_prev_queue_num = false;
-    *this->_writer_count_0_ptr = 0;
-    *this->_writer_count_1_ptr = 0;
-    *this->_offset_0_ptr = 0;
-    *this->_offset_1_ptr = 0;
-    *this->_queue_num_ptr = false;
-
-    MPI_Win_flush_all(this->_data_0_win);
-    MPI_Win_flush_all(this->_data_1_win);
-    MPI_Win_flush_all(this->_writer_count_0_win);
-    MPI_Win_flush_all(this->_writer_count_1_win);
-    MPI_Win_flush_all(this->_offset_0_win);
-    MPI_Win_flush_all(this->_offset_1_win);
-    MPI_Win_flush_all(this->_queue_num_win);
-    MPI_Barrier(comm);
-    MPI_Win_flush_all(this->_data_0_win);
-    MPI_Win_flush_all(this->_data_1_win);
-    MPI_Win_flush_all(this->_writer_count_0_win);
-    MPI_Win_flush_all(this->_writer_count_1_win);
-    MPI_Win_flush_all(this->_offset_0_win);
-    MPI_Win_flush_all(this->_offset_1_win);
-    MPI_Win_flush_all(this->_queue_num_win);
-  }
-
-  AMDequeuer(const AMDequeuer &) = delete;
-  AMDequeuer &operator=(const AMDequeuer &) = delete;
-  ~AMDequeuer() {
-    MPI_Info_free(&this->_info);
-    MPI_Win_unlock_all(_data_0_win);
-    MPI_Win_unlock_all(_data_1_win);
-    MPI_Win_unlock_all(_writer_count_0_win);
-    MPI_Win_unlock_all(_writer_count_1_win);
-    MPI_Win_unlock_all(_offset_0_win);
-    MPI_Win_unlock_all(_offset_1_win);
-    MPI_Win_unlock_all(_queue_num_win);
-    MPI_Win_free(&_data_0_win);
-    MPI_Win_free(&_data_1_win);
-    MPI_Win_free(&_writer_count_0_win);
-    MPI_Win_free(&_writer_count_1_win);
-    MPI_Win_free(&_offset_0_win);
-    MPI_Win_free(&_offset_1_win);
-    MPI_Win_free(&_queue_num_win);
   }
 
   bool dequeue(std::vector<T> &output) {
