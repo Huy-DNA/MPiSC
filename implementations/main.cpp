@@ -1,10 +1,10 @@
-#include "lib/benches/apps/isx.hpp"
 #define PROFILE 1
 
 #ifdef PROFILE
 #include <caliper/cali.h>
 #endif
 
+#include "lib/benches/apps/isx/mpsc-isx.hpp"
 #include "./lib/benches/microbenchmarks/single-one-queue.hpp"
 #include "./lib/benches/utils.h"
 #include "./lib/comm.hpp"
