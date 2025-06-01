@@ -191,7 +191,7 @@ slotqueue_single_one_queue_benchmark(unsigned long long number_of_elements,
           workload_microseconds;
       local_dequeues_microseconds = local_microseconds;
     } else {
-      SlotEnqueuer<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
+      SlotQueue<int> queue(elements_per_queue, 0, rank, MPI_COMM_WORLD);
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
