@@ -5,11 +5,11 @@
 #include "bclx/core/definition.hpp"
 #include <bclx/bclx.hpp>
 
-#include <cstdio>
 #include <cstdlib>
 #include <mpi.h>
 
-template <typename T, int SEGMENT_SIZE = 32> class NaiveJiffyEnqueuer {
+// Warning: A little buggy when dequeuing from empty queue & across segments
+template <typename T, int SEGMENT_SIZE = 32> class NaiveJiffyQueue {
 private:
   enum status_t {
     SET,
@@ -28,17 +28,49 @@ private:
 
   bclx::gptr<int> _tail;
   bclx::gptr<bclx::gptr<segment_t>> _tail_of_queue;
+  bclx::gptr<segment_t> _head_of_queue;
 
 public:
-  NaiveJiffyEnqueuer(int dequeuer_rank) {
-    this->_tail = BCL::broadcast(_tail, dequeuer_rank);
-    this->_tail_of_queue = BCL::broadcast(_tail_of_queue, dequeuer_rank);
+  NaiveJiffyQueue(int self_rank, int dequeuer_rank) {
+    if (self_rank == dequeuer_rank) {
+      this->_tail = BCL::alloc<int>(1);
+      *this->_tail = 0;
+
+      this->_tail_of_queue = BCL::alloc<bclx::gptr<segment_t>>(1);
+      *this->_tail_of_queue = BCL::alloc<segment_t>(1);
+      this->_tail_of_queue.local()->local()->curr_data_buffer =
+          BCL::alloc<T>(SEGMENT_SIZE);
+      this->_tail_of_queue.local()->local()->curr_status_buffer =
+          BCL::alloc<status_t>(SEGMENT_SIZE);
+      for (int i = 0; i < SEGMENT_SIZE; ++i) {
+        this->_tail_of_queue.local()->local()->curr_status_buffer.local()[i] =
+            EMPTY;
+      }
+      this->_tail_of_queue.local()->local()->next =
+          BCL::alloc<bclx::gptr<segment_t>>(1);
+      *this->_tail_of_queue.local()->local()->next.local() = nullptr;
+      this->_tail_of_queue.local()->local()->prev =
+          BCL::alloc<bclx::gptr<segment_t>>(1);
+      *this->_tail_of_queue.local()->local()->prev.local() = nullptr;
+      this->_tail_of_queue.local()->local()->head = BCL::alloc<int>(1);
+      *this->_tail_of_queue.local()->local()->head.local() = 0;
+      this->_tail_of_queue.local()->local()->pos_in_queue = 0;
+
+      this->_head_of_queue = *this->_tail_of_queue.local();
+
+      BCL::broadcast(_tail, self_rank);
+      BCL::broadcast(_tail_of_queue, self_rank);
+
+    } else {
+      this->_tail = BCL::broadcast(_tail, dequeuer_rank);
+      this->_tail_of_queue = BCL::broadcast(_tail_of_queue, dequeuer_rank);
+    }
   }
 
-  NaiveJiffyEnqueuer(const NaiveJiffyEnqueuer &) = delete;
-  NaiveJiffyEnqueuer &operator=(const NaiveJiffyEnqueuer &) = delete;
+  NaiveJiffyQueue(const NaiveJiffyQueue &) = delete;
+  NaiveJiffyQueue &operator=(const NaiveJiffyQueue &) = delete;
 
-  ~NaiveJiffyEnqueuer() {}
+  ~NaiveJiffyQueue() {}
 
   bool enqueue(const T &data) {
     int location;
@@ -126,66 +158,6 @@ public:
     }
 
     return true;
-  }
-};
-
-// Warning: A little buggy when dequeuing from empty queue
-template <typename T, int SEGMENT_SIZE = 32> class NaiveJiffyDequeuer {
-private:
-  enum status_t {
-    SET,
-    HANDLED,
-    EMPTY,
-  };
-
-  struct segment_t {
-    bclx::gptr<T> curr_data_buffer;
-    bclx::gptr<status_t> curr_status_buffer;
-    bclx::gptr<bclx::gptr<segment_t>> next;
-    bclx::gptr<bclx::gptr<segment_t>> prev;
-    bclx::gptr<int> head;
-    int pos_in_queue;
-  };
-
-  bclx::gptr<int> _tail;
-  bclx::gptr<segment_t> _head_of_queue;
-  bclx::gptr<bclx::gptr<segment_t>> _tail_of_queue;
-
-public:
-  NaiveJiffyDequeuer(int self_rank) {
-    this->_tail = BCL::alloc<int>(1);
-    *this->_tail = 0;
-
-    this->_tail_of_queue = BCL::alloc<bclx::gptr<segment_t>>(1);
-    *this->_tail_of_queue = BCL::alloc<segment_t>(1);
-    this->_tail_of_queue.local()->local()->curr_data_buffer =
-        BCL::alloc<T>(SEGMENT_SIZE);
-    this->_tail_of_queue.local()->local()->curr_status_buffer =
-        BCL::alloc<status_t>(SEGMENT_SIZE);
-    for (int i = 0; i < SEGMENT_SIZE; ++i) {
-      this->_tail_of_queue.local()->local()->curr_status_buffer.local()[i] =
-          EMPTY;
-    }
-    this->_tail_of_queue.local()->local()->next =
-        BCL::alloc<bclx::gptr<segment_t>>(1);
-    *this->_tail_of_queue.local()->local()->next.local() = nullptr;
-    this->_tail_of_queue.local()->local()->prev =
-        BCL::alloc<bclx::gptr<segment_t>>(1);
-    *this->_tail_of_queue.local()->local()->prev.local() = nullptr;
-    this->_tail_of_queue.local()->local()->head = BCL::alloc<int>(1);
-    *this->_tail_of_queue.local()->local()->head.local() = 0;
-    this->_tail_of_queue.local()->local()->pos_in_queue = 0;
-
-    this->_head_of_queue = *this->_tail_of_queue.local();
-
-    BCL::broadcast(_tail, self_rank);
-    BCL::broadcast(_tail_of_queue, self_rank);
-  }
-
-  NaiveJiffyDequeuer(const NaiveJiffyDequeuer &) = delete;
-  NaiveJiffyDequeuer &operator=(const NaiveJiffyDequeuer &) = delete;
-  ~NaiveJiffyDequeuer() {
-    // Just leak memory...
   }
 
   bool dequeue(T *output) {

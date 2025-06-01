@@ -63,7 +63,7 @@ inline void naive_jiffy_single_one_queue_microbenchmark(
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      NaiveJiffyEnqueuer<int> queue(0);
+      NaiveJiffyQueue<int> queue(0);
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
