@@ -19,17 +19,17 @@ template <typename data_t> class UnboundedSpsc {
     bclx::gptr<bclx::gptr<node_t>> next;
   };
 
-  bclx::gptr<bclx::gptr<node_t>> _e_first;
-  bclx::gptr<bclx::gptr<node_t>> *_d_first;
-  bclx::gptr<bclx::gptr<node_t>> _e_last;
-  bclx::gptr<bclx::gptr<node_t>> *_d_last;
-  bclx::gptr<node_t> *_d_last_cached;
-  bclx::gptr<bclx::gptr<node_t>> _e_announce;
-  bclx::gptr<bclx::gptr<node_t>> *_d_announce;
-  bclx::gptr<bclx::gptr<node_t>> _e_free_later;
-  bclx::gptr<bclx::gptr<node_t>> *_d_free_later;
-  bclx::gptr<data_t> _e_help;
-  bclx::gptr<data_t> *_d_help;
+  bclx::gptr<bclx::gptr<node_t>> _e_first = nullptr;
+  bclx::gptr<bclx::gptr<node_t>> *_d_first = nullptr;
+  bclx::gptr<bclx::gptr<node_t>> _e_last = nullptr;
+  bclx::gptr<bclx::gptr<node_t>> *_d_last = nullptr;
+  bclx::gptr<node_t> *_d_last_cached = nullptr;
+  bclx::gptr<bclx::gptr<node_t>> _e_announce = nullptr;
+  bclx::gptr<bclx::gptr<node_t>> *_d_announce = nullptr;
+  bclx::gptr<bclx::gptr<node_t>> _e_free_later = nullptr;
+  bclx::gptr<bclx::gptr<node_t>> *_d_free_later = nullptr;
+  bclx::gptr<data_t> _e_help = nullptr;
+  bclx::gptr<data_t> *_d_help = nullptr;
 
 public:
   UnboundedSpsc(MPI_Aint dequeuer_rank, MPI_Comm comm)
@@ -110,6 +110,32 @@ public:
       }
     }
   }
+
+  UnboundedSpsc(UnboundedSpsc &&other) noexcept
+      : _self_rank(other._self_rank), _dequeuer_rank(other._dequeuer_rank),
+        _e_first(other._e_first), _d_first(other._d_first),
+        _e_last(other._e_last), _d_last(other._d_last),
+        _d_last_cached(other._d_last_cached), _e_announce(other._e_announce),
+        _d_announce(other._d_announce), _e_free_later(other._e_free_later),
+        _d_free_later(other._d_free_later), _e_help(other._e_help),
+        _d_help(other._d_help) {
+
+    other._e_first = nullptr;
+    other._d_first = nullptr;
+    other._e_last = nullptr;
+    other._d_last = nullptr;
+    other._d_last_cached = nullptr;
+    other._e_announce = nullptr;
+    other._d_announce = nullptr;
+    other._e_free_later = nullptr;
+    other._d_free_later = nullptr;
+    other._e_help = nullptr;
+    other._d_help = nullptr;
+  }
+
+  UnboundedSpsc(const UnboundedSpsc &) = delete;
+  UnboundedSpsc &operator=(const UnboundedSpsc &) = delete;
+  UnboundedSpsc &operator=(UnboundedSpsc &&) = delete;
 
   ~UnboundedSpsc() {
     // free later
