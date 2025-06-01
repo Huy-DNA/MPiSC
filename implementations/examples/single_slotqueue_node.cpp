@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   if (rank == 0) {
-    SlotNodeDequeuer<int> queue(1000, rank, rank, MPI_COMM_WORLD);
+    SlotNodeQueue<int> queue(1000, rank, rank, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     for (int i = 0; i < 50 * (size - 1); ++i) {
       int value;
@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
       }
     }
   } else {
-    SlotNodeEnqueuer<int> queue(1000, 0, rank, MPI_COMM_WORLD);
+    SlotNodeQueue<int> queue(1000, 0, rank, MPI_COMM_WORLD);
     for (int i = 0; i < 50; ++i) {
       if (!queue.enqueue(i)) {
         printf("Enqueue failed \n");
