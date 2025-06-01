@@ -4,7 +4,6 @@
 #include <caliper/cali.h>
 #endif
 
-#include "./lib/benches/benchmarks/single-one-queue.hpp"
 #include "./lib/benches/microbenchmarks/single-one-queue.hpp"
 #include "./lib/benches/utils.h"
 #include "./lib/comm.hpp"
@@ -80,8 +79,6 @@ int main(int argc, char **argv) {
   }
 
   if (run_bench) {
-    slotqueue_single_one_queue_benchmark(100000, 5);
-    ltqueue_single_one_queue_benchmark(100000, 5);
   }
 
   BCL::finalize();
