@@ -2,6 +2,8 @@ target/
 *.test.cpp
 *.out
 out
+bin/
+obj/
 
 CMakeFiles/
 CMakeCache.txt
