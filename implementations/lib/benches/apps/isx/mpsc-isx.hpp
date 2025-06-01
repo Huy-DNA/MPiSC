@@ -34,7 +34,7 @@ inline void slotqueue_isx_sort(unsigned long long number_of_elements,
     queues.push_back(SlotQueue<int>(number_of_elements, rank, MPI_COMM_WORLD));
   }
 
-  double total_microseconds = 0;
+  double microseconds = 0;
 
   const int MAX_NUM = 10000000;
   const int slice_size = 1 + MAX_NUM / BCL::nprocs();
@@ -61,8 +61,11 @@ inline void slotqueue_isx_sort(unsigned long long number_of_elements,
     BCL::barrier();
   }
   auto t2 = std::chrono::high_resolution_clock::now();
-  total_microseconds =
+  double local_microseconds =
       std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
-  report_isx("Slotqueue", number_of_elements, iterations, total_microseconds);
+  MPI_Allreduce(&local_microseconds, &microseconds, 1, MPI_DOUBLE,
+                MPI_MAX, MPI_COMM_WORLD);
+
+  report_isx("Slotqueue", number_of_elements, iterations, microseconds);
 }
