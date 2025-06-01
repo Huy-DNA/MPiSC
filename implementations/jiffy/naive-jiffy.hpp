@@ -31,7 +31,8 @@ private:
   bclx::gptr<segment_t> _head_of_queue;
 
 public:
-  NaiveJiffyQueue(int self_rank, int dequeuer_rank) {
+  NaiveJiffyQueue(int dequeuer_rank) {
+    int self_rank = BCL::my_rank;
     if (self_rank == dequeuer_rank) {
       this->_tail = BCL::alloc<int>(1);
       *this->_tail = 0;

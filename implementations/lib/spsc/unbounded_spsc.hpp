@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bclx/bclx.hpp>
+#include <mpi.h>
 
 #include "bcl/backends/mpi/backend.hpp"
 #include "bcl/backends/mpi/comm.hpp"
@@ -11,7 +12,7 @@
 
 // Warning: Dequeuer cannot self-enqueue just yet!
 template <typename data_t> class UnboundedSpsc {
-  const MPI_Aint _self_rank;
+  int _self_rank;
   const MPI_Aint _dequeuer_rank;
 
   struct node_t {
@@ -32,8 +33,9 @@ template <typename data_t> class UnboundedSpsc {
   bclx::gptr<data_t> *_d_help;
 
 public:
-  UnboundedSpsc(MPI_Aint self_rank, MPI_Aint dequeuer_rank, MPI_Comm comm)
-      : _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank} {
+  UnboundedSpsc(MPI_Aint dequeuer_rank, MPI_Comm comm)
+      : _dequeuer_rank{dequeuer_rank} {
+    MPI_Comm_rank(comm, &this->_self_rank);
     if (this->_self_rank == this->_dequeuer_rank) {
       this->_d_first = new bclx::gptr<bclx::gptr<node_t>>[BCL::nprocs()];
       this->_d_last = new bclx::gptr<bclx::gptr<node_t>>[BCL::nprocs()];

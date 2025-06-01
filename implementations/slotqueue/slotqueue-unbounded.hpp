@@ -22,7 +22,7 @@ private:
 
   MPI_Comm _comm;
   MPI_Aint _size;
-  const MPI_Aint _self_rank;
+  int _self_rank;
   const MPI_Aint _dequeuer_rank;
 
   FaaCounter _counter;
@@ -131,10 +131,11 @@ private:
   }
 
 public:
-  UnboundedSlotQueue(MPI_Aint dequeuer_rank, MPI_Aint self_rank, MPI_Comm comm)
-      : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
-        _spsc{self_rank, dequeuer_rank, comm}, _counter{dequeuer_rank, comm} {
+  UnboundedSlotQueue(MPI_Aint dequeuer_rank, MPI_Comm comm)
+      : _comm{comm}, _dequeuer_rank{dequeuer_rank}, _spsc{dequeuer_rank, comm},
+        _counter{dequeuer_rank, comm} {
     int size;
+    MPI_Comm_rank(comm, &this->_self_rank);
     MPI_Comm_size(comm, &size);
     this->_size = size;
 

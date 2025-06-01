@@ -9,7 +9,7 @@
 template <typename T> class AMQueue {
 private:
   MPI_Comm _comm;
-  const MPI_Aint _self_rank;
+  int _self_rank;
   const MPI_Aint _dequeuer_rank;
   const MPI_Aint _capacity;
 
@@ -39,10 +39,9 @@ private:
   MPI_Info _info;
 
 public:
-  AMQueue(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Aint self_rank,
-          MPI_Comm comm)
-      : _comm{comm}, _self_rank{self_rank}, _dequeuer_rank{dequeuer_rank},
-        _capacity{capacity} {
+  AMQueue(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Comm comm)
+      : _comm{comm}, _dequeuer_rank{dequeuer_rank}, _capacity{capacity} {
+    MPI_Comm_rank(comm, &this->_self_rank);
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
