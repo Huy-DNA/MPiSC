@@ -30,7 +30,7 @@ private:
 
   MPI_Info _info;
 
-  SpscEnqueuer<data_t> _spsc;
+  Spsc<data_t> _spsc;
 
   bool _refreshEnqueue(timestamp_t ts) {
 #ifdef PROFILE
@@ -39,7 +39,7 @@ private:
     data_t front;
     // avoid possibily redundant remote read below
     timestamp_t new_timestamp;
-    if (!this->_spsc.read_front(&front)) {
+    if (!this->_spsc.e_read_front(&front)) {
       new_timestamp = MAX_TIMESTAMP;
     } else {
       new_timestamp = front.timestamp;
@@ -51,7 +51,7 @@ private:
     timestamp_t old_timestamp;
     fetch_and_add_sync(&old_timestamp, 0, this->_self_rank,
                        this->_dequeuer_rank, this->_min_timestamp_win);
-    if (!this->_spsc.read_front(&front)) {
+    if (!this->_spsc.e_read_front(&front)) {
       new_timestamp = MAX_TIMESTAMP;
     } else {
       new_timestamp = front.timestamp;

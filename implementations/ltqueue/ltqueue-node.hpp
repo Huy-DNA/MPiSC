@@ -41,7 +41,7 @@ private:
   tree_node_t *_tree_ptr;
   MPI_Info _info;
 
-  SpscEnqueuer<data_t> _spsc;
+  Spsc<data_t> _spsc;
 
   int _get_number_of_processes() const {
     int number_processes;
@@ -135,7 +135,7 @@ private:
     bool res;
 
     data_t front;
-    bool min_timestamp_succeeded = this->_spsc.read_front(&front);
+    bool min_timestamp_succeeded = this->_spsc.e_read_front(&front);
 
     timestamp_t current_timestamp;
     aread_sync(&current_timestamp, this->_self_rank, this->_dequeuer_rank,
@@ -242,7 +242,7 @@ public:
 
     data_t front;
     uint32_t cur_timestamp;
-    if (!this->_spsc.read_front(&front)) {
+    if (!this->_spsc.e_read_front(&front)) {
       cur_timestamp = MAX_TIMESTAMP;
     } else {
       cur_timestamp = front.timestamp;
@@ -277,7 +277,7 @@ public:
 
     data_t front;
     uint32_t cur_timestamp;
-    if (!this->_spsc.read_front(&front)) {
+    if (!this->_spsc.e_read_front(&front)) {
       cur_timestamp = MAX_TIMESTAMP;
     } else {
       cur_timestamp = front.timestamp;
