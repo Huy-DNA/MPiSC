@@ -30,11 +30,6 @@ static void report_isx(std::string title, unsigned long long number_of_elements,
 
 inline void slotqueue_isx_sort(unsigned long long number_of_elements,
                                int iterations = 10, bool weak_scaling = false) {
-  std::vector<SlotQueue<int>> queues;
-  for (size_t rank = 0; rank < BCL::nprocs(); rank++) {
-    queues.push_back(SlotQueue<int>(number_of_elements, rank, MPI_COMM_WORLD));
-  }
-
   double microseconds = 0;
 
   const int MAX_NUM = 10000000;
@@ -42,16 +37,33 @@ inline void slotqueue_isx_sort(unsigned long long number_of_elements,
 
   auto t1 = std::chrono::high_resolution_clock::now();
   for (int _ = 0; _ < iterations; ++_) {
+    std::vector<std::vector<int>> buffers(BCL::nprocs());
+    std::vector<SlotQueue<int>> queues;
+    for (size_t rank = 0; rank < BCL::nprocs(); rank++) {
+      queues.push_back(
+          SlotQueue<int>(number_of_elements, rank, MPI_COMM_WORLD));
+    }
+
+    const int batch_size = 1024;
+
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distr(0, MAX_NUM);
     unsigned long long elements_per_pe =
         weak_scaling ? number_of_elements : number_of_elements / BCL::nprocs();
 
-    for (unsigned long long _ = 0; _ < elements_per_pe; ++_) {
+    for (unsigned long long i = 0; i < elements_per_pe; ++i) {
       int num = distr(gen);
       int slice_index = num / slice_size;
-      queues[slice_index].enqueue(num);
+      buffers[slice_index].push_back(num);
+      if (buffers[slice_index].size() >= batch_size) {
+        queues[slice_index].enqueue(buffers[slice_index]);
+        buffers[slice_index].clear();
+      }
+    }
+
+    for (unsigned long long i = 0; i < buffers.size(); i++) {
+      queues[i].enqueue(buffers[i]);
     }
 
     BCL::barrier();
@@ -76,11 +88,6 @@ inline void slotqueue_isx_sort(unsigned long long number_of_elements,
 
 inline void ltqueue_isx_sort(unsigned long long number_of_elements,
                              int iterations = 10, bool weak_scaling = false) {
-  std::vector<LTQueue<int>> queues;
-  for (size_t rank = 0; rank < BCL::nprocs(); rank++) {
-    queues.push_back(LTQueue<int>(number_of_elements, rank, MPI_COMM_WORLD));
-  }
-
   double microseconds = 0;
 
   const int MAX_NUM = 10000000;
@@ -88,16 +95,33 @@ inline void ltqueue_isx_sort(unsigned long long number_of_elements,
 
   auto t1 = std::chrono::high_resolution_clock::now();
   for (int _ = 0; _ < iterations; ++_) {
+    std::vector<std::vector<int>> buffers(BCL::nprocs());
+    std::vector<LTQueue<int>> queues;
+    for (size_t rank = 0; rank < BCL::nprocs(); rank++) {
+      queues.push_back(
+          LTQueue<int>(number_of_elements, rank, MPI_COMM_WORLD));
+    }
+
+    const int batch_size = 1024;
+
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distr(0, MAX_NUM);
     unsigned long long elements_per_pe =
         weak_scaling ? number_of_elements : number_of_elements / BCL::nprocs();
 
-    for (unsigned long long _ = 0; _ < elements_per_pe; ++_) {
+    for (unsigned long long i = 0; i < elements_per_pe; ++i) {
       int num = distr(gen);
       int slice_index = num / slice_size;
-      queues[slice_index].enqueue(num);
+      buffers[slice_index].push_back(num);
+      if (buffers[slice_index].size() >= batch_size) {
+        queues[slice_index].enqueue(buffers[slice_index]);
+        buffers[slice_index].clear();
+      }
+    }
+
+    for (unsigned long long i = 0; i < buffers.size(); i++) {
+      queues[i].enqueue(buffers[i]);
     }
 
     BCL::barrier();
