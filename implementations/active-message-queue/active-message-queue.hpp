@@ -13,30 +13,30 @@ private:
   const MPI_Aint _dequeuer_rank;
   const MPI_Aint _capacity;
 
-  MPI_Win _data_0_win;
-  T *_data_0_ptr;
+  MPI_Win _data_0_win = MPI_WIN_NULL;
+  T *_data_0_ptr = nullptr;
 
-  MPI_Win _data_1_win;
-  T *_data_1_ptr;
+  MPI_Win _data_1_win = MPI_WIN_NULL;
+  T *_data_1_ptr = nullptr;
 
-  MPI_Win _queue_num_win;
-  bool *_queue_num_ptr;
+  MPI_Win _queue_num_win = MPI_WIN_NULL;
+  bool *_queue_num_ptr = nullptr;
 
-  MPI_Win _writer_count_0_win;
-  int64_t *_writer_count_0_ptr;
+  MPI_Win _writer_count_0_win = MPI_WIN_NULL;
+  int64_t *_writer_count_0_ptr = nullptr;
 
-  MPI_Win _writer_count_1_win;
-  int64_t *_writer_count_1_ptr;
+  MPI_Win _writer_count_1_win = MPI_WIN_NULL;
+  int64_t *_writer_count_1_ptr = nullptr;
 
   bool _prev_queue_num; // Dequeuer-specific
 
-  MPI_Win _offset_0_win;
-  MPI_Aint *_offset_0_ptr;
+  MPI_Win _offset_0_win = MPI_WIN_NULL;
+  MPI_Aint *_offset_0_ptr = nullptr;
 
-  MPI_Win _offset_1_win;
-  MPI_Aint *_offset_1_ptr;
+  MPI_Win _offset_1_win = MPI_WIN_NULL;
+  MPI_Aint *_offset_1_ptr = nullptr;
 
-  MPI_Info _info;
+  MPI_Info _info = MPI_INFO_NULL;
 
 public:
   AMQueue(MPI_Aint capacity, MPI_Aint dequeuer_rank, MPI_Comm comm)
@@ -118,22 +118,71 @@ public:
   AMQueue(const AMQueue &) = delete;
   AMQueue &operator=(const AMQueue &) = delete;
 
+  AMQueue(AMQueue &&other) noexcept
+      : _comm{other._comm}, _self_rank{other._self_rank},
+        _dequeuer_rank{other._dequeuer_rank}, _capacity{other._capacity},
+        _data_0_win{other._data_0_win}, _data_0_ptr{other._data_0_ptr},
+        _data_1_win{other._data_1_win}, _data_1_ptr{other._data_1_ptr},
+        _queue_num_win{other._queue_num_win},
+        _queue_num_ptr{other._queue_num_ptr},
+        _writer_count_0_win{other._writer_count_0_win},
+        _writer_count_0_ptr{other._writer_count_0_ptr},
+        _writer_count_1_win{other._writer_count_1_win},
+        _writer_count_1_ptr{other._writer_count_1_ptr},
+        _prev_queue_num{other._prev_queue_num},
+        _offset_0_win{other._offset_0_win}, _offset_0_ptr{other._offset_0_ptr},
+        _offset_1_win{other._offset_1_win}, _offset_1_ptr{other._offset_1_ptr},
+        _info{other._info} {
+    other._data_0_win = MPI_WIN_NULL;
+    other._data_0_ptr = nullptr;
+    other._data_1_win = MPI_WIN_NULL;
+    other._data_1_ptr = nullptr;
+    other._queue_num_win = MPI_WIN_NULL;
+    other._queue_num_ptr = nullptr;
+    other._writer_count_0_win = MPI_WIN_NULL;
+    other._writer_count_0_ptr = nullptr;
+    other._writer_count_1_win = MPI_WIN_NULL;
+    other._writer_count_1_ptr = nullptr;
+    other._offset_0_win = MPI_WIN_NULL;
+    other._offset_0_ptr = nullptr;
+    other._offset_1_win = MPI_WIN_NULL;
+    other._offset_1_ptr = nullptr;
+    other._info = MPI_INFO_NULL;
+  }
+
   ~AMQueue() {
-    MPI_Info_free(&this->_info);
-    MPI_Win_unlock_all(_data_0_win);
-    MPI_Win_unlock_all(_data_1_win);
-    MPI_Win_unlock_all(_writer_count_0_win);
-    MPI_Win_unlock_all(_writer_count_1_win);
-    MPI_Win_unlock_all(_offset_0_win);
-    MPI_Win_unlock_all(_offset_1_win);
-    MPI_Win_unlock_all(_queue_num_win);
-    MPI_Win_free(&_data_0_win);
-    MPI_Win_free(&_data_1_win);
-    MPI_Win_free(&_writer_count_0_win);
-    MPI_Win_free(&_writer_count_1_win);
-    MPI_Win_free(&_offset_0_win);
-    MPI_Win_free(&_offset_1_win);
-    MPI_Win_free(&_queue_num_win);
+    if (_info != MPI_INFO_NULL) {
+      MPI_Info_free(&_info);
+    }
+
+    if (_data_0_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_data_0_win);
+      MPI_Win_free(&_data_0_win);
+    }
+    if (_data_1_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_data_1_win);
+      MPI_Win_free(&_data_1_win);
+    }
+    if (_writer_count_0_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_writer_count_0_win);
+      MPI_Win_free(&_writer_count_0_win);
+    }
+    if (_writer_count_1_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_writer_count_1_win);
+      MPI_Win_free(&_writer_count_1_win);
+    }
+    if (_offset_0_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_offset_0_win);
+      MPI_Win_free(&_offset_0_win);
+    }
+    if (_offset_1_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_offset_1_win);
+      MPI_Win_free(&_offset_1_win);
+    }
+    if (_queue_num_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(_queue_num_win);
+      MPI_Win_free(&_queue_num_win);
+    }
   }
 
   bool enqueue(const T &data) {
