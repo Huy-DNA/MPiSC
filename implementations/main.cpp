@@ -77,14 +77,14 @@ int main(int argc, char **argv) {
   }
 
   if (run_micro) {
-    slotqueue_single_one_queue_microbenchmark(100000, 5);
-    unbounded_slotqueue_single_one_queue_microbenchmark(100000, 5);
-    slotqueue_node_single_one_queue_microbenchmark(100000, 5);
-    unbounded_ltqueue_single_one_queue_microbenchmark(100000, 5);
-    ltqueue_node_single_one_queue_microbenchmark(100000, 5);
-    ltqueue_single_one_queue_microbenchmark(100000, 5);
-    naive_jiffy_single_one_queue_microbenchmark(100000, 5);
-    amqueue_single_one_queue_microbenchmark(100000, 5);
+    slotqueue_single_one_queue_microbenchmark(10000, 5);
+    unbounded_slotqueue_single_one_queue_microbenchmark(10000, 5);
+  //  slotqueue_node_single_one_queue_microbenchmark(10000, 5);
+    unbounded_ltqueue_single_one_queue_microbenchmark(10000, 5);
+  //  ltqueue_node_single_one_queue_microbenchmark(10000, 5);
+    ltqueue_single_one_queue_microbenchmark(10000, 5);
+    naive_jiffy_single_one_queue_microbenchmark(10000, 5);
+    amqueue_single_one_queue_microbenchmark(10000, 5);
   }
 
   if (run_isx) {

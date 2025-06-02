@@ -1,0 +1,148 @@
+1
+---- Slotqueue ----
+Dequeue latency: 8.95474 us
+Dequeue throughput: 1.11673 10^5ops/s
+Enqueue latency: 21.2979 us
+Enqueue throughput: 3.28671 10^5ops/s
+Total throughput: 2.23379 10^5ops/s
+---- Slotqueue Unbounded ----
+Dequeue latency: 17.8492 us
+Dequeue throughput: 0.560249 10^5ops/s
+Enqueue latency: 35.1263 us
+Enqueue throughput: 1.99281 10^5ops/s
+Total throughput: 1.12067 10^5ops/s
+---- LTQueue Unbounded ----
+Dequeue latency: 25.2215 us
+Dequeue throughput: 0.396487 10^5ops/s
+Enqueue latency: 38.3345 us
+Enqueue throughput: 1.82603 10^5ops/s
+Total throughput: 0.793093 10^5ops/s
+---- LTQueue ----
+Dequeue latency: 15.5978 us
+Dequeue throughput: 0.641118 10^5ops/s
+Enqueue latency: 22.5946 us
+Enqueue throughput: 3.09808 10^5ops/s
+Total throughput: 1.28243 10^5ops/s
+---- Naive Jiffy ----
+Dequeue latency: 15.8419 us
+Dequeue throughput: 0.631239 10^5ops/s
+Enqueue latency: 68.89 us
+Enqueue throughput: 1.01611 10^5ops/s
+Total throughput: 1.26267 10^5ops/s
+---- AMQueue ----
+Dequeue latency: 6.41668 us
+Dequeue throughput: 1.55844 10^5ops/s
+Enqueue latency: 42.3411 us
+Enqueue throughput: 1.65324 10^5ops/s
+Total throughput: 3.10339 10^5ops/s
+2
+---- Slotqueue ----
+Dequeue latency: 74.0962 us
+Dequeue throughput: 0.13496 10^5ops/s
+Enqueue latency: 590.295 us
+Enqueue throughput: 0.25411 10^5ops/s
+Total throughput: 0.269987 10^5ops/s
+---- Slotqueue Unbounded ----
+Dequeue latency: 337.935 us
+Dequeue throughput: 0.0295915 10^5ops/s
+Enqueue latency: 782.938 us
+Enqueue throughput: 0.191586 10^5ops/s
+Total throughput: 0.0591978 10^5ops/s
+---- LTQueue Unbounded ----
+Dequeue latency: 384.713 us
+Dequeue throughput: 0.0259934 10^5ops/s
+Enqueue latency: 754.272 us
+Enqueue throughput: 0.198867 10^5ops/s
+Total throughput: 0.0519998 10^5ops/s
+---- LTQueue ----
+Dequeue latency: 106.04 us
+Dequeue throughput: 0.0943043 10^5ops/s
+Enqueue latency: 401.107 us
+Enqueue throughput: 0.373965 10^5ops/s
+Total throughput: 0.188656 10^5ops/s
+---- Naive Jiffy ----
+Dequeue latency: 234.77 us
+Dequeue throughput: 0.0425949 10^5ops/s
+Enqueue latency: 1403.77 us
+Enqueue throughput: 0.106855 10^5ops/s
+Total throughput: 0.085211 10^5ops/s
+---- AMQueue ----
+Dequeue latency: 87.6415 us
+Dequeue throughput: 0.114101 10^5ops/s
+Enqueue latency: 881.615 us
+Enqueue throughput: 0.170142 10^5ops/s
+Total throughput: 0.222947 10^5ops/s
+3
+---- Slotqueue ----
+Dequeue latency: 78.7411 us
+Dequeue throughput: 0.126999 10^5ops/s
+Enqueue latency: 928.355 us
+Enqueue throughput: 0.24775 10^5ops/s
+Total throughput: 0.254061 10^5ops/s
+---- Slotqueue Unbounded ----
+Dequeue latency: 459.64 us
+Dequeue throughput: 0.0217562 10^5ops/s
+Enqueue latency: 1821.43 us
+Enqueue throughput: 0.126274 10^5ops/s
+Total throughput: 0.0435232 10^5ops/s
+---- LTQueue Unbounded ----
+Dequeue latency: 524.184 us
+Dequeue throughput: 0.0190773 10^5ops/s
+Enqueue latency: 1839.81 us
+Enqueue throughput: 0.125013 10^5ops/s
+Total throughput: 0.0381641 10^5ops/s
+---- LTQueue ----
+Dequeue latency: 147.467 us
+Dequeue throughput: 0.067812 10^5ops/s
+Enqueue latency: 987.033 us
+Enqueue throughput: 0.233022 10^5ops/s
+Total throughput: 0.135658 10^5ops/s
+---- Naive Jiffy ----
+Dequeue latency: 342.939 us
+Dequeue throughput: 0.0291597 10^5ops/s
+Enqueue latency: 3654.47 us
+Enqueue throughput: 0.0629367 10^5ops/s
+Total throughput: 0.058334 10^5ops/s
+---- AMQueue ----
+Dequeue latency: 82.9484 us
+Dequeue throughput: 0.120557 10^5ops/s
+Enqueue latency: 1842.65 us
+Enqueue throughput: 0.12482 10^5ops/s
+Total throughput: 0.237143 10^5ops/s
+4
+---- Slotqueue ----
+Dequeue latency: 79.8664 us
+Dequeue throughput: 0.125209 10^5ops/s
+Enqueue latency: 1060.3 us
+Enqueue throughput: 0.292371 10^5ops/s
+Total throughput: 0.250581 10^5ops/s
+---- Slotqueue Unbounded ----
+Dequeue latency: 491.848 us
+Dequeue throughput: 0.0203315 10^5ops/s
+Enqueue latency: 1947.61 us
+Enqueue throughput: 0.159169 10^5ops/s
+Total throughput: 0.0406894 10^5ops/s
+---- LTQueue Unbounded ----
+Dequeue latency: 578.485 us
+Dequeue throughput: 0.0172865 10^5ops/s
+Enqueue latency: 1963.15 us
+Enqueue throughput: 0.15791 10^5ops/s
+Total throughput: 0.0345956 10^5ops/s
+---- LTQueue ----
+Dequeue latency: 167.61 us
+Dequeue throughput: 0.0596622 10^5ops/s
+Enqueue latency: 1094.73 us
+Enqueue throughput: 0.283175 10^5ops/s
+Total throughput: 0.119402 10^5ops/s
+---- Naive Jiffy ----
+Dequeue latency: 227.858 us
+Dequeue throughput: 0.0438869 10^5ops/s
+Enqueue latency: 3485.7 us
+Enqueue throughput: 0.0889347 10^5ops/s
+Total throughput: 0.0878308 10^5ops/s
+---- AMQueue ----
+Dequeue latency: 61.5762 us
+Dequeue throughput: 0.1624 10^5ops/s
+Enqueue latency: 1882.54 us
+Enqueue throughput: 0.164671 10^5ops/s
+Total throughput: 0.317361 10^5ops/s

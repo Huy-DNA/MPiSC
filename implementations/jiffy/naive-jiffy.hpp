@@ -9,7 +9,7 @@
 #include <mpi.h>
 
 // Warning: A little buggy when dequeuing from empty queue & across segments
-template <typename T, int SEGMENT_SIZE = 32> class NaiveJiffyQueue {
+template <typename T, int SEGMENT_SIZE = 10000> class NaiveJiffyQueue {
 private:
   enum status_t {
     SET,
