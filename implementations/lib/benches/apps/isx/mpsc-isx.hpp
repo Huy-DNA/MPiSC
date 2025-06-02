@@ -66,8 +66,9 @@ inline void slotqueue_isx_sort(unsigned long long number_of_elements,
   double local_microseconds =
       std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
-  MPI_Allreduce(&local_microseconds, &microseconds, 1, MPI_DOUBLE, MPI_MAX,
+  MPI_Allreduce(&local_microseconds, &microseconds, 1, MPI_DOUBLE, MPI_SUM,
                 MPI_COMM_WORLD);
+  microseconds /= BCL::nprocs();
 
   report_isx("Slotqueue", number_of_elements, iterations, microseconds);
 }
