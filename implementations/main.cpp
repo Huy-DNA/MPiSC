@@ -4,10 +4,10 @@
 #include <caliper/cali.h>
 #endif
 
-#include "lib/benches/apps/isx/mpsc-isx.hpp"
 #include "./lib/benches/microbenchmarks/single-one-queue.hpp"
 #include "./lib/benches/utils.h"
 #include "bcl/backends/mpi/backend.hpp"
+#include "lib/benches/apps/isx/mpsc-isx.hpp"
 #include <cstring>
 #include <iostream>
 #include <mpi.h>
@@ -88,7 +88,8 @@ int main(int argc, char **argv) {
   }
 
   if (run_isx) {
-    slotqueue_isx_sort(10000000, 1);
+    slotqueue_isx_sort(100000000, 1, true);
+    ltqueue_isx_sort(100000000, 1, true);
   }
 
   if (run_bench) {
