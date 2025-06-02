@@ -7,7 +7,6 @@
 #include "lib/benches/apps/isx/mpsc-isx.hpp"
 #include "./lib/benches/microbenchmarks/single-one-queue.hpp"
 #include "./lib/benches/utils.h"
-#include "./lib/comm.hpp"
 #include "bcl/backends/mpi/backend.hpp"
 #include <cstring>
 #include <iostream>
@@ -19,6 +18,7 @@ void print_usage(const char *prog_name) {
             << "  rmo          - Run RMO latency report\n"
             << "  micro        - Run microbenchmarks\n"
             << "  bench        - Run benchmarks\n"
+            << "  isx          - Run ISx latency report\n"
             << "  all          - Run everything (default if no option)\n"
             << "  help         - Show this help message\n";
 }
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
   }
 
   if (run_isx) {
-    slotqueue_isx_sort(100000, 5);
+    slotqueue_isx_sort(100000000, 1);
   }
 
   if (run_bench) {

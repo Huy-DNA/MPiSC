@@ -45,7 +45,7 @@ inline void slotqueue_isx_sort(unsigned long long number_of_elements,
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distr(0, MAX_NUM);
 
-    for (int _ = 0; _ < number_of_elements; ++_) {
+    for (unsigned long long _ = 0; _ < number_of_elements; ++_) {
       int num = distr(gen);
       int slice_index = num / slice_size;
       queues[slice_index].enqueue(num);
@@ -64,8 +64,8 @@ inline void slotqueue_isx_sort(unsigned long long number_of_elements,
   double local_microseconds =
       std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
-  MPI_Allreduce(&local_microseconds, &microseconds, 1, MPI_DOUBLE,
-                MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(&local_microseconds, &microseconds, 1, MPI_DOUBLE, MPI_MAX,
+                MPI_COMM_WORLD);
 
   report_isx("Slotqueue", number_of_elements, iterations, microseconds);
 }
