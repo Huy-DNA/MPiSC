@@ -23,7 +23,7 @@ static void report_isx(std::string title, unsigned long long number_of_elements,
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0) {
     printf("---- %s ----\n", title.c_str());
-    printf("Average latency: %g us\n", total_microseconds / number_of_elements);
+    printf("Average latency: %g us\n", total_microseconds / iterations);
   }
 }
 
