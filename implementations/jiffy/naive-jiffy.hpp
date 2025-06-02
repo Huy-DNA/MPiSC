@@ -26,9 +26,9 @@ private:
     int pos_in_queue;
   };
 
-  bclx::gptr<int> _tail;
-  bclx::gptr<bclx::gptr<segment_t>> _tail_of_queue;
-  bclx::gptr<segment_t> _head_of_queue;
+  bclx::gptr<int> _tail = nullptr;
+  bclx::gptr<bclx::gptr<segment_t>> _tail_of_queue = nullptr;
+  bclx::gptr<segment_t> _head_of_queue = nullptr;
 
 public:
   NaiveJiffyQueue(int dequeuer_rank) {
@@ -70,6 +70,14 @@ public:
 
   NaiveJiffyQueue(const NaiveJiffyQueue &) = delete;
   NaiveJiffyQueue &operator=(const NaiveJiffyQueue &) = delete;
+  NaiveJiffyQueue(NaiveJiffyQueue &&other) noexcept
+      : _tail{other._tail}, _tail_of_queue{other._tail_of_queue},
+        _head_of_queue{other._head_of_queue} {
+
+    other._tail = nullptr;
+    other._tail_of_queue = nullptr;
+    other._head_of_queue = nullptr;
+  }
 
   ~NaiveJiffyQueue() {}
 
