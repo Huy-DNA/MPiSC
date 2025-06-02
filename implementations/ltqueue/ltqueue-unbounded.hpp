@@ -360,13 +360,34 @@ public:
 
   UnboundedLTQueue(const UnboundedLTQueue &) = delete;
   UnboundedLTQueue &operator=(const UnboundedLTQueue &) = delete;
+  UnboundedLTQueue(UnboundedLTQueue &&other) noexcept
+      : _comm{other._comm}, _self_rank{other._self_rank},
+        _dequeuer_rank{other._dequeuer_rank},
+        _counter{std::move(other._counter)},
+        _min_timestamp_win{other._min_timestamp_win},
+        _min_timestamp_ptr{other._min_timestamp_ptr},
+        _tree_win{other._tree_win}, _tree_ptr{other._tree_ptr},
+        _info{other._info}, _spsc{std::move(other._spsc)} {
+
+    other._min_timestamp_win = MPI_WIN_NULL;
+    other._min_timestamp_ptr = nullptr;
+    other._tree_win = MPI_WIN_NULL;
+    other._tree_ptr = nullptr;
+    other._info = MPI_INFO_NULL;
+  }
 
   ~UnboundedLTQueue() {
-    MPI_Win_unlock_all(this->_min_timestamp_win);
-    MPI_Win_unlock_all(this->_tree_win);
-    MPI_Win_free(&this->_tree_win);
-    MPI_Win_free(&this->_min_timestamp_win);
-    MPI_Info_free(&this->_info);
+    if (_min_timestamp_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(this->_min_timestamp_win);
+      MPI_Win_free(&this->_min_timestamp_win);
+    }
+    if (_tree_win != MPI_WIN_NULL) {
+      MPI_Win_unlock_all(this->_tree_win);
+      MPI_Win_free(&this->_tree_win);
+    }
+    if (_info != MPI_INFO_NULL) {
+      MPI_Info_free(&this->_info);
+    }
   }
 
   bool enqueue(const T &data) {
