@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
   }
 
   if (run_isx) {
-    slotqueue_isx_sort(100000000, 1);
+    slotqueue_isx_sort(10000000, 1);
   }
 
   if (run_bench) {

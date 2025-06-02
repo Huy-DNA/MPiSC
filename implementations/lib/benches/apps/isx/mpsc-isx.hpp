@@ -23,12 +23,13 @@ static void report_isx(std::string title, unsigned long long number_of_elements,
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   if (rank == 0) {
     printf("---- %s ----\n", title.c_str());
-    printf("Average latency: %g s\n", total_microseconds / iterations / 1000000);
+    printf("Average latency: %g s\n",
+           total_microseconds / iterations / 1000000);
   }
 }
 
 inline void slotqueue_isx_sort(unsigned long long number_of_elements,
-                               int iterations = 10) {
+                                    int iterations = 10, bool weak_scaling = false) {
   std::vector<SlotQueue<int>> queues;
   for (size_t rank = 0; rank < BCL::nprocs(); rank++) {
     queues.push_back(SlotQueue<int>(number_of_elements, rank, MPI_COMM_WORLD));
@@ -44,8 +45,9 @@ inline void slotqueue_isx_sort(unsigned long long number_of_elements,
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distr(0, MAX_NUM);
+    unsigned long long elements_per_pe = weak_scaling ? number_of_elements : number_of_elements / BCL::nprocs();
 
-    for (unsigned long long _ = 0; _ < number_of_elements; ++_) {
+    for (unsigned long long _ = 0; _ < elements_per_pe; ++_) {
       int num = distr(gen);
       int slice_index = num / slice_size;
       queues[slice_index].enqueue(num);
