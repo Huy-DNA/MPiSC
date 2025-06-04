@@ -102,8 +102,8 @@ public:
 
     while (true) {
       bclx::gptr<segment_t> last_segment_ptr =
-          bclx::aread_sync(this->_tail_of_queue);
-      segment_t last_segment = bclx::aread_sync(last_segment_ptr);
+          bclx::aget_sync(this->_tail_of_queue);
+      segment_t last_segment = bclx::aget_sync(last_segment_ptr);
       if ((last_segment.pos_in_queue + 1) * SEGMENT_SIZE > location) {
         break;
       }
@@ -122,7 +122,7 @@ public:
 
     bclx::gptr<segment_t> temp_tail_ptr = bclx::aget_sync(this->_tail_of_queue);
     segment_t temp_tail = bclx::aget_sync(temp_tail_ptr);
-    while (bclx::aget_sync(temp_tail_ptr.head) > location) {
+    while (bclx::aget_sync(temp_tail.head) > location) {
       temp_tail_ptr = bclx::aget_sync(temp_tail.prev);
       temp_tail = bclx::aget_sync(temp_tail_ptr);
     }
@@ -164,7 +164,7 @@ public:
 
     int temp_index = cur_index;
     bclx::gptr<segment_t> temp_segment_ptr = cur_segment_ptr;
-    bclx::gptr<segment_t> temp_segment = cur_segment;
+    segment_t temp_segment = cur_segment;
     status_t temp_status =
         bclx::aget_sync(temp_segment.curr_status_buffer + temp_index);
     while (temp_status != SET) {
@@ -186,7 +186,7 @@ public:
     while (true) {
       int e_index = cur_index;
       bclx::gptr<segment_t> e_segment_ptr = cur_segment_ptr;
-      bclx::gptr<segment_t> e_segment = cur_segment;
+      segment_t e_segment = cur_segment;
       status_t e_status =
           bclx::aget_sync(e_segment.curr_status_buffer + e_index);
       while (e_status != SET) {
