@@ -5,7 +5,7 @@
 #endif
 
 #include "../../active-message-queue/active-message-queue.hpp"
-#include "../../jiffy/naive-jiffy.hpp"
+#include "../../jiffy/jiffy.hpp"
 #include "../../ltqueue/ltqueue-node.hpp"
 #include "../../ltqueue/ltqueue-unbounded.hpp"
 #include "../../ltqueue/ltqueue.hpp"
@@ -67,7 +67,7 @@ inline void naive_jiffy_single_one_queue_microbenchmark(
     double local_dequeues_microseconds = 0;
 
     if (rank == 0) {
-      NaiveJiffyQueue<int> queue(0);
+      JiffyQueue<int> queue(0);
       MPI_Barrier(MPI_COMM_WORLD);
       auto t1 = std::chrono::high_resolution_clock::now();
       while (local_successful_dequeues < number_of_elements) {
@@ -85,7 +85,7 @@ inline void naive_jiffy_single_one_queue_microbenchmark(
               .count();
       local_dequeues_microseconds = local_microseconds;
     } else {
-      NaiveJiffyQueue<int> queue(0);
+      JiffyQueue<int> queue(0);
       int warm_up_elements = 5;
       auto t1 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < warm_up_elements; ++i) {
@@ -162,7 +162,7 @@ inline void naive_jiffy_single_one_queue_microbenchmark(
   }
 
   report_single_one_queue(
-      "Naive Jiffy", number_of_elements, iterations, total_microseconds,
+      "Jiffy", number_of_elements, iterations, total_microseconds,
       total_dequeues, total_successful_dequeues, total_dequeues_microseconds,
       total_enqueues, total_successful_enqueues, total_enqueues_microseconds,
       total_enqueues_latency_microseconds);

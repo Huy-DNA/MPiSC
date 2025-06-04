@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../active-message-queue/active-message-queue.hpp"
-#include "../../jiffy/naive-jiffy.hpp"
 #include "../../ltqueue/ltqueue-node.hpp"
 #include "../../ltqueue/ltqueue-unbounded.hpp"
 #include "../../ltqueue/ltqueue.hpp"
