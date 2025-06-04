@@ -129,8 +129,8 @@ public:
       temp_tail = bclx::aget_sync(temp_tail_ptr);
     }
 
-    bclx::aput_sync(data, temp_tail.curr_data_buffer + location);
-    bclx::aput_sync(SET, temp_tail.curr_status_buffer + location);
+    bclx::aput_sync(data, temp_tail.curr_data_buffer + location - temp_tail.pos_in_queue * SEGMENT_SIZE);
+    bclx::aput_sync(SET, temp_tail.curr_status_buffer + location - temp_tail.pos_in_queue * SEGMENT_SIZE);
     return true;
   }
 
@@ -141,19 +141,22 @@ public:
 
     while (bclx::aget_sync(cur_segment.curr_status_buffer + cur_index) ==
            HANDLED) {
-      int tmp;
-      int inc = 1;
-      bclx::fetch_and_op_sync(cur_segment.head, &inc, BCL::plus<int>{}, &tmp);
       ++cur_index;
       if (cur_index >= SEGMENT_SIZE) {
-        // free if all read here...
-        // TBD
         cur_segment_ptr = bclx::aget_sync(cur_segment.next);
         if (cur_segment_ptr == nullptr) {
           return false;
         }
+        // free if all read here...
+        // TBD
+        this->_head_of_queue = cur_segment_ptr;
+
         cur_segment = bclx::aget_sync(cur_segment_ptr);
         cur_index = bclx::aget_sync(cur_segment.head);
+      } else {
+        int tmp;
+        int inc = 1;
+        bclx::fetch_and_op_sync(cur_segment.head, &inc, BCL::plus<int>{}, &tmp);
       }
     }
     bclx::gptr<segment_t> tail_segment_ptr = bclx::aget_sync(_tail_of_queue);
