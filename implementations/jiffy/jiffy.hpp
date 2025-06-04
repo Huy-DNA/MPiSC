@@ -124,13 +124,14 @@ public:
 
     bclx::gptr<segment_t> temp_tail_ptr = bclx::aget_sync(this->_tail_of_queue);
     segment_t temp_tail = bclx::aget_sync(temp_tail_ptr);
-    while (bclx::aget_sync(temp_tail.head) > location) {
+    while (temp_tail.pos_in_queue * SEGMENT_SIZE > location) {
       temp_tail_ptr = bclx::aget_sync(temp_tail.prev);
       temp_tail = bclx::aget_sync(temp_tail_ptr);
     }
 
-    bclx::aput_sync(data, temp_tail.curr_data_buffer + location - temp_tail.pos_in_queue * SEGMENT_SIZE);
-    bclx::aput_sync(SET, temp_tail.curr_status_buffer + location - temp_tail.pos_in_queue * SEGMENT_SIZE);
+    int index = location - temp_tail.pos_in_queue * SEGMENT_SIZE;
+    bclx::aput_sync(data, temp_tail.curr_data_buffer + index);
+    bclx::aput_sync(SET, temp_tail.curr_status_buffer + index);
     return true;
   }
 
