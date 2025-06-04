@@ -132,5 +132,81 @@ public:
     return true;
   }
 
-  bool dequeue(T *output) {}
+  bool dequeue(T *output) {
+    bclx::gptr<segment_t> cur_segment_ptr = this->_head_of_queue;
+    segment_t cur_segment = bclx::aget_sync(cur_segment_ptr);
+    int cur_index = bclx::aget_sync(cur_segment.head);
+
+    while (bclx::aget_sync(cur_segment.curr_status_buffer + cur_index) ==
+           HANDLED) {
+      int tmp;
+      int inc = 1;
+      bclx::fetch_and_op_sync(cur_segment.head, &inc, BCL::plus<int>{}, &tmp);
+      ++cur_index;
+      if (cur_index >= SEGMENT_SIZE) {
+        // free if all read here...
+        // TBD
+        cur_segment_ptr = bclx::aget_sync(cur_segment.next);
+        if (cur_segment_ptr == nullptr) {
+          return false;
+        }
+        cur_segment = bclx::aget_sync(cur_segment_ptr);
+        cur_index = bclx::aget_sync(cur_segment.head);
+      }
+    }
+    bclx::gptr<segment_t> tail_segment_ptr = bclx::aget_sync(_tail_of_queue);
+    segment_t tail_segment = bclx::aget_sync(tail_segment_ptr);
+    int tail_index = bclx::aget_sync(this->_tail);
+    if (cur_segment_ptr == tail_segment_ptr &&
+        cur_index + cur_segment.pos_in_queue * SEGMENT_SIZE > tail_index) {
+      return false;
+    }
+
+    int temp_index = cur_index;
+    bclx::gptr<segment_t> temp_segment_ptr = cur_segment_ptr;
+    bclx::gptr<segment_t> temp_segment = cur_segment;
+    status_t temp_status =
+        bclx::aget_sync(temp_segment.curr_status_buffer + temp_index);
+    while (temp_status != SET) {
+      temp_index += 1;
+      if (temp_index >= SEGMENT_SIZE) {
+        // free if all read here...
+        // TBD
+        temp_index = 0;
+        temp_segment_ptr = bclx::aget_sync(temp_segment.next);
+        if (temp_segment_ptr == nullptr) {
+          return false;
+        }
+        temp_segment = bclx::aget_sync(temp_segment_ptr);
+      }
+      temp_status =
+          bclx::aget_sync(temp_segment.curr_status_buffer + temp_index);
+    }
+
+    while (true) {
+      int e_index = cur_index;
+      bclx::gptr<segment_t> e_segment_ptr = cur_segment_ptr;
+      bclx::gptr<segment_t> e_segment = cur_segment;
+      status_t e_status =
+          bclx::aget_sync(e_segment.curr_status_buffer + e_index);
+      while (e_status != SET) {
+        e_index += 1;
+        if (e_index >= SEGMENT_SIZE) {
+          e_index = 0;
+          e_segment_ptr = bclx::aget_sync(e_segment.next);
+          e_segment = bclx::aget_sync(e_segment_ptr);
+        }
+        e_status = bclx::aget_sync(e_segment.curr_status_buffer + e_index);
+      }
+      if (e_segment_ptr == temp_segment_ptr && e_index == temp_index) {
+        break;
+      }
+      temp_segment_ptr = e_segment_ptr;
+      temp_index = e_index;
+      temp_segment = e_segment;
+    }
+    bclx::aput_sync(HANDLED, temp_segment.curr_status_buffer + temp_index);
+    *output = bclx::aget_sync(temp_segment.curr_data_buffer + temp_index);
+    return true;
+  }
 };
