@@ -72,6 +72,8 @@ public:
       this->_tail_of_queue = BCL::alloc<bclx::gptr<segment_t>>(1);
       *this->_tail_of_queue = allocate_segment(0);
 
+      this->_head_of_queue = *this->_tail_of_queue;
+
       BCL::broadcast(_tail, self_rank);
       BCL::broadcast(_tail_of_queue, self_rank);
     } else {
@@ -172,12 +174,12 @@ public:
       if (temp_index >= SEGMENT_SIZE) {
         // free if all read here...
         // TBD
-        temp_index = 0;
         temp_segment_ptr = bclx::aget_sync(temp_segment.next);
         if (temp_segment_ptr == nullptr) {
           return false;
         }
         temp_segment = bclx::aget_sync(temp_segment_ptr);
+        temp_index = bclx::aget_sync(temp_segment.head);
       }
       temp_status =
           bclx::aget_sync(temp_segment.curr_status_buffer + temp_index);
@@ -192,9 +194,9 @@ public:
       while (e_status != SET) {
         e_index += 1;
         if (e_index >= SEGMENT_SIZE) {
-          e_index = 0;
           e_segment_ptr = bclx::aget_sync(e_segment.next);
           e_segment = bclx::aget_sync(e_segment_ptr);
+          e_index = bclx::aget_sync(e_segment.head);
         }
         e_status = bclx::aget_sync(e_segment.curr_status_buffer + e_index);
       }
