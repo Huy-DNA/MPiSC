@@ -193,13 +193,12 @@ public:
         if (all_handled) {
           bclx::gptr<segment_t> prev_segment_ptr =
               bclx::aget_sync(free_segment.prev);
-          if (prev_segment_ptr != nullptr) {
-            segment_t prev_segment = bclx::aget_sync(prev_segment_ptr);
+          // safe to dereference prev_segment_ptr here!
+          segment_t prev_segment = bclx::aget_sync(prev_segment_ptr);
 
-            bclx::aput_sync(prev_segment_ptr, temp_segment.prev);
-            bclx::aput_sync(temp_segment_ptr, prev_segment.next);
-            // TBD: free with hazard pointer
-          }
+          bclx::aput_sync(prev_segment_ptr, temp_segment.prev);
+          bclx::aput_sync(temp_segment_ptr, prev_segment.next);
+          // TBD: free with hazard pointer
         }
 
         all_handled = true;
