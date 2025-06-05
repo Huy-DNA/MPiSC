@@ -148,8 +148,7 @@ public:
         if (cur_segment_ptr == nullptr) {
           return false;
         }
-        // free if all read here...
-        // TBD
+        // TBD: free
         this->_head_of_queue = cur_segment_ptr;
 
         cur_segment = bclx::aget_sync(cur_segment_ptr);
@@ -173,17 +172,37 @@ public:
     segment_t temp_segment = cur_segment;
     status_t temp_status =
         bclx::aget_sync(temp_segment.curr_status_buffer + temp_index);
+    bool all_handled = true;
     while (temp_status != SET) {
+      if (temp_status != HANDLED) {
+        all_handled = false;
+      }
+
       temp_index += 1;
       if (temp_index >= SEGMENT_SIZE) {
-        // free if all read here...
-        // TBD
+        bclx::gptr<segment_t> free_segment_ptr = temp_segment_ptr;
+        segment_t free_segment = temp_segment;
+
         temp_segment_ptr = bclx::aget_sync(temp_segment.next);
         if (temp_segment_ptr == nullptr) {
           return false;
         }
         temp_segment = bclx::aget_sync(temp_segment_ptr);
         temp_index = bclx::aget_sync(temp_segment.head);
+
+        if (all_handled) {
+          bclx::gptr<segment_t> prev_segment_ptr =
+              bclx::aget_sync(free_segment.prev);
+          if (prev_segment_ptr != nullptr) {
+            segment_t prev_segment = bclx::aget_sync(prev_segment_ptr);
+
+            bclx::aput_sync(prev_segment_ptr, temp_segment.prev);
+            bclx::aput_sync(temp_segment_ptr, prev_segment.next);
+            // TBD: free with hazard pointer
+          }
+        }
+
+        all_handled = true;
       }
       temp_status =
           bclx::aget_sync(temp_segment.curr_status_buffer + temp_index);
