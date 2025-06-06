@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./hp.hpp"
 #include "./utils.hpp"
 #include "bclx/backends/mpi/comm.hpp"
 #include "bclx/core/comm.hpp"
@@ -16,9 +17,10 @@ private:
   bclx::gptr<int> _tail = nullptr;
   bclx::gptr<bclx::gptr<segment_t>> _tail_of_queue = nullptr;
   bclx::gptr<segment_t> _head_of_queue = nullptr;
+  hp<T, SEGMENT_SIZE> _hp;
 
   bclx::gptr<segment_t> allocate_segment(int pos_in_queue) {
-    bclx::gptr<segment_t> segment = BCL::alloc<segment_t>(1);
+    bclx::gptr<segment_t> segment = _hp.malloc();
 
     segment.local()->curr_data_buffer = BCL::alloc<T>(SEGMENT_SIZE);
 
@@ -42,7 +44,7 @@ private:
   }
 
 public:
-  JiffyQueue(int dequeuer_rank) {
+  JiffyQueue(int dequeuer_rank) : _hp(dequeuer_rank) {
     int self_rank = BCL::my_rank;
     if (self_rank == dequeuer_rank) {
       this->_tail = BCL::alloc<int>(1);
@@ -83,7 +85,7 @@ public:
 
     while (true) {
       bclx::gptr<segment_t> last_segment_ptr =
-          bclx::aget_sync(this->_tail_of_queue);
+          _hp.reserve(this->_tail_of_queue);
       segment_t last_segment = bclx::aget_sync(last_segment_ptr);
       if ((last_segment.pos_in_queue + 1) * SEGMENT_SIZE > location) {
         break;
@@ -101,10 +103,10 @@ public:
       }
     }
 
-    bclx::gptr<segment_t> temp_tail_ptr = bclx::aget_sync(this->_tail_of_queue);
+    bclx::gptr<segment_t> temp_tail_ptr = _hp.reserve(this->_tail_of_queue);
     segment_t temp_tail = bclx::aget_sync(temp_tail_ptr);
     while (temp_tail.pos_in_queue * SEGMENT_SIZE > location) {
-      temp_tail_ptr = bclx::aget_sync(temp_tail.prev);
+      temp_tail_ptr = _hp.reserve(temp_tail.prev);
       temp_tail = bclx::aget_sync(temp_tail_ptr);
     }
 
@@ -127,7 +129,7 @@ public:
         if (cur_segment_ptr == nullptr) {
           return false;
         }
-        // TBD: free
+        this->_hp.free(this->_head_of_queue); // free
         this->_head_of_queue = cur_segment_ptr;
 
         cur_segment = bclx::aget_sync(cur_segment_ptr);
@@ -177,7 +179,7 @@ public:
 
           bclx::aput_sync(prev_segment_ptr, temp_segment.prev);
           bclx::aput_sync(temp_segment_ptr, prev_segment.next);
-          // TBD: free with hazard pointer
+          this->_hp.free(prev_segment_ptr); // free
         }
 
         all_handled = true;
