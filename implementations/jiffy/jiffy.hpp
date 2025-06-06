@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./utils.hpp"
 #include "bclx/backends/mpi/comm.hpp"
 #include "bclx/core/comm.hpp"
 #include "bclx/core/definition.hpp"
@@ -10,20 +11,7 @@
 
 template <typename T, int SEGMENT_SIZE = 32> class JiffyQueue {
 private:
-  enum status_t {
-    SET,
-    HANDLED,
-    EMPTY,
-  };
-
-  struct segment_t {
-    bclx::gptr<T> curr_data_buffer;
-    bclx::gptr<status_t> curr_status_buffer;
-    bclx::gptr<bclx::gptr<segment_t>> next;
-    bclx::gptr<bclx::gptr<segment_t>> prev;
-    bclx::gptr<int> head;
-    int pos_in_queue;
-  };
+  typedef segment_t<T> segment_t;
 
   bclx::gptr<int> _tail = nullptr;
   bclx::gptr<bclx::gptr<segment_t>> _tail_of_queue = nullptr;
@@ -51,15 +39,6 @@ private:
     segment.local()->pos_in_queue = pos_in_queue;
 
     return segment;
-  }
-
-  void _fully_reclaim_segment(bclx::gptr<segment_t> segment) {
-    BCL::dealloc(segment.local()->curr_data_buffer);
-    BCL::dealloc(segment.local()->curr_status_buffer);
-    BCL::dealloc(segment.local()->next);
-    BCL::dealloc(segment.local()->prev);
-    BCL::dealloc(segment.local()->head);
-    BCL::dealloc(segment);
   }
 
 public:
@@ -116,7 +95,7 @@ public:
       bclx::compare_and_swap_sync(this->_tail_of_queue, &last_segment_ptr,
                                   &new_last, &old_tail_of_queue);
       if (old_tail_of_queue != last_segment_ptr) {
-        this->_fully_reclaim_segment(new_last);
+        fully_reclaim_segment(new_last);
       } else {
         bclx::aput_sync(new_last, last_segment.next);
       }
