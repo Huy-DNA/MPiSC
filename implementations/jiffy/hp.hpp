@@ -1,5 +1,5 @@
-#include "bclx/core/comm.hpp"
-#include "bclx/core/definition.hpp"
+#pragma once
+
 #include "utils.hpp"
 #include <algorithm>
 #include <vector>
@@ -25,7 +25,8 @@ private:
     while (!this->_reclaimed_list.empty()) {
       bclx::gptr<segment_t> hp_val = this->_reclaimed_list.back();
       this->_reclaimed_list.pop_back();
-      if (std::find(list_temp.begin(), list_temp.end(), hp_val)) {
+      if (std::find(list_temp.begin(), list_temp.end(), hp_val) !=
+          list_temp.end()) {
         reclaimed_list_temp.push_back(hp_val);
       } else {
         this->_freed_list.push_back(hp_val);
@@ -38,7 +39,7 @@ public:
     if (BCL::my_rank == _host) {
       this->_reservations = BCL::alloc<bclx::gptr<segment_t>>(BCL::nprocs());
       for (int i = 0; i < BCL::nprocs(); ++i) {
-        bclx::aput_sync(nullptr, this->_reservations + i);
+        bclx::aput_sync({0, 0}, this->_reservations + i);
       }
     }
     this->_reservations = BCL::broadcast(this->_reservations, host);
