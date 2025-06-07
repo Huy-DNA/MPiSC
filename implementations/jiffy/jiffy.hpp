@@ -93,6 +93,7 @@ public:
       bclx::gptr<segment_t> new_last =
           allocate_segment(last_segment.pos_in_queue + 1);
       *new_last.local()->prev.local() = last_segment_ptr;
+      // TBD: Fix this or else it might be corrupted
       bclx::gptr<segment_t> old_tail_of_queue;
       bclx::compare_and_swap_sync(this->_tail_of_queue, &last_segment_ptr,
                                   &new_last, &old_tail_of_queue);
