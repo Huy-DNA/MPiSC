@@ -90,17 +90,25 @@ public:
       if ((last_segment.pos_in_queue + 1) * SEGMENT_SIZE > location) {
         break;
       }
-      bclx::gptr<segment_t> new_last =
-          allocate_segment(last_segment.pos_in_queue + 1);
-      *new_last.local()->prev.local() = last_segment_ptr;
-      // TBD: Fix this or else it might be corrupted
-      bclx::gptr<segment_t> old_tail_of_queue;
-      bclx::compare_and_swap_sync(this->_tail_of_queue, &last_segment_ptr,
-                                  &new_last, &old_tail_of_queue);
-      if (old_tail_of_queue != last_segment_ptr) {
-        fully_reclaim_segment(new_last);
+      bclx::gptr<segment_t> next = bclx::aget_sync(last_segment.next);
+      if (next == nullptr) {
+        bclx::gptr<segment_t> new_last =
+            allocate_segment(last_segment.pos_in_queue + 1);
+        *new_last.local()->prev.local() = last_segment_ptr;
+        bclx::gptr<segment_t> old_next;
+        bclx::compare_and_swap_sync(last_segment.next, &next, &new_last,
+                                    &old_next);
+        if (old_next != next) {
+          fully_reclaim_segment(new_last);
+        } else {
+          bclx::gptr<segment_t> old_tail_of_queue;
+          bclx::compare_and_swap_sync(this->_tail_of_queue, &last_segment_ptr,
+                                      &new_last, &old_tail_of_queue);
+        }
       } else {
-        bclx::aput_sync(new_last, last_segment.next);
+        bclx::gptr<segment_t> old_tail_of_queue;
+        bclx::compare_and_swap_sync(this->_tail_of_queue, &last_segment_ptr,
+                                    &next, &old_tail_of_queue);
       }
     }
 
