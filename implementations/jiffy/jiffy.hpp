@@ -180,7 +180,8 @@ public:
         temp_segment = bclx::aget_sync(temp_segment_ptr);
         temp_index = bclx::aget_sync(temp_segment.head);
 
-        if (all_handled) {
+        if (all_handled &&
+            temp_segment_ptr != bclx::aget_sync(this->_tail_of_queue)) {
           bclx::gptr<segment_t> prev_segment_ptr =
               bclx::aget_sync(free_segment.prev);
           // safe to dereference prev_segment_ptr here!
