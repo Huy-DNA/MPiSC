@@ -4,4 +4,4 @@ Link: [paper](/references/Jiffy/README.md)
 
 I personally found that existing solutions to distributed dynamic memory allocator unsatisfactory for general use cases, specifically in the realm of MPI. Need more investigation.
 
-Warning: The implementation leaks memory, even with the hazard pointer class because no `BCL::free` is ever called.
+Warning: Jiffy is flawed, don't use this.
