@@ -317,7 +317,7 @@ inline void fetch_and_add_sync(T *dst, uint64_t increment, int disp,
     MPI_Fetch_and_op(&inc, dst, MPI_UINT8_T, target_rank, disp, MPI_SUM, win);
     MPI_Win_flush(target_rank, win);
   } else {
-    static_assert(false, "Invalid template type");
+    //static_assert(false, "Invalid template type");
   }
 }
 
@@ -350,7 +350,7 @@ inline void compare_and_swap_sync(const T *old_val, const T *new_val, T *result,
   } else if constexpr (sizeof(T) == 1) {
     type = MPI_UINT8_T;
   } else {
-    static_assert(false, "Invalid template type");
+    //static_assert(false, "Invalid template type");
   }
 
   MPI_Compare_and_swap(new_val, old_val, result, type, target_rank, disp, win);

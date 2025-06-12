@@ -1,0 +1,39 @@
+2
+---- LTQueue Unbounded ----
+Dequeue latency: 1024.17 us
+Dequeue throughput: 0.00976405 10^5ops/s
+Enqueue latency: 658.962 us
+Enqueue throughput: 0.227631 10^5ops/s
+Total throughput: 0.0195769 10^5ops/s
+---- AMQueue ----
+Dequeue latency: 86.9686 us
+Dequeue throughput: 0.114984 10^5ops/s
+Enqueue latency: 698.085 us
+Enqueue throughput: 0.214874 10^5ops/s
+Total throughput: 0.214838 10^5ops/s
+3
+---- LTQueue Unbounded ----
+Dequeue latency: 1778.31 us
+Dequeue throughput: 0.00562331 10^5ops/s
+Enqueue latency: 1899.41 us
+Enqueue throughput: 0.12109 10^5ops/s
+Total throughput: 0.0113141 10^5ops/s
+---- AMQueue ----
+Dequeue latency: 154.03 us
+Dequeue throughput: 0.0649224 10^5ops/s
+Enqueue latency: 2575.1 us
+Enqueue throughput: 0.089317 10^5ops/s
+Total throughput: 0.11963 10^5ops/s
+4
+---- LTQueue Unbounded ----
+Dequeue latency: 1900.56 us
+Dequeue throughput: 0.00526161 10^5ops/s
+Enqueue latency: 3001.58 us
+Enqueue throughput: 0.103279 10^5ops/s
+Total throughput: 0.0106442 10^5ops/s
+---- AMQueue ----
+Dequeue latency: 136.469 us
+Dequeue throughput: 0.0732769 10^5ops/s
+Enqueue latency: 3612.12 us
+Enqueue throughput: 0.0858222 10^5ops/s
+Total throughput: 0.129664 10^5ops/s
