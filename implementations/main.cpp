@@ -5,6 +5,7 @@
 #endif
 
 #include "./lib/benches/microbenchmarks/single-one-queue.hpp"
+#include "./lib/benches/microbenchmarks/single-one-queue-overflow.hpp"
 #include "./lib/benches/utils.h"
 #include "bcl/backends/mpi/backend.hpp"
 #include "lib/benches/apps/isx/mpsc-isx.hpp"
@@ -80,11 +81,17 @@ int main(int argc, char **argv) {
     slotqueue_single_one_queue_microbenchmark(100000, 5);
     unbounded_slotqueue_single_one_queue_microbenchmark(100000, 5);
     slotqueue_node_single_one_queue_microbenchmark(100000, 5);
+    ltqueue_single_one_queue_microbenchmark(100000, 5);
     unbounded_ltqueue_single_one_queue_microbenchmark(100000, 5);
     ltqueue_node_single_one_queue_microbenchmark(100000, 5);
-    ltqueue_single_one_queue_microbenchmark(100000, 5);
     naive_jiffy_single_one_queue_microbenchmark(100000, 5);
     amqueue_single_one_queue_microbenchmark(100000, 5);
+
+    slotqueue_single_one_queue_overflow_microbenchmark(100000, 5);
+    slotqueue_node_single_one_queue_overflow_microbenchmark(100000, 5);
+    ltqueue_single_one_queue_overflow_microbenchmark(100000, 5);
+    ltqueue_node_single_one_queue_overflow_microbenchmark(100000, 5);
+    amqueue_single_one_queue_overflow_microbenchmark(100000, 5);
   }
 
   if (run_isx) {
