@@ -4,8 +4,8 @@
 #include <caliper/cali.h>
 #endif
 
-#include "./lib/benches/microbenchmarks/single-one-queue.hpp"
 #include "./lib/benches/microbenchmarks/single-one-queue-overflow.hpp"
+#include "./lib/benches/microbenchmarks/single-one-queue.hpp"
 #include "./lib/benches/utils.h"
 #include "bcl/backends/mpi/backend.hpp"
 #include "lib/benches/apps/isx/mpsc-isx.hpp"
@@ -78,11 +78,8 @@ int main(int argc, char **argv) {
   }
 
   if (run_micro) {
-    slotqueue_single_one_queue_overflow_microbenchmark(10000, 5);
-    slotqueue_node_single_one_queue_overflow_microbenchmark(10000, 5);
-    ltqueue_single_one_queue_overflow_microbenchmark(10000, 5);
-    ltqueue_node_single_one_queue_overflow_microbenchmark(10000, 5);
-    amqueue_single_one_queue_overflow_microbenchmark(10000, 5);
+    hosted_slotqueue_single_one_queue_overflow_microbenchmark(100000, 5);
+    amqueue_single_one_queue_overflow_microbenchmark(100000, 5);
   }
 
   if (run_isx) {
