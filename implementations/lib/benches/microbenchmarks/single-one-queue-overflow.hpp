@@ -101,12 +101,11 @@ inline void slotqueue_node_single_one_queue_overflow_microbenchmark(
       auto t3 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue - warm_up_elements;
            ++i) {
-        if (queue.enqueue(i)) {
-          ++local_enqueues;
-          ++local_successful_enqueues;
-        } else {
+        while (!queue.enqueue(i)) {
           ++local_enqueues;
         }
+        ++local_enqueues;
+        ++local_successful_enqueues;
       }
       auto t4 = std::chrono::high_resolution_clock::now();
       local_microseconds =
@@ -229,12 +228,11 @@ inline void slotqueue_single_one_queue_overflow_microbenchmark(
       auto t3 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue - warm_up_elements;
            ++i) {
-        if (queue.enqueue(i)) {
-          ++local_enqueues;
-          ++local_successful_enqueues;
-        } else {
+        while (!queue.enqueue(i)) {
           ++local_enqueues;
         }
+        ++local_enqueues;
+        ++local_successful_enqueues;
       }
       auto t4 = std::chrono::high_resolution_clock::now();
       local_microseconds =
@@ -357,12 +355,11 @@ inline void amqueue_single_one_queue_overflow_microbenchmark(
       auto t3 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue - warm_up_elements;
            ++i) {
-        if (queue.enqueue(i)) {
-          ++local_enqueues;
-          ++local_successful_enqueues;
-        } else {
+        while (!queue.enqueue(i)) {
           ++local_enqueues;
         }
+        ++local_enqueues;
+        ++local_successful_enqueues;
       }
       auto t4 = std::chrono::high_resolution_clock::now();
       local_microseconds =
@@ -485,12 +482,11 @@ inline void ltqueue_single_one_queue_overflow_microbenchmark(
       auto t3 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue - warm_up_elements;
            ++i) {
-        if (queue.enqueue(i)) {
-          ++local_enqueues;
-          ++local_successful_enqueues;
-        } else {
+        while (!queue.enqueue(i)) {
           ++local_enqueues;
         }
+        ++local_enqueues;
+        ++local_successful_enqueues;
       }
       auto t4 = std::chrono::high_resolution_clock::now();
       local_microseconds =
@@ -613,12 +609,11 @@ inline void ltqueue_node_single_one_queue_overflow_microbenchmark(
       auto t3 = std::chrono::high_resolution_clock::now();
       for (unsigned long long i = 0; i < elements_per_queue - warm_up_elements;
            ++i) {
-        if (queue.enqueue(i)) {
-          ++local_enqueues;
-          ++local_successful_enqueues;
-        } else {
+        while (!queue.enqueue(i)) {
           ++local_enqueues;
         }
+        ++local_enqueues;
+        ++local_successful_enqueues;
       }
       auto t4 = std::chrono::high_resolution_clock::now();
       local_microseconds =
