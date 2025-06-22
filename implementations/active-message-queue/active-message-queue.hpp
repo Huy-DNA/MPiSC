@@ -224,11 +224,18 @@ public:
       return false;
     }
 
-    write_async(&data, offset, this->_dequeuer_rank,
+    if (offset < 0) {
+    std::cout << "hi " << offset << std::endl;
+    }
+    write_sync(&data, offset, this->_dequeuer_rank,
                 queue_num ? this->_data_1_win : this->_data_0_win);
+    if (offset < 0) {
+    std::cout << "bye" << std::endl;
+    }
     fetch_and_add_sync(&writer_count, -1, 0, this->_dequeuer_rank,
                        queue_num ? this->_writer_count_1_win
                                  : this->_writer_count_0_win);
+    
     return true;
   }
 

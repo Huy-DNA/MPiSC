@@ -78,8 +78,8 @@ int main(int argc, char **argv) {
   }
 
   if (run_micro) {
-    hosted_slotqueue_single_one_queue_overflow_microbenchmark(100000, 5);
-    amqueue_single_one_queue_overflow_microbenchmark(100000, 5);
+    // hosted_slotqueue_single_one_queue_overflow_microbenchmark(100000, 5);
+    amqueue_single_one_queue_overflow_microbenchmark(10000, 5);
   }
 
   if (run_isx) {

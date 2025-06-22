@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <mpi.h>
 #include <type_traits>
+#include <iostream>
 #ifdef PROFILE
 #include <caliper/cali.h>
 #endif
