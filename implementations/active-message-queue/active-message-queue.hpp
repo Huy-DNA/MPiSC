@@ -6,6 +6,8 @@
 #include <mpi.h>
 #include <vector>
 
+#define LARGE_NUMBER 100000000
+
 template <typename T> class AMQueue {
 private:
   MPI_Comm _comm;
@@ -236,10 +238,10 @@ public:
     write_sync(&this->_prev_queue_num, 0, this->_self_rank,
                this->_queue_num_win);
     int64_t writer_count;
-    fetch_and_add_sync(&writer_count, -this->_capacity, 0, this->_self_rank,
+    fetch_and_add_sync(&writer_count, -LARGE_NUMBER, 0, this->_self_rank,
                        prev_queue_num ? this->_writer_count_1_win
                                       : this->_writer_count_0_win);
-    while (writer_count > -this->_capacity) {
+    while (writer_count > -LARGE_NUMBER) {
       fetch_and_add_sync(&writer_count, 0, 0, this->_self_rank,
                          prev_queue_num ? this->_writer_count_1_win
                                         : this->_writer_count_0_win);
