@@ -215,7 +215,7 @@ public:
     MPI_Aint offset;
     fetch_and_add_sync(&offset, 1, 0, this->_dequeuer_rank,
                        queue_num ? this->_offset_1_win : this->_offset_0_win);
-    if (offset > this->_capacity) {
+    if (offset >= this->_capacity) {
       fetch_and_add_sync(&offset, -1, 0, this->_dequeuer_rank,
                          queue_num ? this->_offset_1_win : this->_offset_0_win);
       fetch_and_add_sync(&writer_count, -1, 0, this->_dequeuer_rank,
