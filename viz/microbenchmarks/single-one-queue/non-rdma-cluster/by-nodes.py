@@ -114,7 +114,8 @@ for metric in metrics:
     plt.title(f"Comparative {title} Across Queue Implementations", fontsize=16)
     plt.xlabel("Number of Nodes (x8 cores)", fontsize=14)
     plt.ylabel(f"{title} ({unit})", fontsize=14)
-    plt.yscale("log")  # Set y-axis to logarithmic scale
+    plt.xscale("log")
+    plt.minorticks_off()
     plt.grid(True, alpha=0.3)
     plt.legend(title="Queue Types", loc="best", fontsize=12)
     plt.xticks(nodes, [str(int(node)) for node in nodes], fontsize=12)
@@ -128,4 +129,3 @@ for metric in metrics:
 print(
     "All comparative plots have been generated in the 'non-rdma-cluster/all/by-nodes' folder."
 )
-
