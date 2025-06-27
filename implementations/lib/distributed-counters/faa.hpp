@@ -10,14 +10,16 @@ private:
   MPI_Aint _host;
 
 public:
-  FaaCounter(MPI_Aint host, MPI_Comm comm) {
+  FaaCounter(MPI_Aint dequeuer_rank, MPI_Comm comm) {
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
-    this->_host = host;
+    int size;
+    MPI_Comm_size(comm, &size);
+    this->_host = (dequeuer_rank + 1) % size;
     int rank;
     MPI_Comm_rank(comm, &rank);
-    if (host == rank) {
+    if (_host == rank) {
       MPI_Win_allocate(sizeof(MPI_Aint), sizeof(MPI_Aint), this->_info, comm,
                        &this->_counter_ptr, &this->_counter_win);
     } else {
@@ -25,7 +27,7 @@ public:
                        &this->_counter_ptr, &this->_counter_win);
     }
     MPI_Win_lock_all(MPI_MODE_NOCHECK, this->_counter_win);
-    if (host == rank) {
+    if (_host == rank) {
       *this->_counter_ptr = 0;
     }
     MPI_Win_flush_all(this->_counter_win);

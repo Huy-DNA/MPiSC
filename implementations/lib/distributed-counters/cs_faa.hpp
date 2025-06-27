@@ -31,7 +31,7 @@ private:
   FaaCounter _base_counter;
 
 public:
-  CsFaaCounter(MPI_Aint host, MPI_Comm comm) : _base_counter{host, comm} {
+  CsFaaCounter(MPI_Aint dequeuer_rank, MPI_Comm comm) : _base_counter{dequeuer_rank, comm} {
     MPI_Info_create(&this->_info);
     MPI_Info_set(this->_info, "same_disp_unit", "true");
     MPI_Info_set(this->_info, "accumulate_ordering", "none");
