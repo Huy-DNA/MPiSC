@@ -4,7 +4,6 @@
 #include <caliper/cali.h>
 #endif
 
-#include "./lib/benches/microbenchmarks/single-one-queue-overflow.hpp"
 #include "./lib/benches/microbenchmarks/single-one-queue.hpp"
 #include "./lib/benches/utils.h"
 #include "bcl/backends/mpi/backend.hpp"
@@ -74,7 +73,8 @@ int main(int argc, char **argv) {
 
   // Execute selected operations
   if (run_rmo) {
-    report_RMO_latency();
+    report_RMO_latency_single();
+    report_RMO_latency_all();
   }
 
   if (run_micro) {
