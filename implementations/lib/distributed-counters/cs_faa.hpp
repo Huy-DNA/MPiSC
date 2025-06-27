@@ -138,7 +138,7 @@ public:
         MPI_Aint counter = self_baseptr->load();
         if (counter == MAX_COUNT) {
           for (int retries = 0; retries < 300; ++retries) {
-            spin(10);
+            spin(100);
             MPI_Aint counter = self_baseptr->load();
             if (counter != MAX_COUNT) {
               self_counter = counter;
