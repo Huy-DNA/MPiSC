@@ -134,11 +134,11 @@ inline void report_RMO_latency_all(unsigned int ops = 1000) {
     printf("---- RMO latency - all ----\n");
     printf("Contending processes: %d\n", size - 1);
     printf("Atomic read latency: %g us\n",
-           atomic_read_microseconds / (size - 1));
+           atomic_read_microseconds / (size - 1) / ops);
     printf("Atomic write latency: %g us\n",
-           atomic_write_microseconds / (size - 1));
-    printf("FAA latency: %g us\n", faa_microseconds / (size - 1));
-    printf("CAS latency: %g us\n", cas_microseconds / (size - 1));
+           atomic_write_microseconds / (size - 1) / ops);
+    printf("FAA latency: %g us\n", faa_microseconds / (size - 1) / ops);
+    printf("CAS latency: %g us\n", cas_microseconds / (size - 1) / ops);
   }
 
   MPI_Info_free(&info);
@@ -253,23 +253,23 @@ inline void report_RMO_latency_single(unsigned int ops = 1000) {
   double faa_microseconds;
   double cas_microseconds;
   MPI_Allreduce(&local_atomic_read_microseconds, &atomic_read_microseconds, 1,
-                MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
   MPI_Allreduce(&local_atomic_write_microseconds, &atomic_write_microseconds, 1,
-                MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
   MPI_Allreduce(&local_faa_microseconds, &faa_microseconds, 1, MPI_DOUBLE,
-                MPI_SUM, MPI_COMM_WORLD);
+                MPI_MAX, MPI_COMM_WORLD);
   MPI_Allreduce(&local_cas_microseconds, &cas_microseconds, 1, MPI_DOUBLE,
-                MPI_SUM, MPI_COMM_WORLD);
+                MPI_MAX, MPI_COMM_WORLD);
 
   if (rank == 0) {
     printf("---- RMO latency - single ----\n");
     printf("#processes: %d\n", size - 1);
     printf("Atomic read latency: %g us\n",
-           atomic_read_microseconds / (size - 1));
+           atomic_read_microseconds / ops);
     printf("Atomic write latency: %g us\n",
-           atomic_write_microseconds / (size - 1));
-    printf("FAA latency: %g us\n", faa_microseconds / (size - 1));
-    printf("CAS latency: %g us\n", cas_microseconds / (size - 1));
+           atomic_write_microseconds / ops);
+    printf("FAA latency: %g us\n", faa_microseconds / ops);
+    printf("CAS latency: %g us\n", cas_microseconds / ops);
   }
 
   MPI_Info_free(&info);
