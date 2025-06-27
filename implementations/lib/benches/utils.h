@@ -70,7 +70,6 @@ inline void report_RMO_latency(unsigned int ops = 1000) {
       switch (current_op) {
       case READ: {
         int dest;
-        awrite_async(&rank, 0, 0, win);
         auto t_0 = std::chrono::high_resolution_clock::now();
         aread_sync(&dest, 0, 0, win);
         auto t_1 = std::chrono::high_resolution_clock::now();
@@ -82,7 +81,6 @@ inline void report_RMO_latency(unsigned int ops = 1000) {
 
       case WRITE: {
         int src = rank * i;
-        awrite_async(&rank, 0, 0, win);
         auto t_0 = std::chrono::high_resolution_clock::now();
         awrite_sync(&src, 0, 0, win);
         auto t_1 = std::chrono::high_resolution_clock::now();
@@ -93,8 +91,6 @@ inline void report_RMO_latency(unsigned int ops = 1000) {
       }
 
       case FAA: {
-        int src = rank * i;
-        awrite_async(&src, 0, 0, win);
         int dst;
         auto t_0 = std::chrono::high_resolution_clock::now();
         fetch_and_add_sync(&dst, 1, 0, 0, win);
@@ -109,8 +105,6 @@ inline void report_RMO_latency(unsigned int ops = 1000) {
         int old_val = 0;
         int new_val = rank;
         int result = 0;
-        int src = rank * i;
-        awrite_async(&src, 0, 0, win);
         auto t_0 = std::chrono::high_resolution_clock::now();
         compare_and_swap_sync(&old_val, &new_val, &result, 0, 0, win);
         auto t_1 = std::chrono::high_resolution_clock::now();
