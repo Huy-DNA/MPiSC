@@ -9,14 +9,6 @@
 #include <string>
 #include <vector>
 
-inline void cache_flush() {
-  static constexpr uint64_t bigger_than_cachesize = 100 * 1024 * 1024;
-  static volatile long p[bigger_than_cachesize];
-  for (int i = 0; i < bigger_than_cachesize; ++i) {
-    p[i] = rand();
-  }
-}
-
 inline double spin_wait(double us) {
   auto t1 = std::chrono::high_resolution_clock::now();
   auto t2 = std::chrono::high_resolution_clock::now();
