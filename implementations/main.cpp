@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
   // Execute selected operations
   if (run_rmo) {
     report_RMO_latency_single();
-    report_RMO_latency_all();
+    report_RMO_latency_all_to_one();
   }
 
   if (run_micro) {
