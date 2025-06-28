@@ -321,6 +321,45 @@ inline void fetch_and_add_sync(T *dst, uint64_t increment, int disp,
   }
 }
 
+template <typename T>
+inline void fetch_and_add_async(T *dst, uint64_t increment, int disp,
+                                unsigned int target_rank, const MPI_Win &win) {
+#ifdef PROFILE
+  CALI_CXX_MARK_FUNCTION;
+#endif
+  if constexpr (std::is_same_v<T, int64_t>) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_INT64_T, target_rank, disp, MPI_SUM, win);
+  } else if constexpr (sizeof(T) == 8) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_UINT64_T, target_rank, disp, MPI_SUM, win);
+  } else if constexpr (std::is_same_v<T, int32_t>) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_INT32_T, target_rank, disp, MPI_SUM, win);
+  } else if constexpr (sizeof(T) == 4) {
+    uint32_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_UINT32_T, target_rank, disp, MPI_SUM, win);
+    MPI_Win_flush(target_rank, win);
+  } else if constexpr (std::is_same_v<T, int16_t>) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_INT16_T, target_rank, disp, MPI_SUM, win);
+  } else if constexpr (sizeof(T) == 2) {
+    uint16_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_UINT16_T, target_rank, disp, MPI_SUM, win);
+  } else if constexpr (std::is_same_v<T, int8_t>) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_INT8_T, target_rank, disp, MPI_SUM, win);
+  } else if constexpr (std::is_same_v<T, int8_t>) {
+    uint64_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_C_BOOL, target_rank, disp, MPI_SUM, win);
+  } else if constexpr (sizeof(T) == 1) {
+    uint8_t inc = increment;
+    MPI_Fetch_and_op(&inc, dst, MPI_UINT8_T, target_rank, disp, MPI_SUM, win);
+  } else {
+    static_assert(false, "Invalid template type");
+  }
+}
+
 // compare-and-swap
 template <typename T>
 inline void compare_and_swap_sync(const T *old_val, const T *new_val, T *result,

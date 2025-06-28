@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
   }
 
   if (run_micro) {
+    slotqueue_2C3_single_one_queue_microbenchmark(100000, 5);
     slotqueue_single_one_queue_microbenchmark(100000, 5);
     unbounded_slotqueue_single_one_queue_microbenchmark(100000, 5);
     slotqueue_node_single_one_queue_microbenchmark(100000, 5);
