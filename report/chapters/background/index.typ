@@ -416,7 +416,7 @@ Solutions to this problem must ensure that memory is only freed when no other pr
 //
 // In conclusion, atomic operations avoid undefined behavior on concurrent accesses to the same memory location while memory orders help us enforce ordering of operations accross threads, which can be used to reason about the program.
 
-== MPI-3 - A popular distributed programming library interface specifcation <mpi>
+== MPI-3 - A popular distributed programming library interface specification <mpi>
 
 MPI stands for message passing interface, which is a *message-passing library interface specification*. Design goals of MPI includes high availability across platforms, efficient communication, thread-safety, reliable and convenient communication interface while still allowing hardware-specific accelerated mechanisms to be exploited @mpi-3.1.
 
