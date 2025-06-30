@@ -80,10 +80,9 @@ private:
     timestamp_t min_timestamp = MAX_TIMESTAMP;
 
     for (int i = 0; i < this->_size; ++i) {
-      aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
-                  this->_min_timestamp_win);
+      aread_sync(&this->_min_timestamp_buf[i], i, this->_self_rank,
+                 this->_min_timestamp_win);
     }
-    flush(this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < this->_size; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
@@ -95,10 +94,9 @@ private:
       return DUMMY_RANK;
     }
     for (int i = 0; i < rank; ++i) {
-      aread_async(&this->_min_timestamp_buf[i], i, this->_self_rank,
-                  this->_min_timestamp_win);
+      aread_sync(&this->_min_timestamp_buf[i], i, this->_self_rank,
+                 this->_min_timestamp_win);
     }
-    flush(this->_self_rank, this->_min_timestamp_win);
     for (int i = 0; i < rank; ++i) {
       timestamp_t timestamp = this->_min_timestamp_buf[i];
       if (timestamp < min_timestamp) {
@@ -131,7 +129,8 @@ private:
   }
 
 public:
-  HostedSlotQueue(MPI_Aint capacity_per_node, MPI_Aint dequeuer_rank, MPI_Comm comm)
+  HostedSlotQueue(MPI_Aint capacity_per_node, MPI_Aint dequeuer_rank,
+                  MPI_Comm comm)
       : _comm{comm}, _dequeuer_rank{dequeuer_rank},
         _spsc{capacity_per_node, dequeuer_rank, comm},
         _counter{dequeuer_rank, comm} {
