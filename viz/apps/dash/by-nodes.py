@@ -54,7 +54,7 @@ for pattern in patterns:
         marker="s",
         linewidth=3,
         markersize=10,
-        label="Unbounded Slotqueue",
+        label="Bounded Slotqueue",
         color=sq_color,
     )
 
